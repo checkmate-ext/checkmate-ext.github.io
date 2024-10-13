@@ -2,10 +2,180 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CheckMate - Fake News Detection Extension</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2980b9;
+            --text-color: #333;
+            --bg-color: #f4f4f4;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1em 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        .nav-links {
+            list-style: none;
+            display: flex;
+        }
+        .nav-links li {
+            margin-left: 20px;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .nav-links a:hover {
+            color: #ecf0f1;
+        }
+        main {
+            margin-top: 80px;
+        }
+        section {
+            padding: 40px 0;
+        }
+        h1, h2, h3 {
+            margin-bottom: 20px;
+        }
+        .hero {
+            background-color: var(--secondary-color);
+            color: white;
+            text-align: center;
+            padding: 60px 0;
+        }
+        .hero h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        .tagline {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: white;
+            color: var(--primary-color);
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .cta-button:hover {
+            background-color: #ecf0f1;
+        }
+        .features {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .feature {
+            flex-basis: calc(33.333% - 20px);
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .download-section {
+            text-align: center;
+        }
+        .download-link {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px;
+            transition: background-color 0.3s ease;
+        }
+        .download-link:hover {
+            background-color: var(--secondary-color);
+        }
+    </style>
 </head>
 <body>
-hello
+<header>
+    <nav class="container">
+        <div class="logo">CheckMate</div>
+        <ul class="nav-links">
+            <li><a href="#about">About</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#reports">Reports</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <section class="hero">
+        <div class="container">
+            <h1>CheckMate</h1>
+            <p class="tagline">Your Shield Against Fake News</p>
+            <a href="#" class="cta-button">Install Extension</a>
+        </div>
+    </section>
+
+    <section id="about" class="container">
+        <h2>About CheckMate</h2>
+        <p>CheckMate is a powerful browser extension designed to help you navigate the complex world of online news. With the rise of misinformation, it's more important than ever to have a reliable tool that can assist you in identifying fake news and understanding the political leanings of various news sources.</p>
+    </section>
+
+    <section id="features" class="container">
+        <h2>Features</h2>
+        <div class="features">
+            <div class="feature">
+                <h3>Fake News Detection</h3>
+                <p>Our advanced algorithm analyzes articles to identify potential misinformation.</p>
+            </div>
+            <div class="feature">
+                <h3>Political Spectrum Analysis</h3>
+                <p>Understand the political leanings of news sources to get a balanced perspective.</p>
+            </div>
+            <div class="feature">
+                <h3>Easy to Use</h3>
+                <p>Seamlessly integrates with your browser for a hassle-free experience.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="reports" class="container">
+        <h2>Reports</h2>
+        <div class="download-section">
+            <a href="#" class="download-link">Report 1</a>
+            <a href="#" class="download-link">Report 2</a>
+            <a href="#" class="download-link">Report 3</a>
+            <a href="#" class="download-link">Report 4</a>
+        </div>
+    </section>
+</main>
 </body>
 </html>
