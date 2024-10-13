@@ -4,17 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CheckMate - Fake News Detection Extension</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #121212;
-            --surface-color: #1e1e1e;
-            --primary-color: #3700B3;
-            --secondary-color: #03DAC6;
+            --bg-color: #0a0a0a;
+            --surface-color: #1a1a1a;
+            --primary-color: #4a00e0;
+            --secondary-color: #00e5ff;
             --text-color: #ffffff;
             --text-secondary: #b0b0b0;
         }
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Inter', sans-serif;
             line-height: 1.6;
             color: var(--text-color);
             background-color: var(--bg-color);
@@ -28,13 +29,16 @@
             padding: 0 20px;
         }
         header {
-            background-color: rgba(30, 30, 30, 0.8);
+            background-color: rgba(10, 10, 10, 0.8);
             backdrop-filter: blur(10px);
             position: fixed;
             width: 100%;
             top: 0;
             z-index: 1000;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
+        }
+        header.scrolled {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
         nav {
             display: flex;
@@ -46,19 +50,22 @@
             font-size: 1.5em;
             font-weight: bold;
             color: var(--secondary-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
         .nav-links {
             list-style: none;
             display: flex;
         }
         .nav-links li {
-            margin-left: 20px;
+            margin-left: 30px;
         }
         .nav-links a {
             color: var(--text-color);
             text-decoration: none;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
             position: relative;
+            font-weight: 500;
         }
         .nav-links a::after {
             content: '';
@@ -78,15 +85,16 @@
             margin-top: 80px;
         }
         section {
-            padding: 60px 0;
+            padding: 80px 0;
         }
         h1, h2, h3 {
             margin-bottom: 20px;
+            font-weight: 600;
         }
         .hero {
             background-color: var(--surface-color);
             text-align: center;
-            padding: 100px 0;
+            padding: 120px 0;
             position: relative;
             overflow: hidden;
         }
@@ -98,7 +106,7 @@
             right: 0;
             bottom: 0;
             background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
-            opacity: 0.1;
+            opacity: 0.05;
             z-index: 0;
         }
         .hero-content {
@@ -106,13 +114,18 @@
             z-index: 1;
         }
         .hero h1 {
-            font-size: 3em;
+            font-size: 4em;
             margin-bottom: 20px;
             animation: fadeInUp 1s ease;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 300% 300%;
+            animation: gradientShift 5s ease infinite;
         }
         .tagline {
-            font-size: 1.2em;
-            margin-bottom: 30px;
+            font-size: 1.4em;
+            margin-bottom: 40px;
             color: var(--text-secondary);
             animation: fadeInUp 1s ease 0.2s;
             animation-fill-mode: both;
@@ -121,40 +134,54 @@
             display: inline-block;
             background-color: var(--secondary-color);
             color: var(--bg-color);
-            padding: 12px 24px;
+            padding: 14px 28px;
             text-decoration: none;
-            border-radius: 15px;
+            border-radius: 30px;
             transition: all 0.3s ease;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
             animation: fadeInUp 1s ease 0.4s;
             animation-fill-mode: both;
+            position: relative;
+            overflow: hidden;
+        }
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: all 0.5s;
+        }
+        .cta-button:hover::before {
+            left: 100%;
         }
         .cta-button:hover {
             background-color: var(--primary-color);
             color: var(--text-color);
-            border-radius: 10px;
-
             transform: translateY(-3px);
-            box-shadow: 0 4px 10px rgba(3, 218, 198, 0.3);
+            box-shadow: 0 10px 20px rgba(74, 0, 224, 0.3);
         }
         .features {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
         }
         .feature {
             background-color: var(--surface-color);
-            padding: 30px;
-            border-radius: 10px;
+            padding: 40px;
+            border-radius: 20px;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
         .feature:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
         }
         .feature::before {
             content: '';
@@ -165,15 +192,20 @@
             bottom: -2px;
             background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
             z-index: -1;
-            filter: blur(10px);
+            filter: blur(15px);
             opacity: 0;
             transition: opacity 0.3s ease;
         }
         .feature:hover::before {
-            opacity: 1;
+            opacity: 0.3;
         }
         .feature h3 {
             color: var(--secondary-color);
+            font-size: 1.4em;
+            margin-bottom: 15px;
+        }
+        .feature p {
+            color: var(--text-secondary);
         }
         .download-section {
             text-align: center;
@@ -182,28 +214,39 @@
             display: inline-block;
             background-color: var(--surface-color);
             color: var(--text-color);
-            padding: 12px 20px;
+            padding: 14px 24px;
             text-decoration: none;
-            border-radius: 15px;
+            border-radius: 30px;
             margin: 10px;
             transition: all 0.3s ease;
             border: 2px solid var(--primary-color);
+            font-weight: 500;
         }
         .download-link:hover {
             background-color: var(--primary-color);
             color: var(--text-color);
-            border-radius: 10px;
             transform: translateY(-3px);
-            box-shadow: 0 4px 10px rgba(55, 0, 179, 0.3);
+            box-shadow: 0 10px 20px rgba(74, 0, 224, 0.3);
         }
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(30px);
             }
             to {
                 opacity: 1;
                 transform: translateY(0);
+            }
+        }
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
             }
         }
         @media (max-width: 768px) {
@@ -211,10 +254,10 @@
                 display: none;
             }
             .hero h1 {
-                font-size: 2.5em;
+                font-size: 3em;
             }
             .feature {
-                padding: 20px;
+                padding: 30px;
             }
         }
     </style>
@@ -242,7 +285,7 @@
 
     <section id="about" class="container">
         <h2>About CheckMate</h2>
-        <p>CheckMate is a powerful browser extension designed to help you navigate the complex world of online news. With the rise of misinformation, it's more important than ever to have a reliable tool that can assist you in identifying fake news and understanding the political leanings of various news sources.</p>
+        <p>CheckMate is a cutting-edge browser extension designed to empower you in navigating the complex landscape of online news. In an era where misinformation spreads rapidly, it's crucial to have a reliable tool that assists you in identifying fake news and understanding the political leanings of various news sources. With CheckMate, you're always one step ahead in your quest for truth.</p>
     </section>
 
     <section id="features" class="container">
@@ -250,15 +293,15 @@
         <div class="features">
             <div class="feature">
                 <h3>Fake News Detection</h3>
-                <p>Our advanced algorithm analyzes articles to identify potential misinformation.</p>
+                <p>Our algorithm leverages machine learning to analyze articles and identify potential misinformation with high accuracy.</p>
             </div>
             <div class="feature">
                 <h3>Political Spectrum Analysis</h3>
-                <p>Understand the political leanings of news sources to get a balanced perspective.</p>
+                <p>Gain insights into the political leanings of news sources, allowing you to consume a balanced diet of information and form well-rounded opinions.</p>
             </div>
             <div class="feature">
-                <h3>Easy to Use</h3>
-                <p>Seamlessly integrates with your browser for a hassle-free experience.</p>
+                <h3>Seamless Integration</h3>
+                <p>CheckMate integrates effortlessly with your browser, providing real-time analysis without disrupting your browsing experience.</p>
             </div>
         </div>
     </section>
@@ -273,5 +316,12 @@
         </div>
     </section>
 </main>
+
+<script>
+    window.addEventListener('scroll', function() {
+        const header = document.querySelector('header');
+        header.classList.toggle('scrolled', window.scrollY > 0);
+    });
+</script>
 </body>
 </html>
