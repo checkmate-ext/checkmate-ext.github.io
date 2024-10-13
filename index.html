@@ -6,41 +6,46 @@
     <title>CheckMate - Fake News Detection Extension</title>
     <style>
         :root {
-            --primary-color: #3498db;
-            --secondary-color: #2980b9;
-            --text-color: #333;
-            --bg-color: #f4f4f4;
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #3700B3;
+            --secondary-color: #03DAC6;
+            --text-color: #ffffff;
+            --text-secondary: #b0b0b0;
         }
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Roboto', sans-serif;
             line-height: 1.6;
             color: var(--text-color);
             background-color: var(--bg-color);
             margin: 0;
             padding: 0;
+            transition: background-color 0.3s ease;
         }
         .container {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
         }
         header {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 1em 0;
+            background-color: rgba(30, 30, 30, 0.8);
+            backdrop-filter: blur(10px);
             position: fixed;
             width: 100%;
             top: 0;
             z-index: 1000;
+            transition: background-color 0.3s ease;
         }
         nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 1rem 0;
         }
         .logo {
             font-size: 1.5em;
             font-weight: bold;
+            color: var(--secondary-color);
         }
         .nav-links {
             list-style: none;
@@ -50,76 +55,164 @@
             margin-left: 20px;
         }
         .nav-links a {
-            color: white;
+            color: var(--text-color);
             text-decoration: none;
             transition: color 0.3s ease;
+            position: relative;
         }
-        .nav-links a:hover {
-            color: #ecf0f1;
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background-color: var(--secondary-color);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        .nav-links a:hover::after {
+            transform: scaleX(1);
         }
         main {
             margin-top: 80px;
         }
         section {
-            padding: 40px 0;
+            padding: 60px 0;
         }
         h1, h2, h3 {
             margin-bottom: 20px;
         }
         .hero {
-            background-color: var(--secondary-color);
-            color: white;
+            background-color: var(--surface-color);
             text-align: center;
-            padding: 60px 0;
+            padding: 100px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            opacity: 0.1;
+            z-index: 0;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 1;
         }
         .hero h1 {
-            font-size: 2.5em;
+            font-size: 3em;
             margin-bottom: 20px;
+            animation: fadeInUp 1s ease;
         }
         .tagline {
             font-size: 1.2em;
             margin-bottom: 30px;
+            color: var(--text-secondary);
+            animation: fadeInUp 1s ease 0.2s;
+            animation-fill-mode: both;
         }
         .cta-button {
             display: inline-block;
-            background-color: white;
-            color: var(--primary-color);
-            padding: 10px 20px;
+            background-color: var(--secondary-color);
+            color: var(--bg-color);
+            padding: 12px 24px;
             text-decoration: none;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            animation: fadeInUp 1s ease 0.4s;
+            animation-fill-mode: both;
         }
         .cta-button:hover {
-            background-color: #ecf0f1;
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(3, 218, 198, 0.3);
         }
         .features {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
         }
         .feature {
-            flex-basis: calc(33.333% - 20px);
-            background-color: white;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background-color: var(--surface-color);
+            padding: 30px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .feature:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .feature::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            z-index: -1;
+            filter: blur(10px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .feature:hover::before {
+            opacity: 1;
+        }
+        .feature h3 {
+            color: var(--secondary-color);
         }
         .download-section {
             text-align: center;
         }
         .download-link {
             display: inline-block;
-            background-color: var(--primary-color);
-            color: white;
-            padding: 10px 15px;
+            background-color: var(--surface-color);
+            color: var(--text-color);
+            padding: 12px 20px;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 30px;
             margin: 10px;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
+            border: 2px solid var(--primary-color);
         }
         .download-link:hover {
-            background-color: var(--secondary-color);
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(55, 0, 179, 0.3);
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            .hero h1 {
+                font-size: 2.5em;
+            }
+            .feature {
+                padding: 20px;
+            }
         }
     </style>
 </head>
@@ -137,7 +230,7 @@
 
 <main>
     <section class="hero">
-        <div class="container">
+        <div class="container hero-content">
             <h1>CheckMate</h1>
             <p class="tagline">Your Shield Against Fake News</p>
             <a href="#" class="cta-button">Install Extension</a>
@@ -170,10 +263,10 @@
     <section id="reports" class="container">
         <h2>Reports</h2>
         <div class="download-section">
-            <a href="#" class="download-link">Report 1</a>
-            <a href="#" class="download-link">Report 2</a>
-            <a href="#" class="download-link">Report 3</a>
-            <a href="#" class="download-link">Report 4</a>
+            <a href="path/to/" class="download-link">Report 1</a>
+            <a href="path/to/" class="download-link">Report 2</a>
+            <a href="path/to/" class="download-link">Report 3</a>
+            <a href="path/to/" class="download-link">Report 4</a>
         </div>
     </section>
 </main>
