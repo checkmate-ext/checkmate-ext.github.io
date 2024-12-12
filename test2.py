@@ -1,5 +1,8 @@
 import argparse
+import itertools
 import os.path as osp
+import wandb  # Import wandb
+
 
 import torch
 import torch.nn.functional as F
@@ -20,16 +23,36 @@ parser.add_argument('--model', type=str, default='GCN',
                     choices=['GCN', 'GAT', 'SAGE'])
 args = parser.parse_args()
 
+# wandb Initialization
+
+run_name = f"{args.dataset}_{args.feature}_{args.model}"
+
+wandb.init(
+    project="FakeNews-Detection",  # Replace with your wandb project name
+    name=run_name,
+    config={
+        "dataset": args.dataset,
+        "feature": args.feature,
+        "model": args.model,
+        "hidden_channels": 128,
+        "epochs": 60,
+        "batch_size": 128,
+        "learning_rate": 0.001,
+        "weight_decay": 0.01,
+    }
+)
+config = wandb.config
+
 # Dataset loading
 path = osp.join(osp.dirname(osp.realpath(__file__)), 'data', 'UPFD')
-train_dataset = UPFD(path, args.dataset, args.feature, 'train', ToUndirected())
-val_dataset = UPFD(path, args.dataset, args.feature, 'val', ToUndirected())
-test_dataset = UPFD(path, args.dataset, args.feature, 'test', ToUndirected())
+train_dataset = UPFD(path, config.dataset, config.feature, 'train', ToUndirected())
+val_dataset = UPFD(path, config.dataset, config.feature, 'val', ToUndirected())
+test_dataset = UPFD(path, config.dataset, config.feature, 'test', ToUndirected())
 
 # DataLoader for batching
-train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=128, shuffle=False)
-test_loader = DataLoader(test_dataset, batch_size=128, shuffle=False)
+train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False)
+test_loader = DataLoader(test_dataset, batch_size=config.batch_size, shuffle=False)
 
 
 # Model definition
@@ -75,9 +98,9 @@ class Net(torch.nn.Module):
 
 # Training and evaluation setup
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = Net(args.model, train_dataset.num_features, 128,
+model = Net(config.model, train_dataset.num_features, config.hidden_channels,
             train_dataset.num_classes, concat=True).to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.01)
+optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
 
 
 # Training loop
@@ -113,12 +136,29 @@ def test(loader):
 
 
 # Main training and evaluation
-for epoch in range(1, 61):  # 60 epochs
+for epoch in range(1, config.epochs + 1):  # 60 epochs
     loss = train()
     train_acc = test(train_loader)
     val_acc = test(val_loader)
     test_acc = test(test_loader)
+
+    # Log metrics to wandb
+    wandb.log({
+        "epoch": epoch,
+        "train_loss": loss,
+        "train_acc": train_acc,
+        "val_acc": val_acc,
+        "test_acc": test_acc,
+    })
+
     print(f'Epoch: {epoch:02d}, Loss: {loss:.4f}, Train: {train_acc:.4f}, '
           f'Val: {val_acc:.4f}, Test: {test_acc:.4f}')
 
-
+# Save the final model and log to wandb
+model_path = f"{config.dataset}_{config.feature}_{config.model}_final.pth"
+torch.save(model.state_dict(), model_path)
+# Log model as a wandb artifact
+artifact = wandb.Artifact(name=f"{config.dataset}_{config.feature}_{config.model}_model", type="model")
+artifact.add_file(model_path)
+wandb.log_artifact(artifact)
+wandb.finish()
