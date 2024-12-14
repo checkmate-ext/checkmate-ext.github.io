@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CheckMate</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <style>
+        body {
+            width: 350px;
+            height: 560px;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .section {
+            height: 280px;
+        }
+        body.fade-out {
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <section class="section has-background-white">
+        <div class="container has-text-centered">
+            <figure class="image is-128x128 is-inline-block">
+                <img src="../images/icon128.png" alt="CheckMate Logo">
+            </figure>
+            <h1 class="title is-4 has-text-dark">Fact Check with the Click Of A Button!</h1>
+        </div>
+    </section>
+    <section class="section has-background-dark">
+        <div class="container">
+            <div class="buttons is-centered is-flex-direction-column">
+                <button id="signInButton" class="button is-light is-fullwidth">Sign In</button>
+                <button id="signUpButton" class="button is-light is-fullwidth">Sign Up</button>
+                <div class="has-text-centered has-text-grey-light">
+                    <span>Or</span>
+                </div>
+                <button id="googleSignUpButton" class="button is-light is-fullwidth">
+                    <span class="icon">
+                        <img src="../images/Google.png" alt="Google">
+                    </span>
+                    <span>Sign up with Google</span>
+                </button>
+                <button id="facebookSignUpButton" class="button is-light is-fullwidth">
+                    <span class="icon">
+                        <img src="../images/Facebook.png" alt="Facebook">
+                    </span>
+                    <span>Sign up with Facebook</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <script src="../navigation/navigate.js"></script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <style>
+        body {
+            width: 350px;
+            height: 560px;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .section {
+            height: 280px;
+        }
+        body.fade-out {
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <section class="section has-background-white">
+        <div class="container has-text-centered">
+            <figure class="image is-128x128 is-inline-block logo">
+                <img src="../images/icon128.png" alt="CheckMate Logo">
+            </figure>
+        </div>
+        <h2 class="title is-4 has-text-centered">Sign Up</h2>
+        <form id="signUpForm">
+            <div class="field input-group">
+                <label class="label">Name</label>
+                <div class="control">
+                    <input class="input" type="text" placeholder="Enter your name" required>
+                </div>
+            </div>
+            <div class="field input-group">
+                <label class="label">E-mail</label>
+                <div class="control">
+                    <input class="input" type="email" placeholder="Enter your e-mail" required>
+                </div>
+            </div>
+            <div class="field input-group">
+                <label class="label">Phone Number</label>
+                <div class="control">
+                    <input class="input" type="tel" placeholder="Enter your phone number" required>
+                </div>
+            </div>
+            <div class="field input-group">
+                <label class="label">Password</label>
+                <div class="control has-icons-right">
+                    <input class="input" type="password" placeholder="Enter your password" required>
+                    <span class="icon is-small is-right">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+            </div>
+            <div class="field input-group">
+                <label class="label">Confirm Password</label>
+                <div class="control has-icons-right">
+                    <input class="input" type="password" placeholder="Confirm your password" required>
+                    <span class="icon is-small is-right">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <button type="submit" class="button is-dark is-fullwidth">Sign Up</button>
+                </div>
+            </div>
+        </form>
+        <div class="has-text-centered has-text-grey-light">
+            <span>Or</span>
+        </div>
+        <div class="buttons is-centered is-flex-direction-column">
+            <button id="googleSignUpButton" class="button is-light is-fullwidth">
+                <span class="icon">
+                    <img src="../images/Google.png" alt="Google">
+                </span>
+                <span>Sign up with Google</span>
+            </button>
+            <button id="facebookSignUpButton" class="button is-light is-fullwidth">
+                <span class="icon">
+                    <img src="../images/Facebook.png" alt="Facebook">
+                </span>
+                <span>Sign up with Facebook</span>
+            </button>
+        </div>
+    </section>
+
+    <script src="../navigation/navigate.js"></script>
+    <script src="../scripts/signupscript.js"></script>
+</body>
+</html>

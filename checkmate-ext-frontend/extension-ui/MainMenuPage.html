@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Main Menu - Checkmate</title>
+    <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
+    <style>
+        body {
+            width: 350px;
+            height: 560px;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            background: #ffffff;
+        }
+
+        .logo {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .icon-bar, .icon-profile {
+            position: absolute;
+            top: 15px;
+            cursor: pointer;
+        }
+
+        .icon-bar {
+            left: 15px;
+        }
+
+        .icon-profile {
+            right: 15px;
+        }
+
+        .button-container {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .btn-large {
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffffff;
+            border-radius: 10px;
+            background-color: #3cb371;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .btn-large span {
+            font-size: 16px;
+            font-weight: normal;
+        }
+
+        .btn-large:hover {
+            background-color: #2e8b57;
+        }
+
+        .input-box {
+            margin-bottom: 20px;
+        }
+
+        .input-box textarea {
+            width: 100%;
+            border-radius: 5px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            resize: none;
+        }
+
+        .analyze-button {
+            width: 100%;
+            height: 40px;
+            margin-bottom: 20px;
+        }
+
+        .icon-settings, .icon-warning {
+            position: absolute;
+            bottom: 15px;
+            cursor: pointer;
+        }
+
+        .icon-settings {
+            left: 15px;
+        }
+
+        .icon-warning {
+            right: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon-bar">
+            <img src="../images/menu-bar-icon.png" alt="Menu" width="24">
+        </div>
+
+        <div class="icon-profile">
+            <img src="../images/user-profile-icon.png" alt="Profile" width="24">
+        </div>
+
+        <div class="logo">
+            <img src="../images/icon128.png" alt="Checkmate Logo" width="80">
+        </div>
+
+        <div class="button-container">
+            <div class="btn-large">
+                Analyze Current Page<br><span id="currentPageUrl">Loading...</span>
+            </div>
+
+            <div class="input-box">
+                <label for="analyze-input" class="is-sr-only">Enter URL or Text to Analyze</label>
+                <textarea id="analyze-input" rows="2" placeholder="Enter URL or text to analyze"></textarea>
+            </div>
+
+            <button class="button is-primary analyze-button">Analyze</button>
+        </div>
+
+        <div class="icon-settings">
+            <img src="../images/setting-icon.png" alt="Settings" width="24">
+        </div>
+
+        <div class="icon-warning">
+            <img src="../images/exclamation-triangle-icon.png" alt="Warning" width="24">
+        </div>
+    </div>
+
+    <script src="../scripts/getcurrentpagescript.js"></script>
+
+</body>
+</html>
