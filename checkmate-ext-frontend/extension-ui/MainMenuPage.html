@@ -55,12 +55,12 @@
         .header-icon {
             cursor: pointer;
             opacity: 0.7;
-            transition: opacity 0.3s, transform 0.2s;
+            transition: all 0.3s ease;
         }
 
         .header-icon:hover {
             opacity: 1;
-            transform: scale(1.1);
+            transform: scale(1.1) rotate(5deg);
         }
 
         .logo {
@@ -80,12 +80,32 @@
             color: white;
             cursor: pointer;
             box-shadow: 0 8px 20px rgba(60,179,113,0.3);
+            position: relative;
+            overflow: hidden;
             transform: perspective(1000px);
             transition: all 0.4s ease;
         }
 
+        .btn-large::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s;
+            opacity: 0;
+        }
+
+        .btn-large:hover::before {
+            opacity: 1;
+            transform: translate(25%, 25%) rotate(45deg);
+        }
+
         .btn-large:hover {
-            transform: scale(1.02) perspective(1000px) rotateX(2deg);
+            transform: perspective(1000px) rotateX(2deg);
             box-shadow: 0 10px 25px rgba(60,179,113,0.4);
         }
 
@@ -114,10 +134,32 @@
             border-radius: 8px;
             font-weight: 600;
             transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .analyze-button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s;
+            opacity: 0;
+        }
+
+        .analyze-button:hover::before {
+            opacity: 1;
+            transform: translate(25%, 25%) rotate(45deg);
         }
 
         .analyze-button:hover {
             background: var(--secondary-color);
+            box-shadow: 0 5px 15px rgba(60,179,113,0.3);
+            color: white;
         }
 
         #similarArticlesModal {
@@ -153,7 +195,7 @@
         }
 
         .similar-article:hover {
-            transform: translateX(10px);
+            transform: translateX(10px) scale(1.02);
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
@@ -187,16 +229,13 @@
     <div class="button-container">
         <div class="btn-large" id="analyzeButton">
             Analyze Current Page<br>
-            <span id="currentPageUrl">Loading...</span>
         </div>
 
-        
         <div class="input-box" style="margin-top: 20px;">
-            <textarea id="analyze-input" rows="2" placeholder="Enter URL or text to analyze" style="resize: none; width: 100%;"></textarea>
+            <textarea id="analyze-input" rows="2" placeholder="Enter URL" style="resize: none; width: 100%;"></textarea>
         </div>
 
         <button class="button analyze-button" style="margin-top: 15px; width: 100%; height: 30px;">Analyze</button>
-
     </div>
 </div>
 

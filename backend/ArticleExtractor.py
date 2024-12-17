@@ -360,7 +360,3 @@ class ArticleExtractor:
                 cleaned_paragraphs.append(text)
 
         return '\n\n'.join(cleaned_paragraphs)
-
-scraper = ArticleExtractor()
-article = scraper.extract_article("https://www.bbc.com/news/articles/cm2ek388yxzo"),
-print(article)
