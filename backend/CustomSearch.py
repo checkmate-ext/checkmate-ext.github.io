@@ -89,9 +89,7 @@ class GoogleSearch:
         return None
 
 
-G_API_KEY = 'AIzaSyCzoprS2n7aVkRIHeqrUpdnaD0y15sVHXI'
-CX_ID = "f2b2655b7da834a7c"
-VISION_API_KEY = 'AIzaSyBhep9MR0ioD2qSB8hWe0FHSxh71nehOkk'
+
 
 url = "https://www.theguardian.com/us-news/2024/nov/26/massachusetts-death-bomb-threats-synagogue"
 google_search = GoogleSearch(G_API_KEY, CX_ID, VISION_API_KEY, url)
