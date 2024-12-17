@@ -5,31 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign In - CheckMate</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
         body {
-            width: 350px;
-            height: 560px;
-            transition: opacity 0.5s ease-in-out;
-            background-color: #f5f5f5;
-            margin: 0 auto;
             display: flex;
             justify-content: center;
             align-items: center;
+            background-color: #f5f5f5;
         }
+
         .card {
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 350px;
         }
+
         .card-content {
-            padding: 2rem;
+            padding: 1.5rem; /* Reduced padding */
         }
+
         .logo {
             margin-bottom: 1rem;
             text-align: center;
         }
+
         .logo img {
-            max-height: 80px;
+            max-height: 60px; /* Reduced size to save space */
         }
+
+        .title.is-4 {
+            margin-bottom: 1.5rem;
+        }
+
         .divider {
             display: flex;
             align-items: center;
@@ -48,85 +61,96 @@
             font-size: 0.875rem;
             color: #aaa;
         }
-        .remember-me {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 1rem;
-        }
-        .remember-me .switch {
-            display: flex;
-            align-items: center;
-        }
+
         .forgot-password {
-            margin-top: 1rem;
+            margin-top: 0.5rem;
             text-align: right;
+            font-size: 0.9rem;
         }
         .forgot-password a {
             color: #3273dc;
             text-decoration: none;
         }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+        }
+
+        .field {
+            margin-bottom: 1rem;
+        }
+
+        .buttons .button {
+            margin-bottom: 0.5rem;
+        }
+
+        .button.is-dark {
+            background-color: #222;
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="card-content">
-            <div class="logo">
-                <img src="../images/icon128.png" alt="CheckMate Logo">
-            </div>
-            <h1 class="title is-4 has-text-centered">Sign In</h1>
-            <form>
-                <div class="field">
-                    <label class="label">E-mail</label>
-                    <div class="control has-icons-left">
-                        <input class="input" type="email" placeholder="Enter your email" required>
-                        <span class="icon is-small is-left">
+<div class="card">
+    <div class="card-content">
+        <div class="logo">
+            <img src="../images/icon128.png" alt="CheckMate Logo">
+        </div>
+        <h1 class="title is-4 has-text-centered">Sign In</h1>
+        <form>
+            <div class="field">
+                <label class="label">E-mail</label>
+                <div class="control has-icons-left">
+                    <input class="input" type="email" placeholder="Enter your email" required>
+                    <span class="icon is-small is-left">
                             <i class="fas fa-envelope"></i>
                         </span>
-                    </div>
                 </div>
-                <div class="field">
-                    <label class="label">Password</label>
-                    <div class="control has-icons-left">
-                        <input class="input" type="password" placeholder="Enter your password" required>
-                        <span class="icon is-small is-left">
+            </div>
+            <div class="field">
+                <label class="label">Password</label>
+                <div class="control has-icons-left">
+                    <input class="input" type="password" placeholder="Enter your password" required>
+                    <span class="icon is-small is-left">
                             <i class="fas fa-lock"></i>
                         </span>
-                    </div>
                 </div>
-                <div class="forgot-password">
-                    <a href="#" id="forgotPasswordLink">Forgot password?</a>
-                </div>
-                <div class="remember-me">
-                    <label class="checkbox">
-                        <input type="checkbox">
-                        Remember Me
-                    </label>
-                </div>
-                <div class="field">
-                    <button type="submit" id="signInToMain" class="button is-dark is-fullwidth">Sign In</button>
-                </div>
-            </form>
-            <div class="divider">
-                <span>Or</span>
             </div>
-            <div class="buttons">
-                <button class="button is-light is-fullwidth">
-                    <span class="icon">
-                        <img src="../images/Google.png" alt="Google">
-                    </span>
-                    <span>Sign in with Google</span>
-                </button>
-                <button class="button is-light is-fullwidth">
-                    <span class="icon">
-                        <img src="../images/Facebook.png" alt="Facebook">
-                    </span>
-                    <span>Sign in with Facebook</span>
-                </button>
+            <div class="forgot-password">
+                <a href="#" id="forgotPasswordLink">Forgot password?</a>
             </div>
+            <div class="remember-me">
+                <label class="checkbox">
+                    <input type="checkbox">
+                    Remember Me
+                </label>
+            </div>
+            <div class="field" style="margin-top: 1rem;">
+                <button type="submit" id="signInToMain" class="button is-dark is-fullwidth">Sign In</button>
+            </div>
+        </form>
+        <div class="divider">
+            <span>Or</span>
+        </div>
+        <div class="buttons">
+            <button class="button is-light is-fullwidth">
+                    <span class="icon">
+                        <img src="../images/Google.png" alt="Google" style="height:20px;">
+                    </span>
+                <span>Sign in with Google</span>
+            </button>
+            <button class="button is-light is-fullwidth">
+                    <span class="icon">
+                        <img src="../images/Facebook.png" alt="Facebook" style="height:20px;">
+                    </span>
+                <span>Sign in with Facebook</span>
+            </button>
         </div>
     </div>
+</div>
 
-    <script src="../navigation/navigate.js"></script>
+<script src="../navigation/navigate.js"></script>
 </body>
 </html>
