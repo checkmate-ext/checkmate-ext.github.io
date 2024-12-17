@@ -8,7 +8,7 @@ import undetected_chromedriver as uc
 from urllib.parse import urljoin, urlparse
 
 
-class Scrapper:
+class ArticleExtractor:
 
     def __init__(self, use_proxy=False, proxy=None):
         options = uc.ChromeOptions()
@@ -360,3 +360,7 @@ class Scrapper:
                 cleaned_paragraphs.append(text)
 
         return '\n\n'.join(cleaned_paragraphs)
+
+scraper = ArticleExtractor()
+article = scraper.extract_article("https://www.bbc.com/news/articles/cm2ek388yxzo"),
+print(article)

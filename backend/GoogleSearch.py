@@ -1,5 +1,7 @@
+from datetime import datetime
+
 import requests
-from Scrapper import Scrapper
+from ArticleExtractor import ArticleExtractor
 
 
 class GoogleSearch:
@@ -7,13 +9,13 @@ class GoogleSearch:
         self.api_key = api_key
         self.cx = cx
         self.vision_api_key = vision_api_key
-        scrapper = Scrapper()
+        scrapper = ArticleExtractor()
         self.article = scrapper.extract_article(article_url)
         print(self.article)
         self.extracted_articles = self.__get_similar_articles(scrapper)
         self.vision_api_url = f"https://vision.googleapis.com/v1/images:annotate?key={self.vision_api_key}"
 
-    def __get_similar_articles(self, scrapper: Scrapper):
+    def __get_similar_articles(self, scrapper: ArticleExtractor):
         similar_articles = self.__search(self.article['title'])
         extracted_articles = []
         for i, article in enumerate(similar_articles, start=1):
