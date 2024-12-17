@@ -4,7 +4,6 @@ from flask_cors import CORS
 from GoogleSearch import GoogleSearch
 import os
 
-
 app = Flask(__name__)
 CORS(app)
 # Load environment variables from .env file
@@ -18,6 +17,7 @@ VISION_API_KEY = os.getenv("VISION_API_KEY")
 # Validate that API keys exist
 if not all([G_API_KEY, CX_ID, VISION_API_KEY]):
     raise ValueError("One or more API keys are missing in the .env file.")
+
 
 @app.route('/scrap_and_search', methods=['POST'])
 def scrap_and_search():
@@ -41,6 +41,7 @@ def scrap_and_search():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)

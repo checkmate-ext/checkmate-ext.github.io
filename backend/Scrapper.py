@@ -8,8 +8,7 @@ import undetected_chromedriver as uc
 from urllib.parse import urljoin, urlparse
 
 
-class Scrapper: f
-
+class Scrapper:
 
 def __init__(self, use_proxy=False, proxy=None):
     options = uc.ChromeOptions()
