@@ -1,14 +1,23 @@
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from CustomSearch import GoogleSearch
+from GoogleSearch import GoogleSearch
+import os
+
 
 app = Flask(__name__)
 CORS(app)
+# Load environment variables from .env file
+load_dotenv()
 
-# API Keys (Replace with your actual keys)
-G_API_KEY = 'AIzaSyCzoprS2n7aVkRIHeqrUpdnaD0y15sVHXI'
-CX_ID = "f2b2655b7da834a7c"
-VISION_API_KEY = 'AIzaSyBhep9MR0ioD2qSB8hWe0FHSxh71nehOkk'
+# Fetch API keys from environment variables
+G_API_KEY = os.getenv("G_API_KEY")
+CX_ID = os.getenv("CX_ID")
+VISION_API_KEY = os.getenv("VISION_API_KEY")
+
+# Validate that API keys exist
+if not all([G_API_KEY, CX_ID, VISION_API_KEY]):
+    raise ValueError("One or more API keys are missing in the .env file.")
 
 @app.route('/scrap_and_search', methods=['POST'])
 def scrap_and_search():
@@ -19,6 +28,7 @@ def scrap_and_search():
         if not url:
             return jsonify({'error': 'URL parameter is required'}), 400
 
+        print(url)
         # Initialize GoogleSearch and perform scraping & custom search
         google_search = GoogleSearch(G_API_KEY, CX_ID, VISION_API_KEY, url)
         similar_articles = google_search.get_similar()

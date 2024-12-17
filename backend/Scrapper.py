@@ -46,23 +46,16 @@ class Scrapper:
 
     def extract_article(self, url):
         try:
-            # Add random delay before request
-            time.sleep(random.uniform(1, 3))
-
             # Clear cookies and cache
             self.driver.delete_all_cookies()
 
             # Navigate to the page
             self.driver.get(url)
 
-            # Additional random delay to simulate human behavior
-            time.sleep(random.uniform(1, 3))
-
             # Execute scroll to load dynamic content
             self.driver.execute_script(
                 "window.scrollTo(0, document.body.scrollHeight/2);"
             )
-            time.sleep(1)
 
             soup = BeautifulSoup(self.driver.page_source, 'html.parser')
 

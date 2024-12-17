@@ -9,6 +9,7 @@ class GoogleSearch:
         self.vision_api_key = vision_api_key
         scrapper = Scrapper()
         self.article = scrapper.extract_article(article_url)
+        print(self.article)
         self.extracted_articles = self.__get_similar_articles(scrapper)
         self.vision_api_url = f"https://vision.googleapis.com/v1/images:annotate?key={self.vision_api_key}"
 

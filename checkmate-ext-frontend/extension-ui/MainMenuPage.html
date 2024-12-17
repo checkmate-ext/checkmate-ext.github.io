@@ -2,15 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Main Menu - Checkmate</title>
+    <title>Checkmate - Web Analysis</title>
     <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #3cb371;
+            --secondary-color: #2e8b57;
+            --bg-light: #f4f4f4;
+            --text-dark: #333;
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
         body {
-            width: 350px;
-            height: 560px;
+            width: 380px;
+            height: 600px;
             margin: 0;
-            font-family: Arial, sans-serif;
-            overflow: hidden; /* Prevent scrollbars */
+            font-family: 'Inter', Arial, sans-serif;
+            background-color: var(--bg-light);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         .container {
@@ -18,130 +33,179 @@
             width: 100%;
             height: 100%;
             padding: 20px;
-            box-sizing: border-box;
-            background: #ffffff;
+            background: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .header-icon {
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s, transform 0.2s;
+        }
+
+        .header-icon:hover {
+            opacity: 1;
+            transform: scale(1.1);
         }
 
         .logo {
-            margin-top: 20px;
-            margin-bottom: 20px;
             display: flex;
             justify-content: center;
-        }
-
-        .icon-bar, .icon-profile {
-            position: absolute;
-            top: 15px;
-            cursor: pointer;
-        }
-
-        .icon-bar {
-            left: 15px;
-        }
-
-        .icon-profile {
-            right: 15px;
-        }
-
-        .button-container {
-            margin-top: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
         .btn-large {
-            height: 100px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            height: 120px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-size: 18px;
-            font-weight: bold;
-            color: #ffffff;
-            border-radius: 10px;
-            background-color: #3cb371;
+            border-radius: 15px;
+            color: white;
             cursor: pointer;
-            margin-bottom: 20px;
-        }
-
-        .btn-large span {
-            font-size: 16px;
-            font-weight: normal;
+            box-shadow: 0 8px 20px rgba(60,179,113,0.3);
+            transform: perspective(1000px);
+            transition: all 0.4s ease;
         }
 
         .btn-large:hover {
-            background-color: #2e8b57;
+            transform: scale(1.02) perspective(1000px) rotateX(2deg);
+            box-shadow: 0 10px 25px rgba(60,179,113,0.4);
         }
 
-        .input-box {
-            margin-bottom: 20px;
+        .btn-large span {
+            font-size: 14px;
+            margin-top: 8px;
+            opacity: 0.8;
         }
 
         .input-box textarea {
-            width: 100%;
-            border-radius: 5px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            resize: none;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            background-color: #f9f9f9;
+            transition: all 0.3s ease;
+        }
+
+        .input-box textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(60,179,113,0.2);
         }
 
         .analyze-button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .analyze-button:hover {
+            background: var(--secondary-color);
+        }
+
+        #similarArticlesModal {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: 40px;
-            margin-bottom: 20px;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
         }
 
-        .icon-settings, .icon-warning {
-            position: absolute;
-            bottom: 15px;
-            cursor: pointer;
+        .modal-content {
+            background: white;
+            width: 95%;
+            max-height: 80%;
+            border-radius: 12px;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
         }
 
-        .icon-settings {
-            left: 15px;
+        .similar-article {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s ease;
         }
 
-        .icon-warning {
-            right: 15px;
+        .similar-article:hover {
+            transform: translateX(10px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .similar-article h3 {
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .similar-article a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-size: 0.9em;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="icon-bar">
-            <img src="../images/menu-bar-icon.png" alt="Menu" width="24">
+<div class="container">
+    <div class="header">
+        <div class="header-icons">
+            <img src="../images/menu-bar-icon.png" alt="Menu" width="24" class="header-icon">
         </div>
-
-        <div class="icon-profile">
-            <img src="../images/user-profile-icon.png" alt="Profile" width="24">
-        </div>
-
-        <div class="logo">
-            <img src="../images/icon128.png" alt="Checkmate Logo" width="80">
-        </div>
-
-        <div class="button-container">
-            <div class="btn-large" id="analyzeButton">
-                Analyze Current Page<br><span id="currentPageUrl">Loading...</span>
-            </div>
-
-            <div class="input-box">
-                <label for="analyze-input" class="is-sr-only">Enter URL or Text to Analyze</label>
-                <textarea id="analyze-input" rows="2" placeholder="Enter URL or text to analyze"></textarea>
-            </div>
-
-            <button class="button is-primary analyze-button">Analyze</button>
-        </div>
-
-        <div class="icon-settings">
-            <img src="../images/setting-icon.png" alt="Settings" width="24">
-        </div>
-
-        <div class="icon-warning">
-            <img src="../images/exclamation-triangle-icon.png" alt="Warning" width="24">
+        <div class="header-icons">
+            <img src="../images/user-profile-icon.png" alt="Profile" width="24" class="header-icon">
         </div>
     </div>
 
-    <script src="../scripts/getcurrentpagescript.js"></script>
+    <div class="logo">
+        <img src="../images/icon128.png" alt="Checkmate Logo" width="100">
+    </div>
 
+    <div class="button-container">
+        <div class="btn-large" id="analyzeButton">
+            Analyze Current Page<br>
+            <span id="currentPageUrl">Loading...</span>
+        </div>
+
+        <div class="input-box" style="margin-top: 20px;">
+            <textarea id="analyze-input" rows="2" placeholder="Enter URL or text to analyze"></textarea>
+        </div>
+
+        <button class="button analyze-button" style="margin-top: 15px;">Analyze</button>
+    </div>
+</div>
+
+<div id="similarArticlesModal">
+    <div class="modal-content">
+        <h2 class="title is-4 mb-4">Similar Articles</h2>
+        <div id="similarArticlesList"></div>
+    </div>
+</div>
+
+<script src="../scripts/getcurrentpagescript.js"></script>
+<script src="../scripts/analyze-script.js"></script>
 </body>
 </html>
