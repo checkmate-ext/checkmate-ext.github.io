@@ -87,11 +87,3 @@ class GoogleSearch:
         except Exception as e:
             print(f"Error analyzing web detection: {e}")
         return None
-
-
-
-
-url = "https://www.theguardian.com/us-news/2024/nov/26/massachusetts-death-bomb-threats-synagogue"
-google_search = GoogleSearch(G_API_KEY, CX_ID, VISION_API_KEY, url)
-
-print(google_search.get_images_data())
