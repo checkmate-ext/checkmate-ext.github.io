@@ -1,59 +1,51 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const analyzeButton = document.querySelector('.analyze-button');
-    const analyzeInput = document.getElementById('analyze-input');
-    const currentPageUrl = document.getElementById('currentPageUrl');
-    const similarArticlesModal = document.getElementById('similarArticlesModal');
-    const similarArticlesList = document.getElementById('similarArticlesList');
+document.addEventListener('DOMContentLoaded', () => {
+    const currentPageUrlElement = document.getElementById('currentPageUrl');
+    const analyzeButton = document.getElementById('analyzeButton');
 
-    // Close modal when clicking outside
-    similarArticlesModal.addEventListener('click', function(event) {
-        if (event.target === similarArticlesModal) {
-            similarArticlesModal.style.display = 'none';
+    // Get the active tab in the current window when the page loads
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const activeTab = tabs[0];
+        if (activeTab && activeTab.url) {
+            // Store the URL for sending when the button is clicked
+            analyzeButton.dataset.url = activeTab.url;
+        } else {
+            currentPageUrlElement.textContent = 'No active tab';
         }
     });
 
-    analyzeButton.addEventListener('click', function() {
-        // Prioritize manual input over current page URL
-        const urlToAnalyze = analyzeInput.value.trim() || currentPageUrl.textContent;
-
-        // Check if URL is valid and not "Loading..."
-        if (!urlToAnalyze || urlToAnalyze === 'Loading...') {
-            alert('Please enter a valid URL or wait for the current page URL to load.');
-            return;
-        }
-
-        // Send POST request to the Flask backend
-        fetch('http://localhost:5000/scrap_and_search', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ url: urlToAnalyze })
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.similar_articles && data.similar_articles.length > 0) {
-                    // Clear previous results
-                    similarArticlesList.innerHTML = '';
-
-                    // Populate similar articles
-                    data.similar_articles.forEach(article => {
-                        const articleElement = document.createElement('div');
-                        articleElement.classList.add('similar-article');
-
-                        articleElement.innerHTML = `
-                        <h3>${article.title || 'Untitled Article'}</h3>
-                        <a href="${article.url}" target="_blank">${article.url}</a>
-                    `;
-
-                        similarArticlesList.appendChild(articleElement);
-                    });
-
-                    // Show modal
-                    similarArticlesModal.style.display = 'flex';
-                } else {
-                    alert('No similar articles found.');
-                }
+    // When the Analyze Current Page button is clicked
+    analyzeButton.addEventListener('click', () => {
+        const urlToAnalyze = analyzeButton.dataset.url;
+        if (urlToAnalyze) {
+            // Send the URL to the Python server
+            fetch('http://localhost:5000/scrap_and_search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: urlToAnalyze })
             })
+                .then(response => response.json())
+                .then(data => {
+                    // Instead of showing the modal here, we store the results and navigate to ResultPage.html
+
+                    // Example data structure:
+                    // data.reliability_score = number
+                    // data.details = array of strings or single string
+                    // data.similar_articles = array of { title: string, url: string }
+
+                    // Store data in localStorage so we can access it from ResultPage.html
+                    localStorage.setItem('analysisResults', JSON.stringify(data));
+
+                    // Redirect to ResultPage.html
+                    window.location.href = 'ResultPage.html';
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    alert('Error analyzing the page. Please try again later.');
+                });
+        } else {
+            alert('No URL to analyze.');
+        }
     });
 });

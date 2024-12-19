@@ -12,7 +12,7 @@
       "service_worker": "background.js"
   },
   "action": {
-      "default_popup": "extension-ui/FirstPage.html",
+      "default_popup": "extension-ui/ResultPage.html",
       "default_icon": {
           "16": "images/icon16.png",
           "32": "images/icon32.png",
