@@ -34,7 +34,6 @@
             display: flex;
             flex-direction: column;
             position: relative;
-            overflow: hidden;
         }
 
         .header {
@@ -42,6 +41,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px 20px;
+            flex: 0 0 auto;
         }
 
         .header-icons img {
@@ -59,6 +59,7 @@
             display: flex;
             justify-content: center;
             margin: 5px 0;
+            flex: 0 0 auto;
         }
 
         .logo-container img {
@@ -70,6 +71,7 @@
             align-items: center;
             padding: 0 20px;
             margin-top: 10px;
+            flex: 0 0 auto;
         }
 
         .score-box {
@@ -120,14 +122,15 @@
             color: var(--text-dark);
         }
 
-        /* Scrollable articles section */
+        /* Articles section with scroll if needed */
         .articles-section {
-            flex: 1;
+            flex: 1 1 auto;
             margin: 10px 20px;
             border: 1px solid #ddd;
             border-radius: 12px;
             overflow-y: auto;
             padding: 10px;
+            max-height: 300px; /* Limit height so the button fits below */
         }
 
         .articles-section::-webkit-scrollbar {
@@ -152,22 +155,6 @@
             margin-bottom: 15px;
             border-left: 4px solid var(--primary-color);
             transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .similar-article::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.4), transparent);
-            transform: rotate(45deg);
-            transition: all 0.5s;
-            opacity: 0;
         }
 
         .similar-article:hover {
@@ -175,9 +162,11 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
-        .similar-article:hover::before {
-            opacity: 1;
-            transform: translate(25%, 25%) rotate(45deg);
+        .similar-article h4 {
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-dark);
         }
 
         .similar-article a {
@@ -185,13 +174,9 @@
             text-decoration: none;
             font-size: 13px;
             word-break: break-all;
-            transition: all 0.3s ease;
         }
 
-        .similar-article:hover a {
-            color: var(--primary-color);
-        }
-
+        /* Report Mistake Button placed after articles-section */
         .report-mistake-button {
             background: var(--warning-color);
             border: none;
@@ -201,65 +186,28 @@
             font-size: 14px;
             color: #333;
             cursor: pointer;
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            margin: 10px 20px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 5px;
-            overflow: hidden;
-        }
-
-        .report-mistake-button::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.2), transparent);
-            transform: rotate(45deg);
-            transition: all 0.5s;
-            opacity: 0;
+            justify-content: center;
+            flex: 0 0 auto;
         }
 
         .report-mistake-button:hover {
             box-shadow: 0 5px 15px rgba(241,196,15,0.3);
-            transform: translate(-50%, -2px);
         }
 
-        .report-mistake-button:hover::before {
+        .report-mistake-button img {
+            width: 18px;
+            opacity: 0.8;
+        }
+
+        .report-mistake-button img:hover {
             opacity: 1;
-            transform: translate(25%, 25%) rotate(45deg);
         }
-        /* Bottom icons (if desired) */
-        .bottom-left-icon, .bottom-right-icon {
-            position: absolute;
-            bottom: 10px;
-        }
-
-        .bottom-left-icon {
-            left: 10px;
-        }
-
-        .bottom-right-icon {
-            right: 10px;
-        }
-
-        .bottom-icon-img {
-            width: 24px;
-            opacity: 0.7;
-            transition: all 0.3s ease;
-        }
-
-        .bottom-icon-img:hover {
-            opacity: 1;
-            transform: scale(1.1);
-        }
-
     </style>
 </head>
 <body>
@@ -291,11 +239,8 @@
         <img src="../images/warning-icon.png" alt="Warning Icon">
         Report Mistake
     </button>
-
 </div>
 
-<script src="../scripts/similar-article.js">
-</script>
-
+<script src="../scripts/similar-article.js"></script>
 </body>
 </html>

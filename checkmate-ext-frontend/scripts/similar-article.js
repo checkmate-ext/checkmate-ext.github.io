@@ -3,11 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!dataString) {
         // No data found, show placeholders
         document.getElementById('reliabilityScore').textContent = 'N/A';
-        return;
     }
-
     const data = JSON.parse(dataString);
-
+    console.log(data)
     // Set the reliability score
     if (data.reliability_score !== undefined) {
         document.getElementById('reliabilityScore').textContent = data.reliability_score;
