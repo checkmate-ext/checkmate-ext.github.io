@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Store data in localStorage so we can access it from ResultPage.html
                     localStorage.setItem('analysisResults', JSON.stringify(data));
+                    console.log('Data stored:', data);
 
                     // Redirect to ResultPage.html
                     window.location.href = 'ResultPage.html';
