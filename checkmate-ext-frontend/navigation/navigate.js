@@ -50,4 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    document.getElementById('moreDetailsBtn').addEventListener('click', () => {
+        navigateTo('MoreDetails.html');
+    });
+
 });
