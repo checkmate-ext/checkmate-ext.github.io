@@ -8,9 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const activeTab = tabs[0];
         if (activeTab && activeTab.url) {
-            // Display the URL before the button is clicked
-            currentPageUrlElement.textContent = activeTab.url;
-
             // Store the URL for sending when the button is clicked
             analyzeButton.dataset.url = activeTab.url;
         } else {
