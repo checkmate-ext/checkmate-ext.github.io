@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             articleElement.innerHTML = `
                 <h4>${article.title || 'Untitled Article'}</h4>
-                <a href="${article.link}" target="_blank">${article.link}</a>
+                <a href="${article.url}" target="_blank">${article.url}</a>
             `;
             similarArticlesList.appendChild(articleElement);
         });
