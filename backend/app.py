@@ -35,6 +35,7 @@ def scrap_and_search():
 
         # Return the results as JSON
         return jsonify({
+            'reliability_score': '80', # Placeholder for reliability score
             'message': f"Results for {url}",
             'similar_articles': similar_articles
         })
