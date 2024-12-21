@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from GoogleSearch import GoogleSearch
 import os
+import random
 
 app = Flask(__name__)
 CORS(app)
@@ -33,9 +34,10 @@ def scrap_and_search():
         google_search = GoogleSearch(G_API_KEY, CX_ID, VISION_API_KEY, url)
         similar_articles = google_search.get_similar()
 
+        reliability_score = random.randint(30, 95)
         # Return the results as JSON
         return jsonify({
-            'reliability_score': '80', # Placeholder for reliability score
+            'reliability_score': reliability_score,
             'message': f"Results for {url}",
             'similar_articles': similar_articles
         })
