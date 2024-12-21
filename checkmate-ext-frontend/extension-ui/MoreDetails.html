@@ -11,6 +11,8 @@
             --bg-light: #f4f4f4;
             --text-dark: #333;
             --score-red: #e74c3c;
+            --score-neutral: #f1c40f;
+            --score-green: #2ecc71;
             --warning-color: #f1c40f;
             --neutral-bg: #ffffff;
         }
@@ -75,7 +77,6 @@
         }
 
         .score-box {
-            background-color: var(--score-red);
             color: #fff;
             font-size: 32px;
             font-weight: bold;
@@ -91,6 +92,18 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+        }
+
+        .score-box.red {
+            background-color: var(--score-red);
+        }
+
+        .score-box.neutral {
+            background-color: var(--score-neutral);
+        }
+
+        .score-box.green {
+            background-color: var(--score-green);
         }
 
         .score-box:hover {

@@ -3,14 +3,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!dataString) {
         // No data found, show placeholders
         document.getElementById('reliabilityScore').textContent = 'N/A';
+        return;
     }
     const data = JSON.parse(dataString);
-    console.log(data)
-    // Set the reliability score
+    const scoreBox = document.getElementById('reliabilityScore');
+
+    // Set the reliability score and color
     if (data.reliability_score !== undefined) {
-        document.getElementById('reliabilityScore').textContent = data.reliability_score;
+        scoreBox.textContent = data.reliability_score;
+
+        if (data.reliability_score > 75) {
+            scoreBox.classList.add('green');
+        } else if (data.reliability_score >= 50) {
+            scoreBox.classList.add('neutral');
+        } else {
+            scoreBox.classList.add('red');
+        }
     } else {
-        document.getElementById('reliabilityScore').textContent = 'N/A';
+        scoreBox.textContent = 'N/A';
+        scoreBox.classList.add('red');
     }
 
     const similarArticlesList = document.getElementById('similarArticlesList');
