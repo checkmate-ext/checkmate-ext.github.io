@@ -34,6 +34,22 @@ document.addEventListener('DOMContentLoaded', () => {
         detailsList.appendChild(thirdElement);
     }
 
+    const scoreBox = document.getElementById('resultPageReliabilityScore');
+    if (data.reliability_score !== undefined) {
+        scoreBox.textContent = data.reliability_score;
+
+        if (data.reliability_score > 75) {
+            scoreBox.classList.add('green');
+        } else if (data.reliability_score >= 50) {
+            scoreBox.classList.add('neutral');
+        } else {
+            scoreBox.classList.add('red');
+        }
+    } else {
+        scoreBox.textContent = 'N/A';
+        scoreBox.classList.add('red');
+    }
+
     // Display the second and third similar articles in detailsList
     if (data.similar_articles && data.similar_articles.length > 2) {
         const articlesToShow = data.similar_articles.slice(1, 3); // Get articles at indexes 1 and 2

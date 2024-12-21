@@ -11,6 +11,8 @@
             --bg-light: #f4f4f4;
             --text-dark: #333;
             --score-red: #e74c3c;
+            --score-neutral: #f1c40f;
+            --score-green: #2ecc71;
             --warning-color: #f1c40f;
             --neutral-bg: #ffffff;
         }
@@ -103,6 +105,18 @@
         .score-box:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .score-box.red {
+            background-color: var(--score-red);
+        }
+
+        .score-box.neutral {
+            background-color: var(--score-neutral);
+        }
+
+        .score-box.green {
+            background-color: var(--score-green);
         }
 
         .score-box::before {
@@ -291,7 +305,7 @@
 
     <div class="content">
         <div class="score-section">
-            <div class="score-box" id="reliabilityScore">35</div>
+            <div class="score-box" id="resultPageReliabilityScore">--</div>
             <div class="score-label">Reliability<br>Score</div>
             <button class="report-mistake-button" id="reportMistakeBtn">Report Mistake</button>
         </div>
