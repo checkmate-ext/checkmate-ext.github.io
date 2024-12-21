@@ -12,6 +12,8 @@ document.getElementById('reportMistakeBtn').addEventListener('click', () => {
     alert('Report mistake functionality goes here.');
 });
 
+// Existing code in result-page.js
+
 document.addEventListener('DOMContentLoaded', () => {
     const dataString = localStorage.getItem('analysisResults');
     if (!dataString) {
@@ -21,7 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const data = JSON.parse(dataString);
     const detailsList = document.getElementById('detailsList');
 
-    if (data.details && data.details.length > 1) {
+    // Display the second and third items from data.details array
+    if (data.details && data.details.length > 2) {
         const secondElement = document.createElement('li');
         secondElement.textContent = data.details[1];
         detailsList.appendChild(secondElement);
@@ -29,5 +32,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const thirdElement = document.createElement('li');
         thirdElement.textContent = data.details[2];
         detailsList.appendChild(thirdElement);
+    }
+
+    // Display the second and third similar articles in detailsList
+    if (data.similar_articles && data.similar_articles.length > 2) {
+        const articlesToShow = data.similar_articles.slice(1, 3); // Get articles at indexes 1 and 2
+
+        articlesToShow.forEach(article => {
+            const listItem = document.createElement('li');
+
+            listItem.innerHTML = `
+                <h4>${article.title || 'Untitled Article'}</h4>
+                <a href="${article.url}" target="_blank">${article.url}</a>
+            `;
+            detailsList.appendChild(listItem);
+        });
     }
 });
