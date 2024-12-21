@@ -3,18 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <title>Checkmate - Web Analysis</title>
+    <!-- Bulma CSS Framework -->
     <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
+    <!-- Font Awesome for Icons (Optional for better iconography) -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     <style>
         :root {
             --primary-color: #3cb371;
             --secondary-color: #2e8b57;
             --bg-light: #f4f4f4;
             --text-dark: #333;
+            --border-radius: 8px;
+            --transition-speed: 0.3s;
         }
 
-        * {
+        *, *::before, *::after {
             box-sizing: border-box;
-            transition: all 0.3s ease;
+            transition: all var(--transition-speed) ease;
         }
 
         body {
@@ -24,38 +29,41 @@
             font-family: 'Inter', Arial, sans-serif;
             background-color: var(--bg-light);
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             overflow: hidden;
         }
 
         .container {
-            position: relative;
             width: 100%;
             height: 100%;
-            padding: 20px;
+            padding: 25px;
             background: white;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             border-radius: 12px;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
+        /* Header Styling */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .header-icons {
             display: flex;
-            gap: 15px;
+            gap: 20px;
         }
 
         .header-icon {
             cursor: pointer;
             opacity: 0.7;
-            transition: all 0.3s ease;
+            width: 24px;
+            height: 24px;
         }
 
         .header-icon:hover {
@@ -63,15 +71,30 @@
             transform: scale(1.1) rotate(5deg);
         }
 
+        /* Logo Styling */
         .logo {
             display: flex;
             justify-content: center;
             margin-bottom: 30px;
         }
 
+        .logo img {
+            width: 100px;
+        }
+
+        /* Button Container */
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+
+        /* Large Analyze Button */
         .btn-large {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            height: 120px;
+            width: 100%;
+            height: 80px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -115,27 +138,49 @@
             opacity: 0.8;
         }
 
+        /* Input Box Styling */
+        .input-box {
+            width: 100%;
+            margin-top: 25px;
+        }
+
         .input-box textarea {
-            border-radius: 8px;
+            border-radius: var(--border-radius);
             border: 1px solid #e0e0e0;
             background-color: #f9f9f9;
-            transition: all 0.3s ease;
+            padding: 12px;
+            font-size: 14px;
+            resize: none;
+            width: 100%;
+            height: 80px;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .input-box textarea::placeholder {
+            color: #999;
         }
 
         .input-box textarea:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(60,179,113,0.2);
+            box-shadow: 0 0 0 2px rgba(60, 179, 113, 0.2);
+            outline: none;
         }
 
+        /* Analyze Button Styling */
         .analyze-button {
             background: var(--primary-color);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: var(--border-radius);
             font-weight: 600;
-            transition: all 0.3s ease;
+            padding: 12px 20px;
+            margin-top: 20px;
+            width: 100%;
+            cursor: pointer;
             position: relative;
             overflow: hidden;
+            transition: all var(--transition-speed) ease;
+            font-size: 16px;
         }
 
         .analyze-button::before {
@@ -162,6 +207,7 @@
             color: white;
         }
 
+        /* Modal Styling */
         #similarArticlesModal {
             position: fixed;
             top: 0;
@@ -177,21 +223,29 @@
 
         .modal-content {
             background: white;
-            width: 95%;
+            width: 90%;
+            max-width: 350px;
             max-height: 80%;
             border-radius: 12px;
-            padding: 20px;
+            padding: 25px;
             overflow-y: auto;
             box-shadow: 0 15px 30px rgba(0,0,0,0.2);
         }
 
+        .modal-content h2 {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            text-align: center;
+        }
+
         .similar-article {
             background-color: #f9f9f9;
-            border-radius: 8px;
+            border-radius: var(--border-radius);
             padding: 15px;
             margin-bottom: 15px;
             border-left: 4px solid var(--primary-color);
-            transition: all 0.3s ease;
+            transition: all var(--transition-speed) ease;
         }
 
         .similar-article:hover {
@@ -200,53 +254,94 @@
         }
 
         .similar-article h3 {
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-dark);
         }
 
         .similar-article a {
             color: var(--secondary-color);
             text-decoration: none;
             font-size: 0.9em;
+            transition: color var(--transition-speed) ease;
+        }
+
+        .similar-article a:hover {
+            color: var(--primary-color);
+        }
+
+        /* Responsive Adjustments (Optional) */
+        @media (max-width: 400px) {
+            body {
+                width: 100vw;
+                height: 100vh;
+            }
+
+            .container {
+                border-radius: 8px;
+                padding: 20px;
+            }
+
+            .btn-large {
+                height: 70px;
+            }
+
+            .input-box textarea {
+                height: 70px;
+            }
+
+            .analyze-button {
+                font-size: 14px;
+                padding: 10px 16px;
+            }
         }
     </style>
 </head>
 <body>
 <div class="container">
+    <!-- Header Section -->
     <div class="header">
         <div class="header-icons">
             <img src="../images/menu-bar-icon.png" alt="Menu" width="24" class="header-icon">
-        </div>
-        <div class="header-icons">
             <img src="../images/user-profile-icon.png" alt="Profile" width="24" class="header-icon">
         </div>
     </div>
 
+    <!-- Logo Section -->
     <div class="logo">
         <img src="../images/icon128.png" alt="Checkmate Logo" width="100">
     </div>
 
+    <!-- Button and Input Section -->
     <div class="button-container">
+        <!-- Large Analyze Button -->
         <div class="btn-large" id="analyzeButton">
-            Analyze Current Page<br>
+            Analyze Current Page
             <span id="currentPageUrl"></span>
         </div>
 
-        <div class="input-box" style="margin-top: 20px;">
-            <textarea id="analyze-input" rows="2" placeholder="Enter URL" style="resize: none; width: 100%;"></textarea>
+        <!-- URL Input Box -->
+        <div class="input-box">
+            <textarea id="analyze-input" rows="2" placeholder="Enter URL"></textarea>
         </div>
 
-        <button class="button analyze-button" id="analyze-button" style="margin-top: 15px; width: 100%; height: 30px;">Analyze</button>
+        <!-- Analyze Button -->
+        <button class="button analyze-button" id="analyze-button">Analyze</button>
     </div>
 </div>
 
+<!-- Modal for Similar Articles -->
 <div id="similarArticlesModal">
     <div class="modal-content">
-        <h2 class="title is-4 mb-4">Similar Articles</h2>
-        <div id="similarArticlesList"></div>
+        <h2 class="title is-4">Similar Articles</h2>
+        <div id="similarArticlesList">
+            <!-- Similar articles will be dynamically inserted here -->
+        </div>
     </div>
 </div>
 
+<!-- External JavaScript File -->
 <script src="../scripts/analyze-script.js"></script>
 </body>
 </html>
