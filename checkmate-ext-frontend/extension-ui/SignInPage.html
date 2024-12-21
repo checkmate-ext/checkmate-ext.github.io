@@ -1,156 +1,374 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
     <title>Sign In - CheckMate</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+    <!-- Bulma CSS Framework -->
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"
+    />
+    <!-- Font Awesome for Icons -->
+    <link
+            rel="stylesheet"
+            href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+    />
     <style>
-        html, body {
-            height: 100%;
-            margin: 0;
+        :root {
+            --primary-color: #3cb371;
+            --secondary-color: #2e8b57;
+            --bg-light: #f4f4f4;
+            --text-dark: #333;
         }
-
-        body {
+        * {
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+        /* Force 380×600 with no scrolling */
+        html, body {
+            width: 380px;
+            height: 600px;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent scrolling */
+            background-color: var(--bg-light);
+            font-family: "Inter", Arial, sans-serif;
+            /* Center card horizontally + vertically */
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #f5f5f5;
         }
-
+        /* The card itself matches the entire 380×600 area */
         .card {
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            width: 350px;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
         }
-
+        /* Make the card-content take up all vertical space, using flex to position elements */
         .card-content {
-            padding: 1.5rem; /* Reduced padding */
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 15px; /* Reduced padding to gain vertical space */
+        }
+        /* Top section (header + logo + title) in a small column */
+        .top-section {
+            flex: 0 0 auto;
+            margin-bottom: 10px; /* Slightly reduced */
+        }
+        /* Form + Social area grows/shrinks to fill leftover space */
+        .content-section {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Push sign-in form up and social down */
+        }
+        /* Footer or leftover spacing if needed */
+        .bottom-section {
+            flex: 0 0 auto;
         }
 
+        /* Header Icons */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .header-icons {
+            display: flex;
+            gap: 15px;
+        }
+        .header-icon {
+            cursor: pointer;
+            opacity: 0.7;
+            width: 24px; /* Ensure consistent icon size */
+            height: 24px;
+        }
+        .header-icon:hover {
+            opacity: 1;
+            transform: scale(1.1) rotate(5deg);
+        }
+        /* Logo */
         .logo {
-            margin-bottom: 1rem;
-            text-align: center;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px; /* Slightly reduced */
         }
-
         .logo img {
-            max-height: 60px; /* Reduced size to save space */
+            width: 80px; /* Slightly smaller to save space vertically */
         }
-
+        /* Title */
         .title.is-4 {
-            margin-bottom: 1.5rem;
+            color: var(--text-dark);
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.25rem;
+            margin-bottom: 0; /* Remove bottom margin */
         }
-
+        /* Fields */
+        .field {
+            margin-bottom: 0.75rem; /* Reduced spacing between fields */
+        }
+        .label {
+            color: var(--text-dark);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .input {
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            background-color: #f9f9f9;
+            height: auto; /* Remove fixed height */
+            font-size: 1rem; /* Increased font size */
+            padding: 0.6rem 0.75rem 0.6rem 2.5rem; /* Increased top/bottom padding and left padding for icon */
+        }
+        .input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(60, 179, 113, 0.2);
+        }
+        .control.has-icons-left .icon.is-left {
+            left: 0.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem; /* Increased icon size */
+        }
+        /* Forgot Password */
+        .forgot-password {
+            text-align: right;
+            margin: 4px 0;
+        }
+        .forgot-password a {
+            color: var(--primary-color);
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+        .forgot-password a:hover {
+            color: var(--secondary-color);
+        }
+        /* Checkbox */
+        .checkbox {
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            cursor: pointer;
+            margin-top: 10px; /* Added spacing above checkbox */
+        }
+        /* Sign-in button (larger) */
+        .button {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem; /* Increased font size */
+            padding: 0.75rem 1rem; /* Added vertical and horizontal padding */
+            position: relative;
+            overflow: hidden;
+            height: auto; /* Remove fixed height */
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(60,179,113,0.3);
+        }
+        .button::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: rotate(45deg);
+            transition: 0.5s;
+            opacity: 0;
+        }
+        .button:hover::before {
+            opacity: 1;
+            transform: translate(25%, 25%) rotate(45deg);
+        }
+        /* Divider */
         .divider {
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin: 1rem 0;
+            margin: 15px 0;
         }
         .divider::before,
         .divider::after {
             content: "";
             flex: 1;
             height: 1px;
-            background-color: #ddd;
-            margin: 0 0.5rem;
+            background: linear-gradient(to right, transparent, #e0e0e0, transparent);
         }
         .divider span {
-            font-size: 0.875rem;
-            color: #aaa;
+            padding: 0 10px;
+            color: #718096;
+            font-size: 0.8rem;
         }
-
-        .forgot-password {
-            margin-top: 0.5rem;
-            text-align: right;
-            font-size: 0.9rem;
+        /* Social Buttons Container */
+        .social-buttons-container {
+            display: flex;
+            gap: 10px; /* Space between buttons */
+            margin-top: 10px; /* Space above the container */
         }
-        .forgot-password a {
-            color: #3273dc;
-            text-decoration: none;
-        }
-
-        .remember-me {
+        /* Social Buttons */
+        .social-button {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-top: 0.5rem;
+            justify-content: center;
+            gap: 12px; /* Increased gap for better spacing */
+            padding: 0.75rem 1rem; /* Added padding */
+            font-size: 1rem; /* Increased font size */
+            flex: 1; /* Make buttons take equal space */
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            height: 100%; /* Ensure buttons have equal height */
         }
-
-        .field {
-            margin-bottom: 1rem;
+        .social-button .icon {
+            width: 24px; /* Increased icon size */
+            height: 24px;
         }
-
-        .buttons .button {
-            margin-bottom: 0.5rem;
-        }
-
-        .button.is-dark {
-            background-color: #222;
+        .social-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: var(--primary-color);
         }
     </style>
 </head>
 <body>
 <div class="card">
     <div class="card-content">
-        <div class="logo">
-            <img src="../images/icon128.png" alt="CheckMate Logo">
+        <!-- Top Section -->
+        <div class="top-section">
+            <!-- Header (Menu & Profile icons) -->
+            <div class="header">
+                <div class="header-icons">
+                    <img
+                            src="../images/menu-bar-icon.png"
+                            alt="Menu"
+                            width="24"
+                            class="header-icon"
+                            aria-label="Open menu"
+                            role="button"
+                            tabindex="0"
+                    />
+                </div>
+                <div class="header-icons">
+                    <img
+                            src="../images/user-profile-icon.png"
+                            alt="Profile"
+                            width="24"
+                            class="header-icon"
+                            aria-label="User profile"
+                            role="button"
+                            tabindex="0"
+                    />
+                </div>
+            </div>
+            <!-- Logo -->
+            <div class="logo">
+                <img
+                        src="../images/icon128.png"
+                        alt="CheckMate Logo"
+                />
+            </div>
+            <!-- Title -->
+            <h1 class="title is-4">Welcome Back</h1>
         </div>
-        <h1 class="title is-4 has-text-centered">Sign In</h1>
-        <form>
-            <div class="field">
-                <label class="label">E-mail</label>
-                <div class="control has-icons-left">
-                    <input class="input" type="email" placeholder="Enter your email" required>
-                    <span class="icon is-small is-left">
-                            <i class="fas fa-envelope"></i>
-                        </span>
+
+        <!-- Middle Section (Form + Social) -->
+        <div class="content-section">
+            <!-- Sign In Form -->
+            <form>
+                <div class="field">
+                    <label class="label">Email Address</label>
+                    <div class="control has-icons-left">
+                        <input
+                                class="input"
+                                type="email"
+                                placeholder="Enter your email"
+                                required
+                        />
+                        <span class="icon is-small is-left">
+                <i class="fas fa-envelope"></i>
+              </span>
+                    </div>
                 </div>
-            </div>
-            <div class="field">
-                <label class="label">Password</label>
-                <div class="control has-icons-left">
-                    <input class="input" type="password" placeholder="Enter your password" required>
-                    <span class="icon is-small is-left">
-                            <i class="fas fa-lock"></i>
-                        </span>
+
+                <div class="field">
+                    <label class="label">Password</label>
+                    <div class="control has-icons-left">
+                        <input
+                                class="input"
+                                type="password"
+                                placeholder="Enter your password"
+                                required
+                        />
+                        <span class="icon is-small is-left">
+                <i class="fas fa-lock"></i>
+              </span>
+                    </div>
                 </div>
-            </div>
-            <div class="forgot-password">
-                <a href="#" id="forgotPasswordLink">Forgot password?</a>
-            </div>
-            <div class="remember-me">
+
+                <div class="forgot-password">
+                    <a href="#" id="forgotPasswordLink">Forgot password?</a>
+                </div>
+
                 <label class="checkbox">
-                    <input type="checkbox">
-                    Remember Me
+                    <input type="checkbox" />
+                    Remember me for 30 days
                 </label>
+
+                <div class="field" style="margin-top: 0.75rem;">
+                    <button
+                            type="submit"
+                            id="signInToMain"
+                            class="button is-fullwidth"
+                    >
+                        Sign In
+                    </button>
+                </div>
+            </form>
+
+            <!-- Divider -->
+            <div class="divider">
+                <span>or continue with</span>
             </div>
-            <div class="field" style="margin-top: 1rem;">
-                <button type="submit" id="signInToMain" class="button is-dark is-fullwidth">Sign In</button>
+
+            <!-- Social Buttons Container -->
+            <div class="social-buttons-container">
+                <button class="social-button">
+                    <img
+                            src="../images/Google.png"
+                            alt="Google"
+                            class="icon"
+                    />
+                    <span>Google</span>
+                </button>
+                <button class="social-button">
+                    <img
+                            src="../images/Facebook.png"
+                            alt="Facebook"
+                            class="icon"
+                    />
+                    <span>Facebook</span>
+                </button>
             </div>
-        </form>
-        <div class="divider">
-            <span>Or</span>
         </div>
-        <div class="buttons">
-            <button class="button is-light is-fullwidth">
-                    <span class="icon">
-                        <img src="../images/Google.png" alt="Google" style="height:20px;">
-                    </span>
-                <span>Sign in with Google</span>
-            </button>
-            <button class="button is-light is-fullwidth">
-                    <span class="icon">
-                        <img src="../images/Facebook.png" alt="Facebook" style="height:20px;">
-                    </span>
-                <span>Sign in with Facebook</span>
-            </button>
-        </div>
+
+        <!-- Bottom Section (optional; left empty) -->
+        <div class="bottom-section"></div>
     </div>
 </div>
 
+<!-- External JavaScript File -->
 <script src="../navigation/navigate.js"></script>
 </body>
 </html>
