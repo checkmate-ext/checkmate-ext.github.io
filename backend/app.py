@@ -29,17 +29,22 @@ def scrap_and_search():
         if not url:
             return jsonify({'error': 'URL parameter is required'}), 400
 
-        print(url)
+        print(f"Processing URL: {url}")
+
         # Initialize GoogleSearch and perform scraping & custom search
         google_search = GoogleSearch(G_API_KEY, CX_ID, VISION_API_KEY, url)
         similar_articles = google_search.get_similar()
-        article = google_search.article  # bunu sonra değiştirelim
+        article = google_search.article  # Original article data
+        images_data = google_search.get_images_data()  # Analyze images for web detection
         reliability_score = random.randint(30, 95)
+
         # Return the results as JSON
         return jsonify({
             'reliability_score': reliability_score,
             'message': f"Results for {url}",
-            'similar_articles': similar_articles
+            'article': article,
+            'similar_articles': similar_articles,
+            'images_data': images_data
         })
 
     except Exception as e:

@@ -221,6 +221,68 @@
         .report-mistake-button img:hover {
             opacity: 1;
         }
+        /* Details Section */
+        .details-section {
+            margin: 20px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 10px;
+            background-color: #fff;
+            max-height: 200px; /* Adjust based on available space */
+            overflow-y: auto; /* Scroll when content exceeds height */
+        }
+
+        .details-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        #detailsList h3 {
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 15px;
+            color: var(--primary-color);
+        }
+
+        #detailsList ul {
+            margin-left: 20px;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        #detailsList ul li {
+            font-size: 13px;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+
+        #detailsList ul li a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            word-break: break-word;
+            font-size: 13px;
+        }
+
+        #detailsList ul li a:hover {
+            text-decoration: underline;
+        }
+
+        .details-section::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .details-section::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .details-section::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
+        }
+
     </style>
 </head>
 <body>
@@ -246,6 +308,11 @@
     <div class="articles-section">
         <div class="articles-title">Similar Articles</div>
         <div id="similarArticlesList"></div>
+    </div>
+
+    <div class="details-section">
+        <div class="details-title">Image Analysis Details</div>
+        <div id="detailsList"></div>
     </div>
 
     <button class="report-mistake-button" id="reportMistakeBtn">
