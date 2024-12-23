@@ -14,3 +14,4 @@ python-dotenv~=1.0.1
 requests~=2.32.3
 bs4~=0.0.2
 torch_geometric
+shap
