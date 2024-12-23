@@ -197,6 +197,21 @@
             padding: 10px;
             display: flex;
             flex-direction: column;
+            /* Add max-height and scroll */
+            max-height: 200px;       /* You can adjust this height as needed */
+            overflow-y: auto;
+        }
+
+        /* Custom scrollbar styling to match moredetails page */
+        .details-box::-webkit-scrollbar {
+            width: 6px;
+        }
+        .details-box::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+        .details-box::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
         }
 
         .details-box h2 {
@@ -313,8 +328,8 @@
             <div class="details-box">
                 <h2>Details</h2>
                 <ul id="detailsList"></ul>
-                <button class="more-details-button" id="moreDetailsBtn">More Details</button>
             </div>
+            <button class="more-details-button" id="moreDetailsBtn">More Details</button>
         </div>
     </div>
 

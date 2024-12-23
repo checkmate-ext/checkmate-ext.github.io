@@ -38,6 +38,7 @@ def scrap_and_search():
         images_data = google_search.get_images_data()  # Analyze images for web detection
         reliability_score = random.randint(30, 95)
 
+        print(similar_articles)
         # Return the results as JSON
         return jsonify({
             'reliability_score': reliability_score,
