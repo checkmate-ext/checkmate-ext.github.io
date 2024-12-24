@@ -1,6 +1,8 @@
 import torch
-from transformers import BertTokenizer, BertModel
 from torch_geometric.nn import GATConv, SAGEConv, global_max_pool
+from transformers import BertTokenizer, BertModel
+import torch.nn.functional as F
+import shap
 
 # Define device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -90,6 +92,7 @@ def preprocess_article(article):
     return embeddings
 
 
+
 # Politifact Inference
 def politifact_inference(article, model):
     embeddings = preprocess_article(article)  # [batch_size, 768]
@@ -98,8 +101,11 @@ def politifact_inference(article, model):
 
     with torch.no_grad():
         output = model(embeddings, edge_index=edge_index, batch=batch)  # [batch_size, 2]
+        probabilities = F.softmax(output, dim=1)  # Apply softmax to get probabilities
         prediction = output.argmax(dim=-1).item()
-    return "Real" if prediction == 1 else "Fake"
+
+    label = "Real" if prediction == 1 else "Fake"
+    return label, probabilities.cpu().numpy()[0]  # Return label and probabilities
 
 
 # GossipCop Inference
@@ -110,27 +116,38 @@ def gossipcop_inference(article, model):
 
     with torch.no_grad():
         output = model(embeddings, edge_index=edge_index, batch=batch)  # [batch_size, 2]
+        probabilities = F.softmax(output, dim=1)  # Apply softmax to get probabilities
         prediction = output.argmax(dim=-1).item()
-    return "Real" if prediction == 1 else "Fake"
+
+    label = "Real" if prediction == 1 else "Fake"
+    return label, probabilities.cpu().numpy()[0]  # Return label and probabilities
 
 
 # Combined Inference
+# Combined Inference
 def combined_inference(article):
-    politifact_result = politifact_inference(article, politifact_model)
-    gossipcop_result = gossipcop_inference(article, gossipcop_model)
+    politifact_label, politifact_probs = politifact_inference(article, politifact_model)
+    gossipcop_label, gossipcop_probs = gossipcop_inference(article, gossipcop_model)
 
     # Majority Voting with Tie-Breaker
-    results = [politifact_result, gossipcop_result]
+    results = [politifact_label, gossipcop_label]
     if results[0] == results[1]:
         final_result = results[0]
     else:
         final_result = "Fake"  # Example tie-breaker
 
     return {
-        "politifact": politifact_result,
-        "gossipcop": gossipcop_result,
+        "politifact": {
+            "label": politifact_label,
+            "probabilities": politifact_probs.tolist()
+        },
+        "gossipcop": {
+            "label": gossipcop_label,
+            "probabilities": gossipcop_probs.tolist()
+        },
         "final_prediction": final_result,
     }
+
 
 
 # Main Test
@@ -139,6 +156,10 @@ if __name__ == "__main__":
     predictions = combined_inference(article)
 
     print("\n--- Prediction Results ---")
-    print(f"Politifact Model Prediction: {predictions['politifact']}")
-    print(f"GossipCop Model Prediction: {predictions['gossipcop']}")
+    print(f"Politifact Model Prediction: {predictions['politifact']['label']}")
+    print(f"Politifact Model Probabilities: {predictions['politifact']['probabilities']}")
+    print(f"GossipCop Model Prediction: {predictions['gossipcop']['label']}")
+    print(f"GossipCop Model Probabilities: {predictions['gossipcop']['probabilities']}")
     print(f"Final Combined Prediction: {predictions['final_prediction']}")
+
+    
