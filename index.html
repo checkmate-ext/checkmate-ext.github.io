@@ -6,6 +6,7 @@
     <title>CheckMate - Fake News Detection Extension</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Previous styles remain unchanged */
         :root {
             --bg-color: #0a0a0a;
             --surface-color: #1a1a1a;
@@ -228,6 +229,57 @@
             transform: translateY(-3px);
             box-shadow: 0 10px 20px rgba(74, 0, 224, 0.3);
         }
+
+        /* New Team Section Styles */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        .team-member {
+            background-color: var(--surface-color);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .team-member:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+        .team-member::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            z-index: -1;
+            filter: blur(15px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .team-member:hover::before {
+            opacity: 0.3;
+        }
+        .team-member h3 {
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        .team-member-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 60px;
+            margin: 0 auto 20px;
+            background-color: var(--primary-color);
+            opacity: 0.8;
+        }
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -259,6 +311,9 @@
             .feature {
                 padding: 30px;
             }
+            .team-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
         }
     </style>
 </head>
@@ -269,6 +324,7 @@
         <ul class="nav-links">
             <li><a href="#about">About</a></li>
             <li><a href="#features">Features</a></li>
+            <li><a href="#team">Team</a></li>
             <li><a href="#reports">Reports</a></li>
         </ul>
     </nav>
@@ -306,13 +362,37 @@
         </div>
     </section>
 
+    <section id="team" class="container">
+        <h2>Our Team</h2>
+        <div class="team-grid">
+            <div class="team-member">
+                <div class="team-member-image"></div>
+                <h3>Alp Batu Aksan</h3>
+            </div>
+            <div class="team-member">
+                <div class="team-member-image"></div>
+                <h3>Pelin Öner</h3>
+            </div>
+            <div class="team-member">
+                <div class="team-member-image"></div>
+                <h3>İpek Sönmez</h3>
+            </div>
+            <div class="team-member">
+                <div class="team-member-image"></div>
+                <h3>Efe Tuna Can</h3>
+            </div>
+            <div class="team-member">
+                <div class="team-member-image"></div>
+                <h3>Ayberk Berat Eroğlu</h3>
+            </div>
+        </div>
+    </section>
+
     <section id="reports" class="container">
         <h2>Reports</h2>
         <div class="download-section">
-            <a href="index.html" class="download-link">Report 1</a>
-            <a href="index.html" class="download-link">Report 2</a>
-            <a href="index.html" class="download-link">Report 3</a>
-            <a href="index.html" class="download-link">Report 4</a>
+            <a href="./reports/report1.pdf" class="download-link">Project Specification1</a>
+            <a href="./reports/report2.pdf" class="download-link">Analysis and Requirements</a>
         </div>
     </section>
 </main>
