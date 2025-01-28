@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmButton = document.getElementById('confirmButton');
     const signInToMain = document.getElementById('signInToMain');
     const moreDetails = document.getElementById('moreDetailsBtn');
+    const menuButton = document.getElementById('menuBtn');
 
 
     if (signInButton) {
@@ -63,6 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (moreDetails) {
         moreDetails.addEventListener('click', () => navigateTo('MoreDetails.html'));
+    }
+
+    if (menuButton) {
+        menuButton.addEventListener('click', () => navigateTo('MainMenuPage.html'));
     }
 
 });
