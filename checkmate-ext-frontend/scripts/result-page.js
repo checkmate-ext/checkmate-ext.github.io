@@ -3,6 +3,7 @@
 function navigateTo(page) {
     document.body.classList.add('fade-out');
     setTimeout(() => {
+        localStorage.setItem('lastPage', page);
         window.location.href = page;
     }, 500); // Match the duration of the CSS transition
 }
