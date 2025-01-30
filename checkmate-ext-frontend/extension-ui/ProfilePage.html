@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Checkmate</title>
+    <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3cb371;
+            --secondary-color: #2e8b57;
+            --bg-light: #f4f4f4;
+            --text-dark: #333;
+            --border-radius: 8px;
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Inter', Arial, sans-serif;
+        }
+
+        .container {
+            width: 380px;
+            height: 600px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Section */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            margin-bottom: 15px;
+        }
+
+        .header-icon {
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+            width: 24px;
+            height: 24px;
+        }
+
+        .header-icon:hover {
+            opacity: 1;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        /* Main Content Wrapper */
+        .content-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-bottom: 60px; /* Space for bottom icons */
+        }
+
+        /* Scrollbar styling */
+        .content-wrapper::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .content-wrapper::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .content-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
+        }
+
+        /* Profile Section */
+        .profile-section {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(60,179,113,0.1), rgba(46,139,87,0.1));
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .profile-section:hover {
+            transform: translateY(-2px);
+        }
+
+        .profile-image {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            border: 3px solid var(--primary-color);
+            padding: 2px;
+            transition: transform 0.3s ease;
+        }
+
+        .profile-image:hover {
+            transform: scale(1.1);
+        }
+
+        .profile-info {
+            margin-bottom: 15px;
+            color: var(--text-dark);
+        }
+
+        .profile-name {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .profile-email {
+            font-size: 0.95em;
+            color: #666;
+        }
+
+        .btn-edit {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 8px 20px;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-edit:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(60,179,113,0.3);
+        }
+
+        .btn-edit::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s;
+            opacity: 0;
+        }
+
+        .btn-edit:hover::before {
+            opacity: 1;
+            transform: translate(25%, 25%) rotate(45deg);
+        }
+
+        /* Plan Box */
+        .plan-box {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .plan-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .plan-info {
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 1em;
+        }
+
+        .btn-upgrade {
+            background: #ffcc00;
+            color: var(--text-dark);
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 8px 15px;
+            font-weight: 600;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-upgrade:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,204,0,0.3);
+        }
+
+        /* Past Searches */
+        .past-searches {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            font-size: 1em;
+        }
+
+        .past-searches:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .past-searches img {
+            width: 20px;
+            opacity: 0.7;
+        }
+
+        /* Bottom Icons */
+        .bottom-icons {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .bottom-icons img {
+            width: 24px;
+            opacity: 0.7;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .bottom-icons img:hover {
+            opacity: 1;
+            transform: scale(1.1) rotate(5deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="../images/menu-bar-icon.png" alt="Menu" class="header-icon" id="menuBtn">
+        </div>
+
+        <div class="content-wrapper">
+            <div class="profile-section">
+                <img src="../images/user-profile-icon.png" alt="User Profile" class="profile-image">
+                <div class="profile-info">
+                    <div class="profile-name">Name Surname</div>
+                    <div class="profile-email">namesurname@email.com</div>
+                </div>
+                <button class="btn-edit">Edit Profile</button>
+            </div>
+
+            <div class="plan-box">
+                <span class="plan-info">Current Plan: Free</span>
+                <button class="btn-upgrade">
+                    ⭐ Upgrade
+                </button>
+            </div>
+
+            <div class="past-searches">
+                <img src="../images/clock-icon.png" alt="Clock">
+                <span>View Past Searches</span>
+            </div>
+        </div>
+
+        <div class="bottom-icons">
+            <img src="../images/settings-icon.png" alt="Settings">
+            <img src="../images/exclamation-triangle-icon.png" alt="Warning">
+        </div>
+    </div>
+
+    <script src="../navigation/navigate.js"></script>
+</body>
+</html>

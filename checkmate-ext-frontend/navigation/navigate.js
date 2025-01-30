@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const signInToMain = document.getElementById('signInToMain');
     const moreDetails = document.getElementById('moreDetailsBtn');
     const menuButton = document.getElementById('menuBtn');
-
+    const profileButton = document.getElementById('profileBtn');
 
     if (signInButton) {
         signInButton.addEventListener('click', () => navigateTo('SignInPage.html'));
@@ -70,4 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
         menuButton.addEventListener('click', () => navigateTo('MainMenuPage.html'));
     }
 
+    if (profileButton) {
+        profileButton.addEventListener('click', () => navigateTo('ProfilePage.html'));
+    }
 });
