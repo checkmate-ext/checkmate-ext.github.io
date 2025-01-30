@@ -1,26 +1,112 @@
 from datetime import datetime
-
 import requests
+import concurrent.futures
+from bs4 import BeautifulSoup
 from ArticleExtractor import ArticleExtractor
 
+def _extract_with_requests(url, min_text_length=300):
+    """
+    Attempt to fetch + parse article using requests + BeautifulSoup.
+    Return a dict similar to what ArticleExtractor returns:
+        {
+            'title': str,
+            'content': str,
+            'date': None,
+            'url': url,
+            'images': []
+        }
+    If the result seems too small or fails, return None to signal fallback.
+    """
+    try:
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "html.parser")
+
+        title_elem = soup.find("title")
+        title = title_elem.get_text(strip=True) if title_elem else "No Title"
+        
+        # Extract text content quickly
+        text_content = soup.get_text(separator="\n").strip()
+        
+        # If the text is too short, treat it as "not enough data"
+        if len(text_content) < min_text_length:
+            return None
+        
+        return {
+            "title": title,
+            "content": text_content,
+            "date": None,     # We could do more date extraction here if desired
+            "url": url,
+            "images": []      # For simplicity, ignoring image extraction
+        }
+    except Exception as e:
+        print(f"Lightweight fetch failed for {url}: {e}")
+        return None
+
+def _extract_article_hybrid(url):
+    """
+    Hybrid approach:
+    1) Try requests + BeautifulSoup first.
+    2) If that yields insufficient content, fallback to ArticleExtractor 
+       (which uses undetectable Chrome).
+    """
+    # 1) Try the lightweight approach
+    article_data = _extract_with_requests(url)
+    if article_data is not None:
+        return article_data
+    
+    # 2) Fallback to the heavier approach
+    #    (launches undetectable Chrome via ArticleExtractor)
+    try:
+        scrapper = ArticleExtractor()
+        data = scrapper.extract_article(url)
+        # Clean up
+        if scrapper.driver:
+            scrapper.driver.quit()
+        return data
+    except Exception as e:
+        print(f"Browser-based extraction failed for {url}: {e}")
+        return None
 
 class GoogleSearch:
-    def __init__(self, api_key: str, cx: str, vision_api_key, article_url: str):
+    def __init__(self, api_key: str, cx: str, vision_api_key: str, article_url: str):
         self.api_key = api_key
         self.cx = cx
         self.vision_api_key = vision_api_key
-        scrapper = ArticleExtractor()
-        self.article = scrapper.extract_article(article_url)
-        print(self.article)
-        self.extracted_articles = self.__get_similar_articles(scrapper)
+        
+        self.article = _extract_article_hybrid(article_url)
+        print("Main Article:", self.article)
+        
+        # Retrieve similar articles (in parallel)
+        self.extracted_articles = self.__get_similar_articles()
+        
+        # Vision API endpoint
         self.vision_api_url = f"https://vision.googleapis.com/v1/images:annotate?key={self.vision_api_key}"
 
-    def __get_similar_articles(self, scrapper: ArticleExtractor):
-        similar_articles = self.__search(self.article['title'])
+    def __get_similar_articles(self):
+        # 1) Search for similar articles by the main article title
+        similar_articles = self.__search(self.article.get('title', ''))
+        
+        # 2) Collect the links
+        urls = [item['link'] for item in similar_articles if 'link' in item]
+        
+        # 3) Parallel extraction
         extracted_articles = []
-        for i, article in enumerate(similar_articles, start=1):
-            extracted_article = scrapper.extract_article(article['link'])
-            extracted_articles.append(extracted_article)
+        
+        with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+            future_to_url = {
+                executor.submit(_extract_article_hybrid, url): url
+                for url in urls
+            }
+            for future in concurrent.futures.as_completed(future_to_url):
+                url = future_to_url[future]
+                try:
+                    data = future.result()
+                    if data:
+                        extracted_articles.append(data)
+                except Exception as e:
+                    print(f"Error extracting {url}: {e}")
+        
         return extracted_articles
 
     def __search(self, query: str, num_results: int = 10):
@@ -45,12 +131,14 @@ class GoogleSearch:
 
     def get_images_data(self):
         images_data = []
-        for image in self.article['images']:
-            image_url = image['src']
-            images_data.append(self.__analyze_web_detection(image_url))
+        # If the main article lacks an 'images' field, handle gracefully
+        for image in self.article.get('images', []):
+            image_url = image.get('src')
+            if image_url:
+                images_data.append(self.__analyze_web_detection(image_url))
         return images_data
 
-    def __analyze_web_detection(self, image_url):
+    def __analyze_web_detection(self, image_url: str):
         """Fetch web detection results from Google Cloud Vision API."""
         payload = {
             "requests": [
