@@ -33,8 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('Data stored:', data);
 
                     // Redirect to ResultPage.html
-                    localStorage.setItem('lastPage', 'ResultPage.html');
-                    window.location.href = 'ResultPage.html';
+                    navigateTo('ResultPage.html');
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
@@ -64,8 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('Data stored:', data);
 
                     // Redirect to ResultPage.html
-                    localStorage.setItem('lastPage', 'ResultPage.html');
-                    window.location.href = 'ResultPage.html';
+                    navigateTo('ResultPage.html');
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
