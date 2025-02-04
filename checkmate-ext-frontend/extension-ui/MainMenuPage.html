@@ -276,6 +276,31 @@
             color: var(--primary-color);
         }
 
+        .bottom-left-icon, .bottom-right-icon {
+            position: absolute;
+            bottom: 10px;
+        }
+
+        .bottom-left-icon {
+            left: 10px;
+        }
+
+        .bottom-right-icon {
+            right: 10px;
+        }
+        
+        .bottom-icon-img {
+            width: 24px;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .bottom-icon-img:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+
         /* Responsive Adjustments (Optional) */
         @media (max-width: 400px) {
             body {
@@ -335,18 +360,18 @@
 
         <!-- Analyze Button -->
         <button class="button analyze-button" id="analyze-button">Analyze</button>
+
+        
+    </div>
+
+    <div class="bottom-left-icon">
+        <img class="bottom-icon-img" src="../images/settings-icon.png" alt="Settings">
+    </div>
+    <div class="bottom-right-icon">
+        <img class="bottom-icon-img" src="../images/exclamation-triangle-icon.png" alt="Warning">
     </div>
 </div>
 
-<!-- Modal for Similar Articles -->
-<div id="similarArticlesModal">
-    <div class="modal-content">
-        <h2 class="title is-4">Similar Articles</h2>
-        <div id="similarArticlesList">
-            <!-- Similar articles will be dynamically inserted here -->
-        </div>
-    </div>
-</div>
 
 <!-- External JavaScript File -->
 <script src="../navigation/navigate.js"></script>
