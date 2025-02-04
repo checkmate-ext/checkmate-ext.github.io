@@ -88,6 +88,7 @@
             flex-direction: column;
             align-items: center;
             flex: 1;
+            gap: 25px;
         }
 
         /* Large Analyze Button */
@@ -200,16 +201,74 @@
             opacity: 1;
             transform: translate(25%, 25%) rotate(45deg);
         }
+
         .btn-large:active, .analyze-button:active {
-         transform: translateY(1px);
-         background: #267d50;
-        box-shadow: 0 5px 15px rgba(60,179,113,0.2);
-    }
+            transform: translateY(1px);
+            background: #267d50;
+            box-shadow: 0 5px 15px rgba(60,179,113,0.2);
+        }
 
         .analyze-button:hover {
             background: var(--secondary-color);
             box-shadow: 0 5px 15px rgba(60,179,113,0.3);
             color: white;
+        }
+
+        /* Dashboard Preview Section */
+        .dashboard-preview {
+            margin-top: auto;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .dashboard-preview:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .preview-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .preview-arrow {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+
+        .mini-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .mini-stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .mini-stat-value {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .mini-stat-title {
+            font-size: 0.75rem;
+            color: #666;
         }
 
         /* Modal Styling */
@@ -276,32 +335,7 @@
             color: var(--primary-color);
         }
 
-        .bottom-left-icon, .bottom-right-icon {
-            position: absolute;
-            bottom: 10px;
-        }
-
-        .bottom-left-icon {
-            left: 10px;
-        }
-
-        .bottom-right-icon {
-            right: 10px;
-        }
-        
-        .bottom-icon-img {
-            width: 24px;
-            opacity: 0.7;
-            transition: all 0.3s ease;
-        }
-
-        .bottom-icon-img:hover {
-            opacity: 1;
-            transform: scale(1.1);
-        }
-
-
-        /* Responsive Adjustments (Optional) */
+        /* Responsive Adjustments */
         @media (max-width: 400px) {
             body {
                 width: 100vw;
@@ -360,18 +394,36 @@
 
         <!-- Analyze Button -->
         <button class="button analyze-button" id="analyze-button">Analyze</button>
-
-        
     </div>
 
-    <div class="bottom-left-icon">
-        <img class="bottom-icon-img" src="../images/settings-icon.png" alt="Settings">
-    </div>
-    <div class="bottom-right-icon">
-        <img class="bottom-icon-img" src="../images/exclamation-triangle-icon.png" alt="Warning">
+    <!-- Dashboard Preview -->
+    <div class="dashboard-preview" id="dashboardPreview">
+        <div class="preview-header">
+            <div class="preview-title">Your Dashboard</div>
+            <div class="preview-arrow">→</div>
+        </div>
+        <div class="mini-stats-grid">
+            <div class="mini-stat-card">
+                <div class="mini-stat-value">70%</div>
+                <div class="mini-stat-title">Daily Usage</div>
+            </div>
+            <div class="mini-stat-card">
+                <div class="mini-stat-value">95%</div>
+                <div class="mini-stat-title">Accuracy</div>
+            </div>
+        </div>
     </div>
 </div>
 
+<!-- Modal for Similar Articles -->
+<div id="similarArticlesModal">
+    <div class="modal-content">
+        <h2 class="title is-4">Similar Articles</h2>
+        <div id="similarArticlesList">
+            <!-- Similar articles will be dynamically inserted here -->
+        </div>
+    </div>
+</div>
 
 <!-- External JavaScript File -->
 <script src="../navigation/navigate.js"></script>
