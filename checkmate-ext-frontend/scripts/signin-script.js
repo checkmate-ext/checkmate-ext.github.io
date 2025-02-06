@@ -12,7 +12,7 @@ document.getElementById('signInForm').addEventListener('submit', async (event) =
 
         if (response.ok) {
             const data = await response.json();
-            alert('Sign-in successful with user ID ' + data.user_id);
+            alert('token: ' + data.token);
             console.log('Sign-in successful:', data);
             // Optionally store token in localStorage and navigate
             // localStorage.setItem('authToken', data.token);
