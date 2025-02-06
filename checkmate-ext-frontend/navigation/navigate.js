@@ -9,7 +9,7 @@ function navigateTo(page) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const lastPage = localStorage.getItem('lastPage');
+    const lastPage = 'SignUpPage.html'; //localStorage.getItem('lastPage');
     const currentPage = window.location.pathname.split('/').pop();
     console.log('Last page: ' + lastPage + ', Current page: ' + currentPage);
     
@@ -35,9 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (signInButton) {
         signInButton.addEventListener('click', () => navigateTo('SignInPage.html'));
     }
-    if (signUpButton) {
+    /* if (signUpButton) {
         signUpButton.addEventListener('click', () => navigateTo('SignUpPage.html'));
-    }
+    } */
     if (googleSignUpButton) {
         googleSignUpButton.addEventListener('click', () => navigateTo('GoogleSignUpPage.html'));
     }
