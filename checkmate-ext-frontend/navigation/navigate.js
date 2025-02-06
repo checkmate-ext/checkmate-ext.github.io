@@ -9,7 +9,7 @@ function navigateTo(page) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const lastPage = 'SignUpPage.html'; //localStorage.getItem('lastPage');
+    const lastPage = 'SignInPage.html'; //localStorage.getItem('lastPage');
     const currentPage = window.location.pathname.split('/').pop();
     console.log('Last page: ' + lastPage + ', Current page: ' + currentPage);
     
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (signInButton) {
         signInButton.addEventListener('click', () => navigateTo('SignInPage.html'));
-    }
+    } 
     /* if (signUpButton) {
         signUpButton.addEventListener('click', () => navigateTo('SignUpPage.html'));
     } */
@@ -57,12 +57,12 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmButton.addEventListener('click', () => navigateTo('UpdatePasswordPage.html'));
     }
 
-    if (signInToMain) {
+    /* if (signInToMain) {
         signInToMain.addEventListener('click', (event) => {
             event.preventDefault();
             navigateTo('MainMenuPage.html');
         });
-    }
+    } */
 
     if (moreDetails) {
         moreDetails.addEventListener('click', () => navigateTo('MoreDetails.html'));
