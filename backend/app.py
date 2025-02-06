@@ -48,110 +48,34 @@ app = create_app()
 
 @app.route('/scrap_and_search', methods=['POST'])
 def scrap_and_search():
-    """
-    Main endpoint for article analysis and similarity search.
-    Accepts a POST request with URL and user_id, returns analysis results.
-    Checks database for existing results before performing new analysis.
-    """
     try:
+        # Extract URL from request JSON
         data = request.json
         url = data.get('url')
-        #user_id = data.get('user_id')
-
         if not url:
-            return jsonify({
-                'error': 'Missing required parameters',
-                'message': 'Both URL and user_id are required'
-            }), 400
+            return jsonify({'error': 'URL parameter is required'}), 400
 
-        #user = User.query.get(user_id)
-        #if not user:
-         #   return jsonify({
-          #      'error': 'User not found',
-           #     'message': 'Invalid user_id provided'
-            #}), 404
+        print(f"Processing URL: {url}")
 
-        from datetime import datetime, timedelta
-        twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
-        recent_searches_count = ArticleSearch.query.filter(
-            #ArticleSearch.user_id == user_id,
-            ArticleSearch.created_at >= twenty_four_hours_ago
-        ).count()
-
-        if recent_searches_count >= 5:
-            return jsonify({
-                'error': 'Daily limit exceeded',
-                'message': 'You have reached the limit of 5 articles per 24 hours',
-                'searches_remaining': 0,
-                'next_available': twenty_four_hours_ago + timedelta(hours=24)
-            }), 429
-
-        # Check if article has been analyzed before
-        existing_search = ArticleSearch.query.filter_by(url=url).first()
-        if existing_search:
-            return jsonify({
-                'message': 'Article already analyzed',
-                'data': existing_search.to_dict()
-            })
-
-
-        print("LALALALLALALALLALAEHLAHLALHALEHLAEHLAEHAE")
-        # Initialize GoogleSearch and perform analysis
-        google_search = GoogleSearch(
-            app.config['G_API_KEY'],
-            app.config['CX_ID'],
-            app.config['VISION_API_KEY'],
-            url
-        )
-
-        # Get search results and article data
-        article = google_search.article
+        # Initialize GoogleSearch and perform scraping & custom search
+        google_search = GoogleSearch(app.config['G_API_KEY'], app.config['CX_ID'],app.config['VISION_API_KEY'], url)
         similar_articles = google_search.get_similar()
+        article = google_search.article  # Original article data
+        images_data = google_search.get_images_data()  # Analyze images for web detection
         reliability_score = random.randint(30, 95)
-        objectivity_score = random.randint(30, 95)
-        credibility_score = random.randint(30, 95)
-        bias_score = random.randint(30, 95)
 
-        # Create new article search record
-        new_search = ArticleSearch(
-            user_id=1,
-            url=url,
-            title=article.get('title', ''),
-            reliability_score=reliability_score,
-            objectivity_score=objectivity_score,
-            credibility_score=credibility_score,
-            bias_score=bias_score
-        )
-        db.session.add(new_search)
-        db.session.flush()  # Get the ID of the new search
-
-        # Store similar articles with similarity scores
-        for similar in similar_articles:
-            similar_article = SimilarArticle(
-                main_article_id=new_search.id,
-                title=similar.get('title', ''),
-                url=similar.get('link', ''),
-                similarity_score=random.uniform(0.1, 1.0)  # Replace with actual similarity calculation
-            )
-            db.session.add(similar_article)
-
-        # Commit all database changes
-        db.session.commit()
-
-        # Return response with analysis results
+        print(similar_articles)
+        # Return the results as JSON
         return jsonify({
+            'reliability_score': reliability_score,
             'message': f"Results for {url}",
-            'data': new_search.to_dict()
+            'article': article,
+            'similar_articles': similar_articles,
+            'images_data': images_data
         })
 
     except Exception as e:
-        # Roll back any database changes if an error occurs
-        db.session.rollback()
-        print(f"Error processing request: {str(e)}")
-        return jsonify({
-            'error': 'Internal server error',
-            'message': str(e)
-        }), 500
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/user/register', methods=['POST'])
 def register_user():
