@@ -2,6 +2,7 @@ document.getElementById('signInForm').addEventListener('submit', async (event) =
     event.preventDefault();
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
+    alert('Signing in with email ' + email + ' and password ' + password);
 
     try {
         const response = await fetch('http://localhost:5000/user/login', {
