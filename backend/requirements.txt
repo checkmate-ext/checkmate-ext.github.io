@@ -1,0 +1,17 @@
+flask~=3.1.0
+flask-cors
+beautifulsoup4~=4.12.3
+undetected-chromedriver
+distutils
+setuptools
+
+python-dotenv~=1.0.1
+requests~=2.32.3
+bs4~=0.0.2
+torch_geometric
+shap
+
+# Database
+SQLAlchemy~=2.0.0
+Flask-SQLAlchemy~=3.1.0
+psycopg2-binary~=2.9.9  # PostgreSQL adapter
