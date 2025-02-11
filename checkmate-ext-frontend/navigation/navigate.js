@@ -27,11 +27,6 @@ function navigateTo(page) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const currentPage = window.location.pathname.split('/').pop();
-    const lastPage = localStorage.getItem('lastPage');
-    if (currentPage !== lastPage) {
-        navigateTo(lastPage);
-    }
 
     const signInButton = document.getElementById('signInButton');
     const signUpButton = document.getElementById('signUpButton');
