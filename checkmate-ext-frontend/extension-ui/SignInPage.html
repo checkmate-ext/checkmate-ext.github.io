@@ -240,6 +240,20 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             border-color: var(--primary-color);
         }
+        .loading-spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
