@@ -16,8 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const result = await authService.login(email, password);
             if (result.success) {
-                // Optionally alert token or log it if needed
-                alert('Signed in successfully! with token: ' + authService.token);
                 // navigate to main menu
                 navigateTo('MainMenuPage.html');
             }
