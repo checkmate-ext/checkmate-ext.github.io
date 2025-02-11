@@ -9,5 +9,5 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
     // Clear the token via AuthService
     authService.logout();
     // Optionally navigate to the sign-in page after logout
-    navigateTo('SignInPage.html');
+    navigateTo('FirstPage.html');
 });
