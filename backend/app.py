@@ -49,9 +49,7 @@ def create_app():
 
 app = create_app()
 
-# -----------------------------
-# JWT Helper & Decorator
-# -----------------------------
+
 def token_required(f):
     """
     Decorator to protect endpoints with JWT authentication.
@@ -83,9 +81,7 @@ def token_required(f):
         return f(current_user, *args, **kwargs)
     return decorated
 
-# -----------------------------
-# Routes
-# -----------------------------
+
 @app.route('/scrap_and_search', methods=['POST'])
 def scrap_and_search():
     try:
@@ -95,6 +91,30 @@ def scrap_and_search():
         if not url:
             return jsonify({'error': 'URL parameter is required'}), 400
 
+        # get the article from the database if it is already analyzed
+        past_article = ArticleSearch.query.filter_by(url=url).first()
+        if past_article:
+            past_similar_articles = SimilarArticle.query.filter_by(main_article_id=past_article.id).all()
+
+            article_data = {
+                'url': past_article.url,
+                'title': past_article.title
+            }
+
+            similar_articles_data = [{
+                'url': article.url,
+                'title': article.title,
+                'similarity_score': article.similarity_score
+            } for article in past_similar_articles]
+
+            return jsonify({
+                'reliability_score': past_article.reliability_score,
+                'message': f"Results for {url}",
+                'article': article_data,
+                'similar_articles': similar_articles_data,
+                'images_data': []
+            })
+
         print(f"Processing URL: {url}")
 
         # Initialize GoogleSearch and perform scraping & custom search
@@ -103,9 +123,40 @@ def scrap_and_search():
         article = google_search.article  # Original article data
         images_data = google_search.get_images_data()  # Analyze images for web detection
         reliability_score = random.randint(30, 95)
+        credibility_score = random.randint(30, 95)
+        objectivity_score = random.randint(30, 95)
+        bias_score = random.randint(30,95)
 
+
+
+        new_search = ArticleSearch(
+            user_id=1,
+            url=article['url'],
+            title=article['title'],
+            reliability_score=reliability_score,
+            credibility_score=credibility_score,
+            objectivity_score=objectivity_score,
+            bias_score=bias_score
+        )
+
+        db.session.add(new_search)
+        db.session.flush()
+
+        similiar_articles_to_insert = [
+            SimilarArticle(
+                main_article_id=new_search.id,
+                title=article['title'],
+                url=article['url'],
+                similarity_score=article['similarity_score']
+            )
+            for article in similar_articles
+        ]
+
+        if similiar_articles_to_insert:
+            db.session.bulk_save_objects(similiar_articles_to_insert)
+
+        db.session.commit()
         print(similar_articles)
-        # Return the results as JSON
         return jsonify({
             'reliability_score': reliability_score,
             'message': f"Results for {url}",
