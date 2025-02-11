@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlAnalyzeButton = document.getElementById('analyze-button');
     const analyzeInput = document.getElementById('analyze-input');
 
-    // Save original button texts so we can restore them on error
     const originalAnalyzeButtonText = analyzeButton.innerHTML;
     const originalUrlAnalyzeButtonText = urlAnalyzeButton.innerHTML;
 
@@ -24,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const urlToAnalyze = analyzeButton.dataset.url;
         if (urlToAnalyze) {
             // Change button text to a loading screen with spinner
-            analyzeButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            analyzeButton.innerHTML = '<div class="loading-spinner"></div>Analyzing...';
 
             // Send the URL to the Python server
             fetch('http://localhost:5000/scrap_and_search', {
@@ -59,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const urlToAnalyze = analyzeInput.value.trim();
         if (urlToAnalyze) {
             // Change button text to a loading screen with spinner
-            urlAnalyzeButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            urlAnalyzeButton.innerHTML = '<div class="loading-spinner"></div>Analyzing...';
 
             // Send the URL to the Python server
             fetch('http://localhost:5000/scrap_and_search', {
