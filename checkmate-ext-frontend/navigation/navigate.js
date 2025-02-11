@@ -34,8 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Redirect based on token
         if (token) {
             navigateTo('MainMenuPage.html');
-        } else {
-            navigateTo('SignInPage.html');
         }
     }
 
