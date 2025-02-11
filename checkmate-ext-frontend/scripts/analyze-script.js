@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // When the Analyze Current Page button is clicked
     analyzeButton.addEventListener('click', () => {
         const urlToAnalyze = analyzeButton.dataset.url;
-        const userId = localStorage.getItem('userId'); // Store this after login
         const token = localStorage.getItem('token');   // Store this after login
 
         if (!token) {
@@ -34,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
             analyzeButton.innerHTML = '<div class="loading-spinner"></div>Analyzing...';
 
             // Send the URL to the Python server
-            fetch(`http://localhost:5000/user/${userId}/scrap_and_search`, {
+            fetch(`http://localhost:5000/user/scrap_and_search`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -66,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // When the Analyze URL button is clicked
     urlAnalyzeButton.addEventListener('click', () => {
         const urlToAnalyze = analyzeInput.value.trim();
-        const userId = localStorage.getItem('userId');
         const token = localStorage.getItem('token');
 
         if (!token) {
@@ -79,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
             urlAnalyzeButton.innerHTML = '<div class="loading-spinner"></div>Analyzing...';
 
             // Send the URL to the Python server
-            fetch(`http://localhost:5000/user/${userId}/scrap_and_search`, {
+            fetch(`http://localhost:5000/user/scrap_and_search`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
