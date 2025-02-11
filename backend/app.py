@@ -19,6 +19,17 @@ def create_app():
     CORS(app)
     load_dotenv()
 
+    # Configure CORS to allow requests from your Chrome extension
+    CORS(app, resources={
+        r"/*": {
+            "origins": [
+                "chrome-extension://jknabnhokhooponmdfanhjonneoeckjm",  # Your extension ID
+                "http://localhost:5000"  # Local development
+            ],
+            "methods": ["GET", "POST", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"]
+        }
+    })
     # Load all required API keys and configurations
     app.config['G_API_KEY'] = os.getenv("G_API_KEY")
     app.config['CX_ID'] = os.getenv("CX_ID")
@@ -84,7 +95,6 @@ def token_required(f):
         return f(current_user, *args, **kwargs)
 
     return decorated
-
 
 @app.route('/scrap_and_search', methods=['POST'])
 @token_required

@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
             analyzeButton.innerHTML = '<div class="loading-spinner"></div>Analyzing...';
 
             // Send the URL to the Python server
-            fetch(`http://localhost:5000/user/scrap_and_search`, {
+            fetch(`http://localhost:5000/scrap_and_search`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
             urlAnalyzeButton.innerHTML = '<div class="loading-spinner"></div>Analyzing...';
 
             // Send the URL to the Python server
-            fetch(`http://localhost:5000/user/scrap_and_search`, {
+            fetch(`http://localhost:5000/scrap_and_search`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
