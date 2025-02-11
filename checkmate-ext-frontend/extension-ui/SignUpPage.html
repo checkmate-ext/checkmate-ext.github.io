@@ -216,32 +216,32 @@
         </div>
 
         <!-- Form Section -->
-        <form class="form-section">
+        <form class="form-section" id="signUpForm">
             <div class="field">
                 <label class="label">Name</label>
                 <div class="control">
-                    <input type="text" class="input" placeholder="Enter your name" required>
+                    <input type="text" class="input" placeholder="Enter your name" id="name" required>
                 </div>
             </div>
 
             <div class="field">
                 <label class="label">Email</label>
                 <div class="control">
-                    <input type="email" class="input" placeholder="Enter your email" required>
+                    <input type="email" class="input" placeholder="Enter your email" id="email" required>
                 </div>
             </div>
 
             <div class="field">
                 <label class="label">Phone Number</label>
                 <div class="control">
-                    <input type="tel" class="input" placeholder="Enter your phone number" required>
+                    <input type="tel" class="input" placeholder="Enter your phone number" id="phoneNumber" required>
                 </div>
             </div>
 
             <div class="field">
                 <label class="label">Password</label>
                 <div class="control password-field">
-                    <input type="password" class="input" placeholder="Enter your password" required>
+                    <input type="password" class="input" placeholder="Enter your password" id="password" required>
                     <i class="fas fa-eye password-toggle"></i>
                 </div>
             </div>
@@ -249,7 +249,7 @@
             <div class="field">
                 <label class="label">Confirm Password</label>
                 <div class="control password-field">
-                    <input type="password" class="input" placeholder="Confirm your password" required>
+                    <input type="password" class="input" placeholder="Confirm your password" id="confirm-password" required>
                     <i class="fas fa-eye password-toggle"></i>
                 </div>
             </div>
@@ -275,6 +275,6 @@
 </div>
 
 <script src="../navigation/navigate.js"></script>
-<script src="../scripts/signupscript.js"></script>
+<script type="module" src="../scripts/signupscript.js"></script>
 </body>
 </html>

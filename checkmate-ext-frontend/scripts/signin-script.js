@@ -1,28 +1,21 @@
+import AuthService from '../authentication/auth-service.js';
+
+const authService = new AuthService('http://localhost:5000');
+
 document.getElementById('signInForm').addEventListener('submit', async (event) => {
     event.preventDefault();
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
     try {
-        const response = await fetch('http://localhost:5000/user/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            alert('token: ' + data.token);
-            console.log('Sign-in successful:', data);
-            // Optionally store token in localStorage and navigate
-            // localStorage.setItem('authToken', data.token);
-            // navigateTo('MainMenuPage.html');
-        } else {
-            const errorData = await response.json();
-            alert(errorData.message);
+        const result = await authService.login(email, password);
+        if (result.success) {
+            // Optionally alert token or log it if needed
+            alert('Signed in successfully! with token: ' + authService.token);
+            // navigate to main menu
+            navigateTo('MainMenuPage.html');
         }
     } catch (error) {
-        console.error('Sign-in error:', error);
-        alert('An error occurred during sign-in');
+        alert(error.message || 'An error occurred during sign-in');
     }
 });

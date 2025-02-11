@@ -1,6 +1,23 @@
 // navigate.js
 
 function navigateTo(page) {
+    const protectedPages = [
+        'MainMenuPage.html',
+        'DashboardPage.html',
+        'ProfilePage.html',
+        // Add any other protected pages here
+    ];
+
+    // If navigating to a protected page, check for token first
+    /* if (protectedPages.includes(page)) {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            // If no valid token, go to sign-in
+            window.location.href = 'SignInPage.html';
+            return;
+        }
+    } */
+
     document.body.classList.add('fade-out');
     setTimeout(() => {
         localStorage.setItem('lastPage', page);
@@ -9,14 +26,14 @@ function navigateTo(page) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const lastPage = 'SignInPage.html'; //localStorage.getItem('lastPage');
+    /* const lastPage = 'MainMenuPage.html'; //localStorage.getItem('lastPage');
     const currentPage = window.location.pathname.split('/').pop();
     console.log('Last page: ' + lastPage + ', Current page: ' + currentPage);
     
 
     if (lastPage && lastPage !== currentPage) {
         navigateTo(lastPage);
-    }
+    } */
 
     const signInButton = document.getElementById('signInButton');
     const signUpButton = document.getElementById('signUpButton');
@@ -35,9 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (signInButton) {
         signInButton.addEventListener('click', () => navigateTo('SignInPage.html'));
     }
-    /* if (signUpButton) {
+    if (signUpButton) {
         signUpButton.addEventListener('click', () => navigateTo('SignUpPage.html'));
-    } */
+    }
     if (googleSignUpButton) {
         googleSignUpButton.addEventListener('click', () => navigateTo('GoogleSignUpPage.html'));
     }

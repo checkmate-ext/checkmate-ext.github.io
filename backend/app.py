@@ -218,6 +218,8 @@ def login_user():
     Endpoint for user login.
     Verifies email and password and returns a JWT token if successful.
     """
+
+    print("Login request received")
     try:
         data = request.json
         email = data.get('email')
