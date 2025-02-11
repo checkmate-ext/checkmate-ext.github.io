@@ -28,6 +28,17 @@ function navigateTo(page) {
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    const currentPage = window.location.pathname.split('/').pop();
+    if (currentPage === 'FirstPage.html') {
+        const token = localStorage.getItem('token');
+        // Redirect based on token
+        if (token) {
+            navigateTo('MainMenuPage.html');
+        } else {
+            navigateTo('SignInPage.html');
+        }
+    }
+
     const signInButton = document.getElementById('signInButton');
     const signUpButton = document.getElementById('signUpButton');
     const googleSignUpButton = document.getElementById('googleSignUpButton');
