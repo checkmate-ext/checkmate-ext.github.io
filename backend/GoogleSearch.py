@@ -3,6 +3,7 @@ import requests
 import concurrent.futures
 from bs4 import BeautifulSoup
 from ArticleExtractor import ArticleExtractor
+import random
 
 def _extract_with_requests(url, min_text_length=300):
     """
@@ -14,6 +15,7 @@ def _extract_with_requests(url, min_text_length=300):
             'date': None,
             'url': url,
             'images': []
+            'similarity_score': float
         }
     If the result seems too small or fails, return None to signal fallback.
     """
@@ -37,7 +39,8 @@ def _extract_with_requests(url, min_text_length=300):
             "content": text_content,
             "date": None,     # We could do more date extraction here if desired
             "url": url,
-            "images": []      # For simplicity, ignoring image extraction
+            "images": [],
+            "similarity_score": random.random()
         }
     except Exception as e:
         print(f"Lightweight fetch failed for {url}: {e}")
@@ -60,6 +63,7 @@ def _extract_article_hybrid(url):
     try:
         scrapper = ArticleExtractor()
         data = scrapper.extract_article(url)
+        data['similarity_score'] = random.random()
         # Clean up
         if scrapper.driver:
             scrapper.driver.quit()
