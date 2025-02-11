@@ -5,18 +5,19 @@ function navigateTo(page) {
         'MainMenuPage.html',
         'DashboardPage.html',
         'ProfilePage.html',
-        // Add any other protected pages here
+        'ResultsPage.html',
+        'MoreDetails.html',
     ];
 
     // If navigating to a protected page, check for token first
-    /* if (protectedPages.includes(page)) {
-        const token = localStorage.getItem('authToken');
+    if (protectedPages.includes(page)) {
+        const token = localStorage.getItem('token');
         if (!token) {
             // If no valid token, go to sign-in
             window.location.href = 'SignInPage.html';
             return;
         }
-    } */
+    }
 
     document.body.classList.add('fade-out');
     setTimeout(() => {
@@ -26,14 +27,11 @@ function navigateTo(page) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    /* const lastPage = 'MainMenuPage.html'; //localStorage.getItem('lastPage');
     const currentPage = window.location.pathname.split('/').pop();
-    console.log('Last page: ' + lastPage + ', Current page: ' + currentPage);
-    
-
-    if (lastPage && lastPage !== currentPage) {
+    const lastPage = localStorage.getItem('lastPage');
+    if (currentPage !== lastPage) {
         navigateTo(lastPage);
-    } */
+    }
 
     const signInButton = document.getElementById('signInButton');
     const signUpButton = document.getElementById('signUpButton');
