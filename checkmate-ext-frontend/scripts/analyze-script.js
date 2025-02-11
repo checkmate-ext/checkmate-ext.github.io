@@ -3,6 +3,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const analyzeButton = document.getElementById('analyzeButton');
     const urlAnalyzeButton = document.getElementById('analyze-button');
     const analyzeInput = document.getElementById('analyze-input');
+
+    // Save original button texts so we can restore them on error
+    const originalAnalyzeButtonText = analyzeButton.innerHTML;
+    const originalUrlAnalyzeButtonText = urlAnalyzeButton.innerHTML;
+
     // Get the active tab in the current window when the page loads
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const activeTab = tabs[0];
@@ -18,6 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
     analyzeButton.addEventListener('click', () => {
         const urlToAnalyze = analyzeButton.dataset.url;
         if (urlToAnalyze) {
+            // Change button text to a loading screen with spinner
+            analyzeButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+
             // Send the URL to the Python server
             fetch('http://localhost:5000/scrap_and_search', {
                 method: 'POST',
@@ -38,16 +46,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 .catch(error => {
                     console.error('Error fetching data:', error);
                     alert('Error analyzing the page. Please try again later.');
+                    // Revert back to the original button text on error
+                    analyzeButton.innerHTML = originalAnalyzeButtonText;
                 });
         } else {
             alert('No URL to analyze.');
         }
     });
 
-    // When the Analyze Current Page button is clicked
+    // When the Analyze URL button is clicked
     urlAnalyzeButton.addEventListener('click', () => {
         const urlToAnalyze = analyzeInput.value.trim();
         if (urlToAnalyze) {
+            // Change button text to a loading screen with spinner
+            urlAnalyzeButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+
             // Send the URL to the Python server
             fetch('http://localhost:5000/scrap_and_search', {
                 method: 'POST',
@@ -68,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 .catch(error => {
                     console.error('Error fetching data:', error);
                     alert('Error analyzing the page. Please try again later.');
+                    // Revert back to the original button text on error
+                    urlAnalyzeButton.innerHTML = originalUrlAnalyzeButtonText;
                 });
         } else {
             alert('No URL to analyze.');
