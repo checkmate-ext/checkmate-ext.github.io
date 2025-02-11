@@ -290,7 +290,7 @@ def get_user_searches(current_user, user_id):
 
 @app.route('/article/<int:article_id>/', methods=['GET'])
 @token_required
-def get_article_info(article_id):
+def get_article_data(article_id):
     """
     Endpoint to retrieve the data about the article, including similar articles
     :return:
