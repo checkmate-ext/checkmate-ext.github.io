@@ -87,7 +87,8 @@ def token_required(f):
 
 
 @app.route('/scrap_and_search', methods=['POST'])
-def scrap_and_search():
+@token_required
+def scrap_and_search(current_user):
     try:
         # Extract URL from request JSON
         data = request.json
@@ -132,7 +133,7 @@ def scrap_and_search():
         bias_score = random.randint(30, 95)
 
         new_search = ArticleSearch(
-            user_id=1,
+            user_id=current_user.id,
             url=article['url'],
             title=article['title'],
             reliability_score=reliability_score,
