@@ -259,7 +259,7 @@ def login_user():
             # Generate a JWT token valid for 1 hour
             token = jwt.encode({
                 'user_id': user.id,
-                'exp': datetime.utcnow() + timedelta(hours=1)
+                'exp': datetime.utcnow() + timedelta(seconds=15)
             }, app.config['JWT_SECRET_KEY'], algorithm='HS256')
             return jsonify({
                 'message': 'Login successful',

@@ -1,11 +1,8 @@
-import AuthService from "../authentication/auth-service";
 document.addEventListener('DOMContentLoaded', () => {
     const currentPageUrlElement = document.getElementById('currentPageUrl');
     const analyzeButton = document.getElementById('analyzeButton');
     const urlAnalyzeButton = document.getElementById('analyze-button');
     const analyzeInput = document.getElementById('analyze-input');
-    const authService = new AuthService('http://localhost:5000');
-
 
     const originalAnalyzeButtonText = analyzeButton.innerHTML;
     const originalUrlAnalyzeButtonText = urlAnalyzeButton.innerHTML;
@@ -26,9 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const urlToAnalyze = analyzeButton.dataset.url;
         const token = localStorage.getItem('token');   // Store this after login
 
-        if (!token || !authService.isTokenValid()) {
+        if (!token) {
             alert('Please log in first');
-            navigateTo('FirstPage.html');
+            return;
         }
 
         if (urlToAnalyze) {
