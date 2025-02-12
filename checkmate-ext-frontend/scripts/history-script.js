@@ -32,7 +32,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         result.data.forEach(search => {
           // Format date
           const dateObj = new Date(search.created_at);
-          const formattedDate = "dateObj.toISOString().split('T')[0]";
+          // Format date
+          let formattedDate = 'Unknown Date';
+          if (search.created_at) {
+            const d = new Date(search.created_at);
+            formattedDate = isNaN(d.getTime())
+              ? 'Unknown Date'
+              : d.toLocaleString('en-US', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                });
+          }
 
           // Create history item container
           const item = document.createElement('div');
