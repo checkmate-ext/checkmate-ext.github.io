@@ -297,7 +297,8 @@ def get_user_searches(current_user):
             'title': article.title,
             'reliability_score': article.reliability_score,
             'credibility_score': article.credibility_score,
-            'objectivity_score': article.objectivity_score
+            'objectivity_score': article.objectivity_score,
+            'created_at': article.created_at,
         } for article in searches]
 
         return jsonify({
