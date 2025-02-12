@@ -107,6 +107,8 @@ def scrap_and_search(current_user):
             return jsonify({'error': 'URL parameter is required'}), 400
 
         print(f"Processing URL:")
+        website_credibility = check_website_score(url)
+        print(website_credibility['credibility_score'])
         # get the article from the database if it is already analyzed
         past_article = ArticleSearch.query.filter_by(url=url).first()
         if past_article:
@@ -128,7 +130,8 @@ def scrap_and_search(current_user):
                 'message': f"Results for {url}",
                 'article': article_data,
                 'similar_articles': similar_articles_data,
-                'images_data': []
+                'images_data': [],
+                'website_credibility': website_credibility['credibility_score']
             })
 
         print(f"Processing URL: {url}")
@@ -178,7 +181,8 @@ def scrap_and_search(current_user):
             'message': f"Results for {url}",
             'article': article,
             'similar_articles': similar_articles,
-            'images_data': images_data
+            'images_data': images_data,
+            'website_credibility': website_credibility['credibility_score'],
         })
 
     except Exception as e:
@@ -339,27 +343,7 @@ def get_article_data(article_id):
             'message': str(e)
         }), 500
 
-@app.route('/check_website', methods=['POST'])
-def check_website():
-    """
-    API endpoint to check the credibility score of a news website.
-    Expects a JSON request with a 'url' field.
-    """
-    try:
-        data = request.json
-        url = data.get("url")
 
-        if not url:
-            return jsonify({"error": "URL is required"}), 400
-
-        # Get the website score
-        result = check_website_score(url)
-        print(f"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",result)
-
-        return jsonify(result)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
