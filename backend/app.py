@@ -292,9 +292,14 @@ def get_user_searches(current_user):
 
     try:
         searches = ArticleSearch.query.filter_by(user_id=current_user.id).all()
+        articles_data = [{
+            'url': article.url,
+            'title': article.title,
+        } for article in searches]
+
         return jsonify({
             'message': 'Search history retrieved',
-            'data': [search.to_dict() for search in searches]
+            'data': articles_data
         })
 
     except Exception as e:
