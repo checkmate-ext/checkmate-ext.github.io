@@ -279,20 +279,19 @@ def login_user():
         }), 500
 
 
-@app.route('/user/<int:user_id>/searches', methods=['GET'])
+@app.route('/user/searches', methods=['GET'])
 @token_required
-def get_user_searches(current_user, user_id):
+def get_user_searches(current_user):
     """
     Endpoint to retrieve all searches performed by a specific user.
     Returns a list of search results with their similar articles.
     This endpoint is protected and requires a valid JWT token.
     """
     # Ensure that the token belongs to the user making the request
-    if current_user.id != user_id:
-        return jsonify({'error': 'Unauthorized access'}), 401
+
 
     try:
-        searches = ArticleSearch.query.filter_by(user_id=user_id).all()
+        searches = ArticleSearch.query.filter_by(user_id=current_user.id).all()
         return jsonify({
             'message': 'Search history retrieved',
             'data': [search.to_dict() for search in searches]
