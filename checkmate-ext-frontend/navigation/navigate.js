@@ -33,6 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isTokenValid()) {
             navigateTo('MainMenuPage.html');
         }
+        else {
+            localStorage.removeItem('token');
+        }
     }
 
 
