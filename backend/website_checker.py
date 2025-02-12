@@ -3,7 +3,6 @@ from models import db
 from urllib.parse import urlparse
 
 def get_domain_from_url(url):
-    print(f"BBBBBBBBBBBBB",url)
     """
     Extract the main domain name from a URL.
     

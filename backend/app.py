@@ -354,7 +354,6 @@ def check_website():
 
         # Get the website score
         result = check_website_score(url)
-        print(f"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",result)
 
         return jsonify(result)
 
