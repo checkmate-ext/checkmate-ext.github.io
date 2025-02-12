@@ -8,7 +8,7 @@ import random
 import jwt
 from datetime import datetime, timedelta
 from functools import wraps
-
+from website_checker import check_website_score
 
 def create_app():
     """
@@ -106,6 +106,7 @@ def scrap_and_search(current_user):
         if not url:
             return jsonify({'error': 'URL parameter is required'}), 400
 
+        print(f"Processing URL:")
         # get the article from the database if it is already analyzed
         past_article = ArticleSearch.query.filter_by(url=url).first()
         if past_article:
@@ -141,6 +142,8 @@ def scrap_and_search(current_user):
         credibility_score = random.randint(30, 95)
         objectivity_score = random.randint(30, 95)
         bias_score = random.randint(30, 95)
+
+        print("article : ", article)
 
         new_search = ArticleSearch(
             user_id=current_user.id,
@@ -336,6 +339,27 @@ def get_article_data(article_id):
             'message': str(e)
         }), 500
 
+@app.route('/check_website', methods=['POST'])
+def check_website():
+    """
+    API endpoint to check the credibility score of a news website.
+    Expects a JSON request with a 'url' field.
+    """
+    try:
+        data = request.json
+        url = data.get("url")
+
+        if not url:
+            return jsonify({"error": "URL is required"}), 400
+
+        # Get the website score
+        result = check_website_score(url)
+        print(f"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",result)
+
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

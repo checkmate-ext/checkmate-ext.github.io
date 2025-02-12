@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const dataString = localStorage.getItem('analysisResults');
     if (!dataString) {
         // No data found, show placeholders
@@ -10,6 +10,90 @@ document.addEventListener('DOMContentLoaded', () => {
     const scoreBox = document.getElementById('reliabilityScore');
     const detailsList = document.getElementById('detailsList');
     const similarArticlesList = document.getElementById('similarArticlesList');
+
+    function getActiveTabUrl(callback) {
+        if (chrome && chrome.tabs) {
+            chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                if (tabs.length > 0) {
+                    let url = tabs[0].url;
+                    console.log("Actual Page URL:", url); 
+                    callback(url);
+                } else {
+                    console.log("No active tab found.");
+                    callback(null);
+                }
+            });
+        } else {
+            console.log("Chrome API not available. Running in a normal webpage.");
+            callback(window.location.href); // Fallback to normal window location if not in an extension
+        }
+    }
+
+    function getDomainFromUrl(url) {
+        try {
+            let urlObj = new URL(url);
+            let domain = urlObj.hostname.replace('www.', ''); // Remove 'www.' prefix
+
+            console.log("Extracted Domain:", domain); 
+            return domain;
+        } catch (error) {
+            console.error("Invalid URL:", error);
+            return null;
+        }
+    }
+
+    async function fetchWebsiteScore(url) {
+        try {
+            const response = await fetch('http://localhost:5000/check_website', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+
+            const result = await response.json();
+            console.log('API Response:', result); 
+            const credibilityResult = document.getElementById('credibilityResult');
+
+            if (result.credibility_score !== null) {
+                let label = "";
+                credibilityResult.classList.remove('green', 'neutral', 'red');
+
+                if (result.credibility_score === 0) {
+                    label = "Credible";
+                    credibilityResult.classList.add('green');  // High credibility
+                } else if (result.credibility_score === 1) {
+                    label = "Mixed";
+                    credibilityResult.classList.add('neutral');  // Moderate credibility
+                } else {
+                    label = "Uncredible";
+                    credibilityResult.classList.add('red');  // Low credibility
+                }
+
+                credibilityResult.textContent = `Website Credibility: ${label}`;
+            } else {
+                credibilityResult.textContent = 'Website not found in database';
+                credibilityResult.classList.add('red');
+            }
+
+        } catch (error) {
+            console.error('Error fetching website score:', error);
+
+            const credibilityResult = document.getElementById('credibilityResult');
+            credibilityResult.textContent = 'Error retrieving score';
+            credibilityResult.classList.add('red');
+        }
+    }
+
+    getActiveTabUrl((url) => {
+        if (url) {
+            let domain = getDomainFromUrl(url);
+            if (domain) {
+                fetchWebsiteScore(`https://${domain}`); // Send formatted URL to backend
+            }
+        } else {
+            console.log("Could not retrieve a valid URL.");
+        }
+    });
 
     // Set the reliability score and color
     if (data.reliability_score !== undefined) {
@@ -65,9 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 section.appendChild(entitiesList);
             } else {
-                const noEntities = document.createElement('p');
-                noEntities.textContent = 'No entities found.';
-                section.appendChild(noEntities);
+                section.innerHTML += '<p>No entities found.</p>';
             }
 
             // Pages with Matching Images
@@ -81,9 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 section.appendChild(pagesList);
             } else {
-                const noPages = document.createElement('p');
-                noPages.textContent = 'No pages with matching images found.';
-                section.appendChild(noPages);
+                section.innerHTML += '<p>No pages with matching images found.</p>';
             }
 
             // Full Matching Images
@@ -97,9 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 section.appendChild(fullImagesList);
             } else {
-                const noFullImages = document.createElement('p');
-                noFullImages.textContent = 'No full matching images found.';
-                section.appendChild(noFullImages);
+                section.innerHTML += '<p>No full matching images found.</p>';
             }
 
             // Partial Matching Images
@@ -113,9 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 section.appendChild(partialImagesList);
             } else {
-                const noPartialImages = document.createElement('p');
-                noPartialImages.textContent = 'No partial matching images found.';
-                section.appendChild(noPartialImages);
+                section.innerHTML += '<p>No partial matching images found.</p>';
             }
 
             detailsList.appendChild(section);
