@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
             navigateTo('MainMenuPage.html');
         }
         else {
-            localStorage.removeItem('token');
+            if (localStorage.getItem('token')) {localStorage.removeItem('token');}
         }
     }
 
