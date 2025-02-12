@@ -42,26 +42,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    async function fetchWebsiteScore(url) {
+    function fetchWebsiteScore() {
         try {
-            const response = await fetch('http://localhost:5000/check_website', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url })
-            });
 
-            const result = await response.json();
-            console.log('API Response:', result); 
             const credibilityResult = document.getElementById('credibilityResult');
 
-            if (result.credibility_score !== null) {
+            if (data.website_credibility !== null) {
                 let label = "";
                 credibilityResult.classList.remove('green', 'neutral', 'red');
 
-                if (result.credibility_score === 0) {
+                if (data.website_credibility === 0) {
                     label = "Credible";
                     credibilityResult.classList.add('green');  // High credibility
-                } else if (result.credibility_score === 1) {
+                } else if (data.website_credibility === 1) {
                     label = "Mixed";
                     credibilityResult.classList.add('neutral');  // Moderate credibility
                 } else {
@@ -84,16 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    getActiveTabUrl((url) => {
-        if (url) {
-            let domain = getDomainFromUrl(url);
-            if (domain) {
-                fetchWebsiteScore(`https://${domain}`); // Send formatted URL to backend
-            }
-        } else {
-            console.log("Could not retrieve a valid URL.");
-        }
-    });
+   fetchWebsiteScore();
 
     // Set the reliability score and color
     if (data.reliability_score !== undefined) {

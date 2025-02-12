@@ -14,7 +14,7 @@ function navigateTo(page) {
         const token = localStorage.getItem('token');
         if (!token) {
             // If no valid token, go to sign-in
-            window.location.href = 'SignInPage.html';
+            window.location.href = 'FirstPage.html';
             return;
         }
     }
@@ -30,12 +30,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const currentPage = window.location.pathname.split('/').pop();
     if (currentPage === 'FirstPage.html') {
-        const token = localStorage.getItem('token');
-        // Redirect based on token
-        if (token) {
+        if (isTokenValid()) {
             navigateTo('MainMenuPage.html');
         }
+        else {
+            if (localStorage.getItem('token')) {localStorage.removeItem('token');}
+        }
     }
+
 
     const signInButton = document.getElementById('signInButton');
     const signUpButton = document.getElementById('signUpButton');
@@ -102,3 +104,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 });
+
+
+function isTokenValid() {
+    const token = localStorage.getItem('token');
+    if (!token) return false;
+    
+    try {
+        // Decode token payload (assumes JWT format: header.payload.signature)
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        // exp is in seconds; convert to milliseconds
+        if (payload.exp * 1000 < Date.now()) {
+            return false;  // token expired
+        }
+        return true; // token is valid
+    } catch (error) {
+        return false;
+    }
+}

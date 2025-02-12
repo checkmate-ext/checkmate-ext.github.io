@@ -69,7 +69,7 @@
         .history-list {
             flex: 1;
             overflow-y: auto;
-            padding: 0 20px;
+            padding: 0 20px 60px; /* Added bottom padding to ensure last item is visible */
             margin: 10px 0;
         }
 
@@ -94,6 +94,7 @@
             margin-bottom: 5px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -105,6 +106,7 @@
             word-break: break-all;
             display: -webkit-box;
             -webkit-line-clamp: 1;
+            line-clamp: 1;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }

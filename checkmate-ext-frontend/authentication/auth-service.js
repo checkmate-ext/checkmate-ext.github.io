@@ -90,9 +90,26 @@ export default class AuthService {
         return data;
     }
 
+    isTokenValid() {
+        const token = localStorage.getItem('token');
+        if (!token) return false;
+        
+        try {
+            // Decode token payload (assumes JWT format: header.payload.signature)
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            // exp is in seconds; convert to milliseconds
+            if (payload.exp * 1000 < Date.now()) {
+                return false;  // token expired
+            }
+            return true; // token is valid
+        } catch (error) {
+            return false;
+        }
+    }
+
     // Method to check if user is logged in
     isAuthenticated() {
-        return !!this.token;
+        return !!this.token && this.isTokenValid();
     }
 
     // Method to logout user
