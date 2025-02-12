@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileButton = document.getElementById('profileBtn');
     const pastSearches = document.getElementById('pastSearches');
     const dashboardPreview = document.getElementById('dashboardPreview');
+    const historyButton = document.getElementById('historyBtn');
 
     if (signInButton) {
         signInButton.addEventListener('click', () => navigateTo('SignInPage.html'));
@@ -95,4 +96,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dashboardPreview) {
         dashboardPreview.addEventListener('click', () => navigateTo('DashboardPage.html'));
     }
+
+    if (historyButton) {
+        historyButton.addEventListener('click', () => navigateTo('HistoryPage.html'));
+    }
+
 });
