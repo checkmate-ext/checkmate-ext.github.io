@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pastSearches = document.getElementById('pastSearches');
     const dashboardPreview = document.getElementById('dashboardPreview');
     const historyButton = document.getElementById('historyBtn');
+    const priceButton = document.getElementById('upgradeBtn');
 
     if (signInButton) {
         signInButton.addEventListener('click', () => navigateTo('SignInPage.html'));
@@ -72,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (forgotPasswordLink) {
         forgotPasswordLink.addEventListener('click', (event) => {
             event.preventDefault();
-            navigateTo('emailverfication.html');
+            navigateTo('pricing.html');
         });
     }
     if (confirmButton) {
@@ -101,6 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (historyButton) {
         historyButton.addEventListener('click', () => navigateTo('HistoryPage.html'));
+    }
+
+    if (priceButton) {
+        priceButton.addEventListener('click', () => navigateTo('pricing.html'));
     }
 
 });

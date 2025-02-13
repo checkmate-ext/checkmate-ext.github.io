@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, current_app
+from flask_mail import Mail, Message
 from flask_cors import CORS
 from models import db, User, ArticleSearch, SimilarArticle
 from GoogleSearch import GoogleSearch
@@ -18,6 +19,20 @@ def create_app():
     app = Flask(__name__)
     CORS(app)
     load_dotenv()
+
+        # Email Configuration
+    app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
+    app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True').lower() == 'true'
+    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
+
+    # Initialize Flask-Mail
+    mail = Mail(app)
+    app.mail = mail  # Store mail instance in app context
+
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 
     # Configure CORS to allow requests from your Chrome extension
     CORS(app, resources={
@@ -44,7 +59,8 @@ def create_app():
     DB_NAME = os.getenv("DB_NAME")
 
     required_vars = ['G_API_KEY', 'CX_ID', 'VISION_API_KEY',
-                     'DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_NAME']
+                     'DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_NAME',
+                     'MAIL_USERNAME', 'MAIL_PASSWORD']
     missing_vars = [var for var in required_vars if not os.getenv(var)]
     if missing_vars:
         raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
@@ -344,6 +360,96 @@ def get_article_data(article_id):
         }), 500
 
 
+def generate_verification_code():
+    return str(random.randint(100000, 999999))
+
+def send_verification_email(user_email, verification_code):
+    """
+    Sends an email verification code.
+    """
+    print(f"📧 Sending verification email to: {user_email} with code: {verification_code}")  # Debug log
+
+    msg = Message(
+        'Verify Your Email Address',
+        recipients=[user_email]
+    )
+    msg.body = f"""
+    Hello,
+
+    Your email verification code is: {verification_code}
+
+    Please enter this code in the verification page to confirm your email.
+
+    If you did not request this, please ignore this email.
+
+    Best regards,
+    Your App Team
+    """
+    try:
+        with current_app.app_context():  
+            current_app.mail.send(msg) 
+        print(" Email sent successfully!")
+    except Exception as mail_error:
+        print(f" Error sending verification email: {str(mail_error)}")  # Print error
+
+
+@app.route("/user/send-verification-code", methods=["POST"])
+def send_verification_code():
+    """
+    Endpoint to send a verification code to the user's email.
+    """
+    try:
+        data = request.json
+        email = data.get("email")
+
+        if not email:
+            return jsonify({"error": "Missing email", "message": "Email is required"}), 400
+
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        verification_code = generate_verification_code()
+        user.verification_code = verification_code
+        db.session.commit()
+
+        send_verification_email(user.email, verification_code)
+
+        return jsonify({"message": "Verification code has been sent to your email"}), 200
+
+    except Exception as e:
+        print(f"Error in sending verification email: {str(e)}")
+        return jsonify({"error": "Failed to send verification code", "message": str(e)}), 500
+
+@app.route("/user/verify-email", methods=["POST"])
+def verify_email():
+    """
+    Endpoint to verify the email using the code sent to the user.
+    """
+    try:
+        data = request.json
+        email = data.get("email")
+        code = data.get("code")
+
+        if not email or not code:
+            return jsonify({"error": "Missing email or code"}), 400
+        
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        if user.verification_code != code:
+            return jsonify({"error": "Invalid verification code"}), 400
+        
+        user.is_verified = True
+        user.verification_code = None  # Remove code after successful verification
+        db.session.commit()
+
+        return jsonify({"message": "Email verified successfully"}), 200
+
+    except Exception as e:
+        print(f"Error in email verification: {str(e)}")
+        return jsonify({"error": "Verification failed", "message": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

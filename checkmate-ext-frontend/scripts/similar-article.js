@@ -11,37 +11,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const detailsList = document.getElementById('detailsList');
     const similarArticlesList = document.getElementById('similarArticlesList');
 
-    function getActiveTabUrl(callback) {
-        if (chrome && chrome.tabs) {
-            chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-                if (tabs.length > 0) {
-                    let url = tabs[0].url;
-                    console.log("Actual Page URL:", url); 
-                    callback(url);
-                } else {
-                    console.log("No active tab found.");
-                    callback(null);
-                }
-            });
-        } else {
-            console.log("Chrome API not available. Running in a normal webpage.");
-            callback(window.location.href); // Fallback to normal window location if not in an extension
-        }
-    }
-
-    function getDomainFromUrl(url) {
-        try {
-            let urlObj = new URL(url);
-            let domain = urlObj.hostname.replace('www.', ''); // Remove 'www.' prefix
-
-            console.log("Extracted Domain:", domain); 
-            return domain;
-        } catch (error) {
-            console.error("Invalid URL:", error);
-            return null;
-        }
-    }
-
     function fetchWebsiteScore() {
         try {
 

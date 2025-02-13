@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email Verification</title>
     <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
         body {
             background-color: #f0f0f0;
@@ -36,7 +37,7 @@
         }
 
         .input {
-            font-size: 1.25rem;
+            font-size: 1rem;
             text-align: center;
             letter-spacing: 0.1rem;
         }
@@ -44,21 +45,44 @@
         .button {
             margin-top: 1.5rem;
         }
+
+        .message {
+            margin-top: 1rem;
+            font-weight: bold;
+        }
     </style>
 </head>
 
 <body>
     <div class="verification-container">
         <img src="../images/CheckMate_Transparent_Logo.png" alt="Checkmate Logo" class="logo" width="80">
-        <h2>Enter the Code Sent to:<br><strong>exampleuser@example.com</strong></h2>
-        <div class="field">
-            <div class="control">
-                <input class="input is-medium" type="text" placeholder="Enter Code">
+        
+        <!-- Step 1: Enter Email -->
+        <div id="emailSection">
+            <h2>Enter Your Email Address</h2>
+            <div class="field">
+                <div class="control">
+                    <input class="input is-medium" type="email" id="userEmail" placeholder="Enter your email" required>
+                </div>
             </div>
+            <button id="sendCodeButton" class="button is-info is-fullwidth is-medium">Send Verification Code</button>
         </div>
-        <button id="confirmButton" class="button is-success is-fullwidth is-medium">Confirm</button>
+
+        <!-- Step 2: Enter Verification Code (Hidden Initially) -->
+        <div id="codeSection" style="display: none;">
+            <h2>Enter the Code Sent to:<br><strong id="displayEmail"></strong></h2>
+            <div class="field">
+                <div class="control">
+                    <input class="input is-medium" type="text" id="verificationCode" placeholder="Enter Code" maxlength="6">
+                </div>
+            </div>
+            <button id="confirmButton" class="button is-success is-fullwidth is-medium">Confirm</button>
+        </div>
+
+        <p id="message" class="message"></p>
     </div>
-    <script src="../navigation/navigate.js"></script>
+
+    <script src="script.js" defer></script>
 </body>
 
 </html>
