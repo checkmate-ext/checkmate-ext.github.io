@@ -11,6 +11,7 @@ class User(db.Model):
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    subscription_plan = db.Column(db.String(50), default="Free")
     searches = db.relationship('ArticleSearch', backref='user', lazy=True)
 
     def set_password(self, password):

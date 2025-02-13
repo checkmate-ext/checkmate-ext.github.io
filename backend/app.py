@@ -10,6 +10,7 @@ import jwt
 from datetime import datetime, timedelta
 from functools import wraps
 from website_checker import check_website_score
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 def create_app():
     """
@@ -458,6 +459,32 @@ def verify_email():
     except Exception as e:
         print(f"Error in email verification: {str(e)}")
         return jsonify({"error": "Verification failed", "message": str(e)}), 500
+    
+@app.route('/user/update-plan', methods=['POST'])
+@jwt_required()
+def update_user_plan():
+    try:
+        data = request.json
+        plan = data.get('plan')
+        
+        if plan not in ['Free', 'Premium', 'Enterprise']:
+            return jsonify({'error': 'Invalid plan selected'}), 400
+        
+        # Get current user from JWT token
+        user_id = get_jwt_identity()
+        user = User.query.get(user_id)
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Update the user's plan
+        user.subscription_plan = plan
+        db.session.commit()
+        
+        return jsonify({'message': f'Plan updated to {plan}'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

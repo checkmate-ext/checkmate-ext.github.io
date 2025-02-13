@@ -6,55 +6,23 @@
     <title>Checkmate Pricing</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
     <style>
-        body {
-            background-color: #f4f4f4;
-            padding: 20px;
-            text-align: center;
-        }
-        .header img {
-            width: 80px;
-        }
-        .plan-box {
-            background-color: #d3d3d3;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-        .upgrade-options {
-            display: flex;
-            justify-content: space-around;
-            gap: 10px;
-        }
-        .plan-card {
-            padding: 20px;
-            border-radius: 10px;
-            color: white;
-            width: 150px;
-        }
-        .premium {
-            background-color: #fbc02d;
-        }
-        .enterprise {
-            background-color: #1976d2;
-        }
-        .icons {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-        .icons img {
-            width: 30px;
-        }
+        body { background-color: #f4f4f4; padding: 20px; text-align: center; }
+        .header img { width: 80px; }
+        .plan-box { background-color: #d3d3d3; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .upgrade-options { display: flex; justify-content: space-around; gap: 10px; }
+        .plan-card { padding: 20px; border-radius: 10px; color: white; cursor: pointer; width: 150px; }
+        .premium { background-color: #fbc02d; }
+        .enterprise { background-color: #1976d2; }
+        .icons { display: flex; justify-content: space-between; margin-top: 20px; }
+        .icons img { width: 30px; }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <div class="header">
         <img src="https://via.placeholder.com/80" alt="Checkmate Logo">
         <h2 class="title">CHECKMATE</h2>
     </div>
 
-    <!-- Current Plan -->
     <div class="plan-box">
         <p class="title is-5">Current Plan: Free</p>
         <ul>
@@ -63,10 +31,9 @@
         </ul>
     </div>
 
-    <!-- Upgrade Options -->
     <h3 class="subtitle is-5">Upgrade To</h3>
     <div class="upgrade-options">
-        <div class="plan-card premium">
+        <div class="plan-card premium" id="premiumPlan">
             <p class="title is-6">⭐ Premium</p>
             <ul>
                 <li>Infinite Searches</li>
@@ -74,7 +41,7 @@
             </ul>
             <p><strong>5$/mo</strong></p>
         </div>
-        <div class="plan-card enterprise">
+        <div class="plan-card enterprise" id="enterprisePlan">
             <p class="title is-6">Enterprise</p>
             <ul>
                 <li>Infinite Searches</li>
@@ -84,10 +51,11 @@
         </div>
     </div>
 
-    <!-- Bottom Icons -->
     <div class="icons">
         <img src="https://via.placeholder.com/30" alt="Settings Icon">
         <img src="https://via.placeholder.com/30" alt="Warning Icon">
     </div>
+
+    <script src="pricing.js"></script>
 </body>
 </html>
