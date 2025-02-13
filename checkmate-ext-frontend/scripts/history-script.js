@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       historyList.innerHTML = '';
 
       if (result.data && result.data.length > 0) {
-        result.data.forEach(search => {
+        result.data.slice().reverse().forEach(search => {
           // Format date
           const dateObj = new Date(search.created_at);
           // Format date
