@@ -299,6 +299,7 @@ def get_user_searches(current_user):
             'credibility_score': article.credibility_score,
             'objectivity_score': article.objectivity_score,
             'created_at': article.created_at,
+            'id': article.id,
         } for article in searches]
 
         return jsonify({
@@ -316,15 +317,13 @@ def get_user_searches(current_user):
 
 @app.route('/article/<int:article_id>/', methods=['GET'])
 @token_required
-def get_article_data(article_id):
-    """
-    Endpoint to retrieve the data about the article, including similar articles
-    :return:
-    """
+def get_article_data(current_user, article_id):
     try:
         article = ArticleSearch.query.filter_by(id=article_id).first()
         if article:
-            similar_articles = SimilarArticle.filtery_by(main_article_id=article.id).all()
+            # Note: change "filtery_by" to "query.filter_by" if that was a typo.
+            similar_articles = SimilarArticle.query.filter_by(main_article_id=article.id).all()
+            website_credibility = check_website_score(article.url)
 
             article_data = {
                 'url': article.url,
@@ -332,16 +331,17 @@ def get_article_data(article_id):
             }
 
             similar_articles_data = [{
-                'url': article.url,
-                'title': article.title,
-                'similarity_score': article.similarity_score
-            } for article in similar_articles]
+                'url': sim_article.url,
+                'title': sim_article.title,
+                'similarity_score': sim_article.similarity_score
+            } for sim_article in similar_articles]
 
             return jsonify({
                 'reliability_score': article.reliability_score,
                 'article': article_data,
                 'similar_articles': similar_articles_data,
-                'images_data': []
+                'images_data': [],
+                'website_credibility': website_credibility['credibility_score'],
             })
 
     except Exception as e:

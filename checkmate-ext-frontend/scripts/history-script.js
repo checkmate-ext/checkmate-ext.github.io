@@ -51,10 +51,34 @@ document.addEventListener('DOMContentLoaded', async () => {
           // Create history item container
           const item = document.createElement('div');
           item.classList.add('history-item');
-          item.addEventListener('click', () => {
-            // Store the article data and navigate to the Results page
-            localStorage.setItem('analysisResults', JSON.stringify(search));
-            navigateTo('ResultPage.html');
+          item.addEventListener('click', async () => {
+            const articleId = search.id;
+            if (!articleId) {
+              alert('Article ID not found.');
+              return;
+            }
+          
+            try {
+              const response = await fetch(`http://localhost:5000/article/${articleId}/`, {
+                method: 'GET',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+              });
+              
+              if (!response.ok) {
+                throw new Error(`HTTP error ${response.status}`);
+              }
+              
+              const resultData = await response.json();
+              localStorage.setItem('analysisResults', JSON.stringify(resultData));
+              navigateTo('ResultPage.html');
+              
+            } catch (error) {
+              console.error('Error fetching article data:', error);
+              alert('Failed to load article details.');
+            }
           });
 
           // Create title
