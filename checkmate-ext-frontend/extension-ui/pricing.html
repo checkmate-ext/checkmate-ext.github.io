@@ -2,60 +2,214 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkmate Pricing</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <title>Checkmate - Pricing</title>
+        <!-- Bulma CSS Framework -->
+        <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
+        <!-- Font Awesome for Icons (Optional for better iconography) -->
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     <style>
-        body { background-color: #f4f4f4; padding: 20px; text-align: center; }
-        .header img { width: 80px; }
-        .plan-box { background-color: #d3d3d3; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        .upgrade-options { display: flex; justify-content: space-around; gap: 10px; }
-        .plan-card { padding: 20px; border-radius: 10px; color: white; cursor: pointer; width: 150px; }
-        .premium { background-color: #fbc02d; }
-        .enterprise { background-color: #1976d2; }
-        .icons { display: flex; justify-content: space-between; margin-top: 20px; }
-        .icons img { width: 30px; }
+        :root {
+            --primary-color: #3cb371;
+            --secondary-color: #2e8b57;
+            --bg-light: #f4f4f4;
+            --text-dark: #333;
+            --border-radius: 8px;
+            --transition-speed: 0.3s;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            transition: all var(--transition-speed) ease;
+        }
+
+        body {
+            width: 380px;
+            height: 600px;
+            margin: 0;
+            font-family: 'Inter', Arial, sans-serif;
+            background-color: var(--bg-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 380px;
+            height: 600px;
+            background: var(--neutral-bg);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            flex: 0 0 auto;
+        }
+
+        .header-icons img {
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .header-icons img:hover {
+            opacity: 1;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin: 5px 0;
+            flex: 0 0 auto;
+        }
+
+        .logo-container img {
+            width: 100px;
+        }
+
+        .button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            padding: 12px 20px;
+            width: 100%;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all var(--transition-speed) ease;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s;
+            opacity: 0;
+        }
+
+        .button:hover::before {
+            opacity: 1;
+            transform: translate(25%, 25%) rotate(45deg);
+        }
+
+        .button:hover {
+            background: var(--secondary-color);
+            box-shadow: 0 5px 15px rgba(60,179,113,0.3);
+            color: white;
+        }
+
+        
+        .bottom-icons {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .bottom-icons img {
+            width: 24px;
+            opacity: 0.7;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .bottom-icons img:hover {
+            opacity: 1;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .button-margin {
+            margin: 10px;
+        }
+            /* Responsive Adjustments */
+            @media (max-width: 400px) {
+            body {
+                width: 100vw;
+                height: 100vh;
+            }
+
+            .container {
+                border-radius: 8px;
+                padding: 20px;
+            }
+            .input-box textarea {
+                height: 70px;
+            }
+
+            .button {
+                font-size: 14px;
+                padding: 10px 16px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .upgrade-options {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .plan-card {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    
     </style>
 </head>
 <body>
-    <div class="header">
-        <img src="https://via.placeholder.com/80" alt="Checkmate Logo">
-        <h2 class="title">CHECKMATE</h2>
-    </div>
-
-    <div class="plan-box">
-        <p class="title is-5">Current Plan: Free</p>
-        <ul>
-            <li>Limited searches per day</li>
-            <li>Limited performance</li>
-        </ul>
-    </div>
-
-    <h3 class="subtitle is-5">Upgrade To</h3>
-    <div class="upgrade-options">
-        <div class="plan-card premium" id="premiumPlan">
-            <p class="title is-6">⭐ Premium</p>
-            <ul>
-                <li>Infinite Searches</li>
-                <li>Best Performance</li>
-            </ul>
-            <p><strong>5$/mo</strong></p>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="header-icons" >
+                <img src="../images/menu-bar-icon.png" alt="Menu" width="24" id="menuBtn" class="header-icon">
+            </div>
+            <div class="header-icons">
+                <img src="../images/user-profile-icon.png" alt="Profile" width="24" id="profileBtn" class="header-icon">
+            </div>
         </div>
-        <div class="plan-card enterprise" id="enterprisePlan">
-            <p class="title is-6">Enterprise</p>
-            <ul>
-                <li>Infinite Searches</li>
-                <li>Easy Integration</li>
-            </ul>
-            <p><strong>10$/mo</strong> per person</p>
+    
+        <!-- Logo Section -->
+        <div class="logo">
+            <img src="../images/CheckMate_Transparent_Logo.png" alt="Checkmate Logo" width="100">
+        </div>
+
+        <h3 class="subtitle is-5">Upgrade To</h3>
+        <button class="button button-margin" id="premiumBtn">⭐ Premium<br>5$/mo</button>
+        <button class="button button-margin" id="enterpriseBtn">Enterprise<br>10$/mo per person</button>        
+
+        <div class="bottom-icons">
+            <img src="../images/settings-icon.png" alt="Settings">
+            <img src="../images/exclamation-triangle-icon.png" alt="Warning">
+            <button id="logoutBtn" style="background: none; border: none; cursor: pointer;">
+                <img src="../images/logout.png" alt="Logout" title="Logout" style="width: 24px; height: 24px;">
+            </button>
         </div>
     </div>
-
-    <div class="icons">
-        <img src="https://via.placeholder.com/30" alt="Settings Icon">
-        <img src="https://via.placeholder.com/30" alt="Warning Icon">
-    </div>
-
-    <script src="pricing.js"></script>
+    <script src="../navigation/navigate.js"></script>
+    <script src="../scripts/pricing.js"></script>
 </body>
 </html>

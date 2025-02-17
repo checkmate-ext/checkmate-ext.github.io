@@ -461,30 +461,28 @@ def verify_email():
         return jsonify({"error": "Verification failed", "message": str(e)}), 500
     
 @app.route('/user/update-plan', methods=['POST'])
-@jwt_required()
-def update_user_plan():
+@token_required
+def update_user_plan(current_user):
     try:
         data = request.json
         plan = data.get('plan')
-        
-        if plan not in ['Free', 'Premium', 'Enterprise']:
-            return jsonify({'error': 'Invalid plan selected'}), 400
-        
-        # Get current user from JWT token
-        user_id = get_jwt_identity()
-        user = User.query.get(user_id)
-        
-        if not user:
-            return jsonify({'error': 'User not found'}), 404
-        
-        # Update the user's plan
-        user.subscription_plan = plan
+
+        if not plan:
+            return jsonify({'error': 'Plan is required'}), 400
+
+        current_user.subscription_plan = plan
         db.session.commit()
-        
-        return jsonify({'message': f'Plan updated to {plan}'}), 200
+
+        return jsonify({
+            'message': f'Plan updated to {plan}',
+            'plan': plan
+        }), 200
+    
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        print(f"Error updating plan: {str(e)}")  # Add logging
+        return jsonify({'error': 'Failed to update plan'}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
