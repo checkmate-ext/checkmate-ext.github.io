@@ -15,6 +15,7 @@ from website_checker import check_website_score
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from email_verification.TOTPVerification import TOTPVerification
 
+
 def create_app():
     """
     Creates and configures the Flask application with database and CORS support.
@@ -76,7 +77,6 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-
     # Initialize the database with the app
     db.init_app(app)
 
@@ -85,6 +85,7 @@ def create_app():
 
 app = create_app()
 verifier = TOTPVerification(app.config['EMAIL_VERIFICATION_SECRET_KEY'])
+
 
 def token_required(f):
     """
@@ -118,6 +119,7 @@ def token_required(f):
         return f(current_user, *args, **kwargs)
 
     return decorated
+
 
 @app.route('/scrap_and_search', methods=['POST'])
 @token_required
@@ -312,7 +314,6 @@ def get_user_searches(current_user):
     """
     # Ensure that the token belongs to the user making the request
 
-
     try:
         searches = ArticleSearch.query.filter_by(user_id=current_user.id).all()
         articles_data = [{
@@ -378,6 +379,7 @@ def get_article_data(current_user, article_id):
 def generate_verification_code():
     return str(random.randint(100000, 999999))
 
+
 def send_verification_email(user_email, verification_code):
     """
     Sends an email verification code.
@@ -418,11 +420,12 @@ def send_verification_code():
 
         code = verifier.generate_code(email)
         send_verification_email(email, code)
-        print('code is:',code)
+        print('code is:', code)
         return jsonify({"message": "Code sent"}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @app.route("/user/verify-code", methods=["POST"])
 def verify_code():
@@ -430,13 +433,14 @@ def verify_code():
         email = request.json.get("email")
         code = request.json.get("code")
 
-        print('code we got is:',code)
+        print('code we got is:', code)
         if verifier.verify_code(email, code):
             return jsonify({"message": "Verified"}), 200
         return jsonify({"error": "Invalid code"}), 400
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @app.route("/user/verify-email", methods=["POST"])
 def verify_email():
@@ -486,12 +490,11 @@ def update_user_plan(current_user):
             'message': f'Plan updated to {plan}',
             'plan': plan
         }), 200
-    
+
     except Exception as e:
         db.session.rollback()
         print(f"Error updating plan: {str(e)}")  # Add logging
         return jsonify({'error': 'Failed to update plan'}), 500
-
 
 
 @app.route('/login/google/callback', methods=['POST'])
@@ -565,6 +568,7 @@ def google_auth_callback():
             'message': str(e)
         }), 500
 
+
 @app.route('/user/update-password', methods=['POST'])
 @token_required
 def update_password(current_user):
@@ -577,6 +581,32 @@ def update_password(current_user):
 
         # Update the password with hash
         current_user.set_password(new_password)
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Password updated successfully',
+            'status': 'success'
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating password: {str(e)}")  # Add logging
+        return jsonify({'error': 'Failed to update password'}), 500
+
+
+@app.route('/user/update-forgotten-password', methods=['POST'])
+def update_forgotten_password():
+    try:
+        data = request.json
+        new_password = data.get('new_password')
+        email = data.get('email')
+
+        if not new_password:
+            return jsonify({'error': 'New password is required'}), 400
+
+        user = User.query.filter_by(email=email).first()
+        # Update the password with hash
+        user.set_password(new_password)
         db.session.commit()
 
         return jsonify({

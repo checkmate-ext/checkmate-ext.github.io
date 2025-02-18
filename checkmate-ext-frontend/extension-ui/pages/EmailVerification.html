@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Verification</title>
+    <title>Reset Password</title>
     <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
     <style>
         :root {
@@ -61,7 +61,6 @@
             font-size: 0.9rem;
             background-color: #f9f9f9;
             text-align: center;
-            letter-spacing: 0.1rem;
         }
         .input:focus {
             border-color: var(--primary-color);
@@ -86,22 +85,6 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(60,179,113,0.3);
         }
-        button::before {
-            content: "";
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.2), transparent);
-            transform: rotate(45deg);
-            transition: 0.5s;
-            opacity: 0;
-        }
-        button:hover::before {
-            opacity: 1;
-            transform: translate(25%, 25%) rotate(45deg);
-        }
         button:disabled {
             background: #B8B8B8;
             transform: none;
@@ -116,6 +99,9 @@
         }
         .success-message { color: var(--primary-color); }
         .error-message { color: #ff3860; }
+
+        #codeSection, #passwordSection { display: none; }
+
         .loading-spinner {
             display: inline-block;
             width: 18px;
@@ -129,24 +115,23 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        #codeSection { display: none; }
-        #displayEmail {
-            color: var(--primary-color);
-            font-weight: 600;
-        }
     </style>
 </head>
 <body>
 <div class="container">
     <img src="../../images/CheckMate_Transparent_Logo.png" alt="Checkmate Logo" class="logo">
+
+    <!-- Email Section -->
     <div id="emailSection">
-        <h1>Enter Your Email Address</h1>
-        <p>We'll send you a verification code to reset your password</p>
+        <h1>Reset Password</h1>
+        <p>Enter your email to receive a verification code</p>
         <div class="form-group">
             <input type="email" id="userEmail" class="input" placeholder="Enter your email" required>
         </div>
         <button type="button" id="sendCodeButton">Send Verification Code</button>
     </div>
+
+    <!-- Code Verification Section -->
     <div id="codeSection">
         <h1>Enter Verification Code</h1>
         <p>We've sent a code to:<br><strong id="displayEmail"></strong></p>
@@ -155,6 +140,20 @@
         </div>
         <button type="button" id="confirmButton">Verify Code</button>
     </div>
+
+    <!-- Password Update Section -->
+    <div id="passwordSection">
+        <h1>Create New Password</h1>
+        <p>Please enter your new password</p>
+        <div class="form-group">
+            <input type="password" id="newPassword" class="input" placeholder="New Password">
+        </div>
+        <div class="form-group">
+            <input type="password" id="confirmPassword" class="input" placeholder="Confirm Password">
+        </div>
+        <button type="button" id="updatePasswordButton">Update Password</button>
+    </div>
+
     <div id="message" class="message"></div>
 </div>
 <script src="../../scripts/email-verification.js"></script>
