@@ -2,11 +2,16 @@ import AuthService from '../authentication/auth-service.js';
 
 const authService = new AuthService('http://localhost:5000');
 
+
+
+
+
 document.addEventListener('DOMContentLoaded', () => {
     const signInButton = document.getElementById('signInToMain');
     const passwordInput = document.getElementById('password');
     const passwordError = document.getElementById('passwordError');
     const originalSignInButtonText = signInButton.innerHTML;
+    const googleButton = document.querySelector('.social-button:first-child'); // This selects the Google button
 
     // Function to show error
     const showError = (message) => {
@@ -44,6 +49,21 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             signInButton.innerHTML = originalSignInButtonText;
             showError(error.message || 'An error occurred during sign-in');
+        }
+    });
+
+    googleButton.addEventListener('click', async () => {
+        try {
+            const result = await authService.googleSignIn();
+            if (result.success) {
+                // Navigate to dashboard or main page
+                navigateTo('MainMenuPage.html');
+            } else {
+                // Handle error
+                showError(result.error);
+            }
+        } catch (error) {
+            showError('Google sign-in failed');
         }
     });
 });

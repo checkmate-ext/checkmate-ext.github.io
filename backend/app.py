@@ -2,6 +2,8 @@ from dotenv import load_dotenv
 from flask import Flask, request, jsonify, current_app
 from flask_mail import Mail, Message
 from flask_cors import CORS
+from google.auth.transport import requests
+
 from models import db, User, ArticleSearch, SimilarArticle
 from GoogleSearch import GoogleSearch
 import os
@@ -11,6 +13,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from website_checker import check_website_score
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from email_verification.TOTPVerification import TOTPVerification
 
 def create_app():
     """
@@ -21,7 +24,7 @@ def create_app():
     CORS(app)
     load_dotenv()
 
-        # Email Configuration
+    # Email Configuration
     app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
     app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
     app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True').lower() == 'true'
@@ -51,6 +54,8 @@ def create_app():
     app.config['CX_ID'] = os.getenv("CX_ID")
     app.config['VISION_API_KEY'] = os.getenv("VISION_API_KEY")
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+    app.config['GOOGLE_CLIENT_ID'] = "1029076451566-fdl9g8jq85793ej9290cddon3dt2d6rt.apps.googleusercontent.com",
+    app.config['EMAIL_VERIFICATION_SECRET_KEY'] = os.getenv('EMAIL_VERIFICATION_SECRET_KEY')
 
     # Database configuration
     DB_USER = os.getenv("DB_USER")
@@ -71,6 +76,7 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+
     # Initialize the database with the app
     db.init_app(app)
 
@@ -78,7 +84,7 @@ def create_app():
 
 
 app = create_app()
-
+verifier = TOTPVerification(app.config['EMAIL_VERIFICATION_SECRET_KEY'])
 
 def token_required(f):
     """
@@ -395,40 +401,42 @@ def send_verification_email(user_email, verification_code):
     Your App Team
     """
     try:
-        with current_app.app_context():  
-            current_app.mail.send(msg) 
+        with current_app.app_context():
+            current_app.mail.send(msg)
         print(" Email sent successfully!")
+        print()
     except Exception as mail_error:
         print(f" Error sending verification email: {str(mail_error)}")  # Print error
 
 
 @app.route("/user/send-verification-code", methods=["POST"])
 def send_verification_code():
-    """
-    Endpoint to send a verification code to the user's email.
-    """
     try:
-        data = request.json
-        email = data.get("email")
-
+        email = request.json.get("email")
         if not email:
-            return jsonify({"error": "Missing email", "message": "Email is required"}), 400
+            return jsonify({"error": "Missing email"}), 400
 
-        user = User.query.filter_by(email=email).first()
-        if not user:
-            return jsonify({"error": "User not found"}), 404
-
-        verification_code = generate_verification_code()
-        user.verification_code = verification_code
-        db.session.commit()
-
-        send_verification_email(user.email, verification_code)
-
-        return jsonify({"message": "Verification code has been sent to your email"}), 200
+        code = verifier.generate_code(email)
+        send_verification_email(email, code)
+        print('code is:',code)
+        return jsonify({"message": "Code sent"}), 200
 
     except Exception as e:
-        print(f"Error in sending verification email: {str(e)}")
-        return jsonify({"error": "Failed to send verification code", "message": str(e)}), 500
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/user/verify-code", methods=["POST"])
+def verify_code():
+    try:
+        email = request.json.get("email")
+        code = request.json.get("code")
+
+        print('code we got is:',code)
+        if verifier.verify_code(email, code):
+            return jsonify({"message": "Verified"}), 200
+        return jsonify({"error": "Invalid code"}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/user/verify-email", methods=["POST"])
 def verify_email():
@@ -442,14 +450,14 @@ def verify_email():
 
         if not email or not code:
             return jsonify({"error": "Missing email or code"}), 400
-        
+
         user = User.query.filter_by(email=email).first()
         if not user:
             return jsonify({"error": "User not found"}), 404
-        
+
         if user.verification_code != code:
             return jsonify({"error": "Invalid verification code"}), 400
-        
+
         user.is_verified = True
         user.verification_code = None  # Remove code after successful verification
         db.session.commit()
@@ -459,7 +467,8 @@ def verify_email():
     except Exception as e:
         print(f"Error in email verification: {str(e)}")
         return jsonify({"error": "Verification failed", "message": str(e)}), 500
-    
+
+
 @app.route('/user/update-plan', methods=['POST'])
 @token_required
 def update_user_plan(current_user):
@@ -483,6 +492,78 @@ def update_user_plan(current_user):
         print(f"Error updating plan: {str(e)}")  # Add logging
         return jsonify({'error': 'Failed to update plan'}), 500
 
+
+
+@app.route('/login/google/callback', methods=['POST'])
+def google_auth_callback():
+    try:
+        data = request.json
+        google_token = data.get('google_token')
+        email = data.get('email')
+        name = data.get('name')
+
+        if not google_token or not email:
+            return jsonify({
+                'error': 'Missing credentials',
+                'message': 'Google token and email are required'
+            }), 400
+
+        # Verify the token with Google
+        google_response = requests.get(
+            'https://www.googleapis.com/oauth2/v3/tokeninfo',
+            params={'access_token': google_token}
+        )
+
+        if not google_response.ok:
+            return jsonify({
+                'error': 'Invalid token',
+                'message': 'Failed to verify Google token'
+            }), 401
+
+        google_data = google_response.json()
+
+        # Verify the audience matches our client ID
+        if google_data.get('aud') != app.config['GOOGLE_CLIENT_ID']:
+            return jsonify({
+                'error': 'Invalid client',
+                'message': 'Token was not issued for this application'
+            }), 401
+
+        # Check if user exists
+        user = User.query.filter_by(email=email).first()
+
+        if not user:
+            # Create new user
+            user = User(
+                email=email,
+                name=name,
+                google_id=google_data.get('sub')
+            )
+            # Set a random password for Google users
+            random_password = os.urandom(24).hex()
+            user.set_password(random_password)
+
+            db.session.add(user)
+            db.session.commit()
+
+        # Generate JWT token
+        token = jwt.encode({
+            'user_id': user.id,
+            'exp': datetime.utcnow() + timedelta(hours=1)
+        }, app.config['JWT_SECRET_KEY'], algorithm='HS256')
+
+        return jsonify({
+            'message': 'Login successful',
+            'token': token
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error during Google authentication: {str(e)}")
+        return jsonify({
+            'error': 'Authentication failed',
+            'message': str(e)
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

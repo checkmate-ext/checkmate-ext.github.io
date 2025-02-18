@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
         } else {
             alert('No URL to analyze.');
-        }
+        } 
     });
 
     // When the Analyze URL button is clicked

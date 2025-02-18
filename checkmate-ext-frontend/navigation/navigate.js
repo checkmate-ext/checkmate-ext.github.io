@@ -73,8 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (forgotPasswordLink) {
         forgotPasswordLink.addEventListener('click', (event) => {
             event.preventDefault();
-            navigateTo('pricing.html');
-        });
+            chrome.tabs.create({
+                url: chrome.runtime.getURL('../extension-ui/pages/EmailVerification.html')
+            });});
     }
     if (confirmButton) {
         confirmButton.addEventListener('click', () => navigateTo('UpdatePasswordPage.html'));
