@@ -565,5 +565,30 @@ def google_auth_callback():
             'message': str(e)
         }), 500
 
+@app.route('/user/update-password', methods=['POST'])
+@token_required
+def update_password(current_user):
+    try:
+        data = request.json
+        new_password = data.get('new_password')
+
+        if not new_password:
+            return jsonify({'error': 'New password is required'}), 400
+
+        # Update the password with hash
+        current_user.set_password(new_password)
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Password updated successfully',
+            'status': 'success'
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating password: {str(e)}")  # Add logging
+        return jsonify({'error': 'Failed to update password'}), 500
+
+
 if __name__ == '__main__':
     app.run(debug=True)

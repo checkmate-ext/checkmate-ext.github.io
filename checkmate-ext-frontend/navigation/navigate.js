@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
+    const editButton = document.getElementById('editBtn');
     const signInButton = document.getElementById('signInButton');
     const signUpButton = document.getElementById('signUpButton');
     const googleSignUpButton = document.getElementById('googleSignUpButton');
@@ -77,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 url: chrome.runtime.getURL('../extension-ui/pages/EmailVerification.html')
             });});
     }
+
     if (confirmButton) {
         confirmButton.addEventListener('click', () => navigateTo('UpdatePasswordPage.html'));
     }
@@ -109,6 +110,12 @@ document.addEventListener('DOMContentLoaded', () => {
         priceButton.addEventListener('click', () => navigateTo('pricing.html'));
     }
 
+    if (editButton) {
+        editButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            navigateTo('UpdatePasswordPage.html');
+        });
+    }
 });
 
 
