@@ -4,6 +4,7 @@ beautifulsoup4~=4.12.3
 undetected-chromedriver
 distutils
 setuptools
+pyotp
 
 python-dotenv~=1.0.1
 requests~=2.32.3
