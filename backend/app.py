@@ -400,7 +400,7 @@ def send_verification_email(user_email, verification_code):
     If you did not request this, please ignore this email.
 
     Best regards,
-    Your App Team
+    CheckMate
     """
     try:
         with current_app.app_context():
