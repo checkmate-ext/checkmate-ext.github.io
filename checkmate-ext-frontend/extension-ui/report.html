@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Send Report</title>
+    <!-- Bulma CSS Framework for styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+    <style>
+        body {
+            background-color: #f4f4f4;
+            font-family: 'Inter', Arial, sans-serif;
+        }
+        .container {
+            position: relative;
+            max-width: 500px;
+            margin: 50px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        #notificationContainer {
+            margin-top: 20px;
+        }
+
+        /* Bottom Icons */
+        .bottom-icons {
+            z-index: 10;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .bottom-icons img {
+            width: 24px;
+            opacity: 0.7;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .bottom-icons img:hover {
+            opacity: 1;
+            transform: scale(1.1) rotate(5deg);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 class="title">Send a Report</h1>
+    <form id="reportForm">
+        <div class="field">
+            <label class="label">Report Type</label>
+            <div class="control">
+                <label class="radio">
+                    <input type="radio" name="reportType" value="Bug" checked>
+                    Bug
+                </label>
+                <label class="radio">
+                    <input type="radio" name="reportType" value="Reliability Score Issue">
+                    Reliability Score Issue
+                </label>
+            </div>
+        </div>
+        <div class="field">
+            <label class="label">Your Email (optional)</label>
+            <div class="control">
+                <input class="input" type="email" name="email" placeholder="you@example.com">
+            </div>
+        </div>
+        <div class="field">
+            <label class="label">Message</label>
+            <div class="control">
+                <textarea class="textarea" name="message" placeholder="Describe the issue..."></textarea>
+            </div>
+        </div>
+        <div class="field">
+            <div class="control">
+                <button id="sendReportBtn" class="button is-link" type="submit">Send Report</button>
+            </div>
+        </div>
+    </form>
+    <div id="notificationContainer"></div>
+    <script src="../scripts/report.js"></script>
+</div>
+<div class="bottom-icons">
+    <img src="../images/settings-icon.png" alt="Settings">
+    <button id="logoutBtn" style="background: none; border: none; cursor: pointer;">
+        <img src="../images/logout.png" alt="Logout" title="Logout" style="width: 24px; height: 24px;">
+    </button>
+</div>
+<script src="../navigation/navigate.js"></script>
+<script type="module" src="../scripts/logout-script.js"></script>
+</body>
+</html>

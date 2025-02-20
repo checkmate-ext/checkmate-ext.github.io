@@ -618,6 +618,30 @@ def update_forgotten_password():
         print(f"Error updating password: {str(e)}")  # Add logging
         return jsonify({'error': 'Failed to update password'}), 500
 
+@app.route('/report', methods=['POST'])
+def report():
+    try:
+        data = request.json
+        report_type = data.get('reportType', 'Bug')
+        message_content = data.get('message', '')
+        reporter_email = data.get('email')  # Getting email like in update_forgotten_password
+
+        subject = f"New Report: {report_type}"
+        body = (
+            f"Report Type: {report_type}\n\n"
+            f"Message:\n{message_content}\n\n"
+            f"Reporter Email: {reporter_email}"
+        )
+
+        msg = Message(subject=subject, recipients=[os.getenv('MAIL_DEFAULT_SENDER')])
+        msg.body = body
+
+        current_app.mail.send(msg)
+        return jsonify({'message': 'Report sent successfully.'}), 200
+
+    except Exception as e:
+        print("Error sending email:", e)
+        return jsonify({'error': 'Failed to send report.'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

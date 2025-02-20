@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dashboardPreview = document.getElementById('dashboardPreview');
     const historyButton = document.getElementById('historyBtn');
     const priceButton = document.getElementById('upgradeBtn');
+    const reportButton = document.getElementById('reportBtn');
 
     if (signInButton) {
         signInButton.addEventListener('click', () => navigateTo('SignInPage.html'));
@@ -114,6 +115,13 @@ document.addEventListener('DOMContentLoaded', () => {
         editButton.addEventListener('click', (event) => {
             event.preventDefault();
             navigateTo('UpdatePasswordPage.html');
+        });
+    }
+
+    if (reportButton) {
+        reportButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            navigateTo('report.html');
         });
     }
 });
