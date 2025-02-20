@@ -13,7 +13,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     subscription_plan = db.Column(db.String(50), default="Free")
-    searches = db.relationship('ArticleSearch', backref='user', lazy=True)
+    article_requests = db.relationship('ArticleRequest', backref='user', lazy=True)
     google_id = db.Column(db.String(128), unique=True, nullable=True)
 
     def set_password(self, password):
@@ -27,7 +27,6 @@ class ArticleSearch(db.Model):
     __tablename__ = 'article_searches'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     url = db.Column(db.String(500), nullable=False)
     title = db.Column(db.String(500), nullable=False)
     reliability_score = db.Column(db.Float(precision=53))
@@ -36,6 +35,7 @@ class ArticleSearch(db.Model):
     bias_score = db.Column(db.Float(precision=53))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     similar_articles = db.relationship('SimilarArticle', backref='main_article', lazy=True)
+    requests = db.relationship('ArticleRequest', backref='article', lazy=True)
 
     def to_dict(self):
         return {
@@ -60,4 +60,19 @@ class SimilarArticle(db.Model):
     title = db.Column(db.String(500), nullable=False)
     url = db.Column(db.String(500), nullable=False)
     similarity_score = db.Column(db.Float, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'title': self.title,
+            'url': self.url,
+            'similarity_score': self.similarity_score
+        }
+
+
+class ArticleRequest(db.Model):
+    __tablename__ = 'article_requests'
+
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    article_id = db.Column(db.Integer, db.ForeignKey('article_searches.id'), primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
