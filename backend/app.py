@@ -12,7 +12,6 @@ import jwt
 from datetime import datetime, timedelta
 from functools import wraps
 from website_checker import check_website_score
-from flask_jwt_extended import jwt_required, get_jwt_identity
 from email_verification.TOTPVerification import TOTPVerification
 
 
