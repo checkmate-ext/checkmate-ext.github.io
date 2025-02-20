@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Checkmate - Pricing</title>
-        <!-- Bulma CSS Framework -->
-        <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
-        <!-- Font Awesome for Icons (Optional for better iconography) -->
-        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+    <!-- Bulma CSS Framework -->
+    <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
+    <!-- Font Awesome for Icons (Optional for better iconography) -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     <style>
         :root {
             --primary-color: #3cb371;
@@ -64,14 +64,16 @@
             transform: scale(1.1) rotate(5deg);
         }
 
-        .logo-container {
+        .logo-container,
+        .logo {
             display: flex;
             justify-content: center;
             margin: 5px 0;
             flex: 0 0 auto;
         }
 
-        .logo-container img {
+        .logo-container img,
+        .logo img {
             width: 100px;
         }
 
@@ -115,7 +117,6 @@
             color: white;
         }
 
-        
         .bottom-icons {
             position: absolute;
             bottom: 0;
@@ -145,13 +146,13 @@
         .button-margin {
             margin: 10px;
         }
-            /* Responsive Adjustments */
-            @media (max-width: 400px) {
+
+        /* Responsive Adjustments */
+        @media (max-width: 400px) {
             body {
                 width: 100vw;
                 height: 100vh;
             }
-
             .container {
                 border-radius: 8px;
                 padding: 20px;
@@ -159,7 +160,6 @@
             .input-box textarea {
                 height: 70px;
             }
-
             .button {
                 font-size: 14px;
                 padding: 10px 16px;
@@ -171,36 +171,38 @@
                 flex-direction: column;
                 align-items: center;
             }
-
             .plan-card {
                 width: 100%;
                 max-width: 300px;
             }
         }
-    
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Header Section -->
         <div class="header">
-            <div class="header-icons" >
+            <div class="header-icons">
                 <img src="../images/menu-bar-icon.png" alt="Menu" width="24" id="menuBtn" class="header-icon">
             </div>
             <div class="header-icons">
                 <img src="../images/user-profile-icon.png" alt="Profile" width="24" id="profileBtn" class="header-icon">
             </div>
         </div>
-    
+
         <!-- Logo Section -->
         <div class="logo">
             <img src="../images/CheckMate_Transparent_Logo.png" alt="Checkmate Logo" width="100">
         </div>
 
-        <h3 class="subtitle is-5">Upgrade To</h3>
-        <button class="button button-margin" id="premiumBtn">⭐ Premium<br>5$/mo</button>
-        <button class="button button-margin" id="enterpriseBtn">Enterprise<br>10$/mo per person</button>        
+        <!-- Dynamic Plan Message -->
+        <h3 id="planMessage" class="subtitle is-5"></h3>
 
+        <!-- Upgrade/Plan Action Buttons -->
+        <button class="button button-margin" id="premiumBtn"></button>
+        <button class="button button-margin" id="enterpriseBtn"></button>        
+
+        <!-- Bottom Icons -->
         <div class="bottom-icons">
             <img src="../images/settings-icon.png" alt="Settings">
             <img src="../images/exclamation-triangle-icon.png" alt="Warning">
