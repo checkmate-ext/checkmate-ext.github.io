@@ -17,12 +17,17 @@ document.getElementById('updateBtn').addEventListener('click', async (e) => {
     updateBtn.classList.add('is-loading');
 
     try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Authentication required. Please log in.');
+        }
+
         const response = await fetch('http://localhost:5000/user/update-password', {
             method: 'POST',
             mode: 'cors',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': Bearer ${localStorage.getItem('token')}
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ new_password: newPassword })
         });
@@ -69,8 +74,8 @@ function togglePasswordVisibility(inputId, iconId) {
 // Helper: Show Notification
 function showNotification(message, type) {
     const notificationDiv = document.createElement('div');
-    notificationDiv.className = notification ${type};
-    notificationDiv.innerHTML = <button class="delete"></button> ${message};
+    notificationDiv.className = `notification ${type}`;
+    notificationDiv.innerHTML = `<button class="delete"></button> ${message}`;
 
     document.getElementById('notificationContainer').appendChild(notificationDiv);
 
