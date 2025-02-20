@@ -68,7 +68,7 @@
             gap: 15px;
             overflow-y: auto;
             padding-right: 5px;
-            margin-bottom: 60px; /* Space for bottom icons */
+            margin-bottom: 60px;
         }
 
         /* Scrollbar styling */
@@ -88,44 +88,26 @@
         /* Profile Section */
         .profile-section {
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             background: linear-gradient(135deg, rgba(60,179,113,0.1), rgba(46,139,87,0.1));
             border-radius: 15px;
             transition: transform 0.3s ease;
+            margin-top: 20px;
         }
 
         .profile-section:hover {
             transform: translateY(-2px);
         }
 
-        .profile-image {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            margin-bottom: 15px;
-            border: 3px solid var(--primary-color);
-            padding: 2px;
-            transition: transform 0.3s ease;
-        }
-
-        .profile-image:hover {
-            transform: scale(1.1);
-        }
-
         .profile-info {
-            margin-bottom: 15px;
+            margin-bottom: 25px;
             color: var(--text-dark);
         }
 
-        .profile-name {
-            font-size: 1.3em;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
         .profile-email {
-            font-size: 0.95em;
+            font-size: 1.1em;
             color: #666;
+            margin-bottom: 20px;
         }
 
         .btn-edit {
@@ -133,7 +115,7 @@
             color: white;
             border: none;
             border-radius: var(--border-radius);
-            padding: 8px 20px;
+            padding: 10px 25px;
             font-size: 0.95em;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -261,46 +243,44 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <img src="../images/menu-bar-icon.png" alt="Menu" class="header-icon" id="menuBtn">
+<div class="container">
+    <div class="header">
+        <img src="../images/menu-bar-icon.png" alt="Menu" class="header-icon" id="menuBtn">
+    </div>
+
+    <div class="content-wrapper">
+        <div class="profile-section">
+            <div class="profile-info">
+                <div class="profile-email">namesurname@email.com</div>
+            </div>
+            <button class="btn-edit" id="editBtn">Change Password</button>
         </div>
 
-        <div class="content-wrapper">
-            <div class="profile-section">
-                <img src="../images/user-profile-icon.png" alt="User Profile" class="profile-image">
-                <div class="profile-info">
-                    <div class="profile-name">Name Surname</div>
-                    <div class="profile-email">namesurname@email.com</div>
-                </div>
-                <button class="btn-edit" id="editBtn">Edit Profile</button>
-            </div>
-
-            <div class="plan-box">
-                <span class="plan-info">Current Plan: Free</span>
-                <button class="btn-upgrade" id="upgradeBtn">
-                    ⭐ Upgrade
-                </button>
-            </div>
-
-            <div class="past-searches" id="pastSearches">
-                <img src="../images/DashboardIcon.png" alt="Dashboard">
-                <span>Dashboard</span>
-            </div>
+        <div class="plan-box">
+            <span class="plan-info">Current Plan: Free</span>
+            <button class="btn-upgrade" id="upgradeBtn">
+                ⭐ Upgrade
+            </button>
         </div>
 
-        <div class="bottom-icons">
-            <img src="../images/settings-icon.png" alt="Settings">
-            <button id="reportBtn" style="background: none; border: none; cursor: pointer;">
-                <img src="../images/exclamation-triangle-icon.png" alt="Warning">
-            </button>
-            <button id="logoutBtn" style="background: none; border: none; cursor: pointer;">
-                <img src="../images/logout.png" alt="Logout" title="Logout" style="width: 24px; height: 24px;">
-            </button>
+        <div class="past-searches" id="pastSearches">
+            <img src="../images/DashboardIcon.png" alt="Dashboard">
+            <span>Dashboard</span>
         </div>
     </div>
 
-    <script src="../navigation/navigate.js"></script>
-    <script type="module" src="../scripts/logout-script.js"></script>
+    <div class="bottom-icons">
+        <img src="../images/settings-icon.png" alt="Settings">
+        <button id="reportBtn" style="background: none; border: none; cursor: pointer;">
+            <img src="../images/exclamation-triangle-icon.png" alt="Warning">
+        </button>
+        <button id="logoutBtn" style="background: none; border: none; cursor: pointer;">
+            <img src="../images/logout.png" alt="Logout" title="Logout" style="width: 24px; height: 24px;">
+        </button>
+    </div>
+</div>
+
+<script src="../navigation/navigate.js"></script>
+<script type="module" src="../scripts/logout-script.js"></script>
 </body>
 </html>
