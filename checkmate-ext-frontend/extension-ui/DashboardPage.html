@@ -168,6 +168,23 @@
             width: 100%;
             height: 80px; /* adjust as needed */
         }
+        .loading {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .error-message {
+            color: #dc3545;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background-color: #f8d7da;
+            display: none;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -185,27 +202,27 @@
             <div class="progress-container">
                 <div class="progress-bar" id="usageBar"></div>
             </div>
-            <div class="progress-label">70% of daily limit used</div>
+            <div class="progress-label">-</div>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-value">100</div>
+                <div class="stat-value">-</div>
                 <div class="stat-title">Daily Limit</div>
                 <div class="stat-subtitle">articles/day</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">70</div>
+                <div class="stat-value">-</div>
                 <div class="stat-title">Articles Today</div>
                 <div class="stat-subtitle">articles analyzed</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">95%</div>
-                <div class="stat-title">Accuracy Rate</div>
+                <div class="stat-value">-</div>
+                <div class="stat-title">Reliability</div>
                 <div class="stat-subtitle">last 7 days</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">1,247</div>
+                <div class="stat-value">-</div>
                 <div class="stat-title">Total Articles</div>
                 <div class="stat-subtitle">all time</div>
             </div>
@@ -228,9 +245,8 @@
             </button>
         </div>
     </div>
-
     <script src="../navigation/navigate.js"></script>
     <script src="../scripts/chart.min.js"></script>
-    <script src="../scripts/dashboard-animation.js"></script>
+    <script src="../scripts/dashboard.js"></script>
 </body>
 </html>

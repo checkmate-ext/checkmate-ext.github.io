@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify, current_app
 from flask_mail import Mail, Message
 from flask_cors import CORS
 from google.auth.transport import requests
+from sqlalchemy import func
 
 from models import db, User, ArticleSearch, SimilarArticle, ArticleRequest
 from GoogleSearch import GoogleSearch
@@ -149,7 +150,7 @@ def scrap_and_search(current_user):
                 'similarity_score': article.similarity_score
             } for article in past_similar_articles]
 
-            past_request = ArticleRequest.query.filter_by(user_id=current_user.id,article_id=past_article.id).first()
+            past_request = ArticleRequest.query.filter_by(user_id=current_user.id, article_id=past_article.id).first()
             if not past_request:
                 article_request = ArticleRequest(
                     user_id=current_user.id,
@@ -633,6 +634,7 @@ def update_forgotten_password():
         print(f"Error updating password: {str(e)}")  # Add logging
         return jsonify({'error': 'Failed to update password'}), 500
 
+
 @app.route('/report', methods=['POST'])
 @token_required
 def report(current_user):
@@ -659,33 +661,76 @@ def report(current_user):
         print("Error sending email:", e)
         return jsonify({'error': 'Failed to send report.'}), 500
 
+
 @app.route('/user/stats', methods=['GET'])
 @token_required
 def fetch_stats(current_user):
     try:
+        # Get timeframes for different metrics
         twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
 
-        recent_articles = ArticleSearch.query.join(ArticleRequest) \
-            .filter(
+        # Get recent articles (last 24 hours)
+        recent_articles = ArticleSearch.query.join(ArticleRequest).filter(
             ArticleRequest.user_id == current_user.id,
             ArticleRequest.created_at >= twenty_four_hours_ago
         ).all()
 
+        # Get weekly articles
+        weekly_articles = ArticleSearch.query.join(ArticleRequest).filter(
+            ArticleRequest.user_id == current_user.id,
+            ArticleRequest.created_at >= seven_days_ago
+        ).all()
+
+        # Get all-time articles count
+        total_articles = ArticleRequest.query.filter(
+            ArticleRequest.user_id == current_user.id
+        ).count()
+
+        # Calculate average scores for accuracy metrics
+        weekly_scores = []
+        for article in weekly_articles:
+            weekly_scores.append(article.reliability_score)
+        avg_accuracy = sum(weekly_scores) / len(weekly_scores) if weekly_scores else 0
+
+        # Get article distribution by day for the past week
+        daily_counts = db.session.query(
+            func.date(ArticleRequest.created_at).label('date'),
+            func.count(ArticleRequest.article_id).label('count')
+        ).filter(
+            ArticleRequest.user_id == current_user.id,
+            ArticleRequest.created_at >= seven_days_ago
+        ).group_by(
+            func.date(ArticleRequest.created_at)
+        ).all()
+
+        daily_distribution = {
+            str(day.date): day.count for day in daily_counts
+        }
+
+        # Format recent articles data
         articles_data = [{
             'url': article.url,
             'title': article.title,
             'reliability_score': article.reliability_score,
             'credibility_score': article.credibility_score,
             'objectivity_score': article.objectivity_score,
-            'created_at': article.created_at,
+            'bias_score': article.bias_score,
+            'created_at': article.created_at.isoformat(),
             'id': article.id,
         } for article in recent_articles]
 
         return jsonify({
             'articles_analyzed': len(recent_articles),
             'daily_usage_left': app.config['DAILY_USAGE'] - len(recent_articles),
-            'articles': articles_data
+            'total_articles': total_articles,
+            'weekly_accuracy': avg_accuracy,
+            'daily_distribution': daily_distribution,
+            'articles': articles_data,
+            'subscription_plan': current_user.subscription_plan,
+            'daily_limit': app.config['DAILY_USAGE']
         })
+
     except Exception as e:
         db.session.rollback()
         print(f"Error fetching stats: {str(e)}")
