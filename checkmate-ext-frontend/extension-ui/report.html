@@ -8,26 +8,108 @@
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     <style>
+        :root {
+            --primary-color: #3cb371;
+            --secondary-color: #2e8b57;
+            --bg-light: #f4f4f4;
+            --text-dark: #333;
+            --border-radius: 8px;
+            --transition-speed: 0.3s;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            transition: all var(--transition-speed) ease;
+        }
+
         body {
-            background-color: #f4f4f4;
+            width: 380px;
+            height: 600px;
+            margin: 0;
             font-family: 'Inter', Arial, sans-serif;
+            background-color: var(--bg-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
         }
+
         .container {
-            position: relative;
-            max-width: 500px;
-            margin: 50px auto;
-            background: white;
+            width: 100%;
+            height: 100%;
             padding: 25px;
-            border-radius: 12px;
+            background: white;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
         }
-        #notificationContainer {
+
+        /* Header Styling */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .header-icon {
+            cursor: pointer;
+            opacity: 0.7;
+            width: 24px;
+            height: 24px;
+        }
+
+        .header-icon:hover {
+            opacity: 1;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        /* Logo Styling */
+        .logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .logo img {
+            width: 100px;
+        }
+
+        /* Form Styling */
+        #reportForm {
             margin-top: 20px;
         }
 
-        /* Bottom Icons */
+        .field {
+            margin-bottom: 20px;
+        }
+
+        .input,
+        .textarea {
+            border-radius: var(--border-radius);
+            border: 1px solid #e0e0e0;
+            background-color: #f9f9f9;
+            padding: 12px;
+            font-size: 14px;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .input:focus,
+        .textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(60, 179, 113, 0.2);
+            outline: none;
+        }
+
+        /* Bottom Icons Styling */
         .bottom-icons {
-            z-index: 10;
             position: absolute;
             bottom: 0;
             left: 0;
@@ -52,11 +134,46 @@
             opacity: 1;
             transform: scale(1.1) rotate(5deg);
         }
+
+        /* Notification Container */
+        #notificationContainer {
+            margin-top: 20px;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 400px) {
+            body {
+                width: 100vw;
+                height: 100vh;
+            }
+            .container {
+                border-radius: 8px;
+                padding: 20px;
+            }
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1 class="title">Send a Report</h1>
+    <!-- Header Section -->
+    <div class="header">
+        <div class="header-icons">
+            <img src="../images/menu-bar-icon.png" alt="Menu" id="menuBtn" class="header-icon">
+        </div>
+        <div class="header-icons">
+            <img src="../images/user-profile-icon.png" alt="Profile" id="profileBtn" class="header-icon">
+        </div>
+    </div>
+
+    <!-- Logo Section -->
+    <div class="logo">
+        <img src="../images/CheckMate_Transparent_Logo.png" alt="Checkmate Logo">
+    </div>
+
+    <!-- Title -->
+    <h1 class="title" style="text-align: center; margin-bottom: 20px;">Send a Report</h1>
+
+    <!-- Report Form -->
     <form id="reportForm">
         <div class="field">
             <label class="label">Report Type</label>
@@ -72,12 +189,6 @@
             </div>
         </div>
         <div class="field">
-            <label class="label">Your Email (optional)</label>
-            <div class="control">
-                <input class="input" type="email" name="email" placeholder="you@example.com">
-            </div>
-        </div>
-        <div class="field">
             <label class="label">Message</label>
             <div class="control">
                 <textarea class="textarea" name="message" placeholder="Describe the issue..."></textarea>
@@ -89,16 +200,21 @@
             </div>
         </div>
     </form>
+
+    <!-- Notification Container -->
     <div id="notificationContainer"></div>
-    <script src="../scripts/report.js"></script>
+
+    <!-- Bottom Icons -->
+    <div class="bottom-icons">
+        <img src="../images/settings-icon.png" alt="Settings">
+        <button id="reportBtn" style="background: none; border: none; cursor: pointer;">
+            <img src="../images/exclamation-triangle-icon.png" alt="Warning">
+        </button>
+        <button id="logoutBtn" style="background: none; border: none; cursor: pointer;">
+            <img src="../images/logout.png" alt="Logout" title="Logout" style="width: 24px; height: 24px;">
+        </button>
+    </div>
 </div>
-<div class="bottom-icons">
-    <img src="../images/settings-icon.png" alt="Settings">
-    <button id="logoutBtn" style="background: none; border: none; cursor: pointer;">
-        <img src="../images/logout.png" alt="Logout" title="Logout" style="width: 24px; height: 24px;">
-    </button>
-</div>
-<script src="../navigation/navigate.js"></script>
-<script type="module" src="../scripts/logout-script.js"></script>
+<script src="../scripts/report.js"></script>
 </body>
 </html>
