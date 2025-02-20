@@ -76,4 +76,3 @@ class ArticleRequest(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     article_id = db.Column(db.Integer, db.ForeignKey('article_searches.id'), primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-

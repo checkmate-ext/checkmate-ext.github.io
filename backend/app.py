@@ -4,7 +4,7 @@ from flask_mail import Mail, Message
 from flask_cors import CORS
 from google.auth.transport import requests
 
-from models import db, User, ArticleSearch, SimilarArticle
+from models import db, User, ArticleSearch, SimilarArticle, ArticleRequest
 from GoogleSearch import GoogleSearch
 import os
 import random
@@ -75,7 +75,7 @@ def create_app():
     DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+    app.config['DAILY_USAGE'] = 100
     # Initialize the database with the app
     db.init_app(app)
 
@@ -149,6 +149,15 @@ def scrap_and_search(current_user):
                 'similarity_score': article.similarity_score
             } for article in past_similar_articles]
 
+            past_request = ArticleRequest.query.filter_by(user_id=current_user.id,article_id=past_article.id).first()
+            if not past_request:
+                article_request = ArticleRequest(
+                    user_id=current_user.id,
+                    article_id=past_article.id
+                )
+                db.session.add(article_request)
+                db.session.commit()
+
             return jsonify({
                 'reliability_score': past_article.reliability_score,
                 'message': f"Results for {url}",
@@ -173,7 +182,6 @@ def scrap_and_search(current_user):
         print("article : ", article)
 
         new_search = ArticleSearch(
-            user_id=current_user.id,
             url=article['url'],
             title=article['title'],
             reliability_score=reliability_score,
@@ -184,6 +192,12 @@ def scrap_and_search(current_user):
 
         db.session.add(new_search)
         db.session.flush()
+
+        article_request = ArticleRequest(
+            user_id=current_user.id,
+            article_id=new_search.id
+        )
+        db.session.add(article_request)
 
         similiar_articles_to_insert = [
             SimilarArticle(
@@ -311,10 +325,11 @@ def get_user_searches(current_user):
     Returns a list of search results with their similar articles.
     This endpoint is protected and requires a valid JWT token.
     """
-    # Ensure that the token belongs to the user making the request
-
     try:
-        searches = ArticleSearch.query.filter_by(user_id=current_user.id).all()
+        searches = ArticleSearch.query.join(ArticleRequest) \
+            .filter(ArticleRequest.user_id == current_user.id) \
+            .all()
+
         articles_data = [{
             'url': article.url,
             'title': article.title,
@@ -617,6 +632,39 @@ def update_forgotten_password():
         db.session.rollback()
         print(f"Error updating password: {str(e)}")  # Add logging
         return jsonify({'error': 'Failed to update password'}), 500
+
+
+@app.route('/user/stats', methods=['GET'])
+@token_required
+def fetch_stats(current_user):
+    try:
+        twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
+
+        recent_articles = ArticleSearch.query.join(ArticleRequest) \
+            .filter(
+            ArticleRequest.user_id == current_user.id,
+            ArticleRequest.created_at >= twenty_four_hours_ago
+        ).all()
+
+        articles_data = [{
+            'url': article.url,
+            'title': article.title,
+            'reliability_score': article.reliability_score,
+            'credibility_score': article.credibility_score,
+            'objectivity_score': article.objectivity_score,
+            'created_at': article.created_at,
+            'id': article.id,
+        } for article in recent_articles]
+
+        return jsonify({
+            'articles_analyzed': len(recent_articles),
+            'daily_usage_left': app.config['DAILY_USAGE'] - len(recent_articles),
+            'articles': articles_data
+        })
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error fetching stats: {str(e)}")
+        return jsonify({'error': 'Failed to fetch daily stats'}), 500
 
 
 if __name__ == '__main__':
