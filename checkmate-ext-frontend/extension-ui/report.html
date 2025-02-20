@@ -173,8 +173,30 @@
     <!-- Title -->
     <h1 class="title" style="text-align: center; margin-bottom: 20px;">Send a Report</h1>
 
-    <!-- Report Form -->
     <form id="reportForm">
+        <style>
+            /* Make form fields a bit smaller */
+            .field {
+                margin-bottom: 10px;
+            }
+            .label {
+                font-size: 0.9rem;
+            }
+            .radio,
+            .textarea,
+            .button {
+                font-size: 0.9rem;
+            }
+            /* Reduce the textarea height */
+            .textarea {
+                min-height: 50px;
+            }
+            /* Notification container spacing */
+            #notificationContainer {
+                margin-top: 10px;
+                font-size: 0.9rem;
+            }
+        </style>
         <div class="field">
             <label class="label">Report Type</label>
             <div class="control">
@@ -199,17 +221,13 @@
                 <button id="sendReportBtn" class="button is-link" type="submit">Send Report</button>
             </div>
         </div>
+        <!-- Notification Container -->
+        <div id="notificationContainer"></div>
     </form>
-
-    <!-- Notification Container -->
-    <div id="notificationContainer"></div>
 
     <!-- Bottom Icons -->
     <div class="bottom-icons">
         <img src="../images/settings-icon.png" alt="Settings">
-        <button id="reportBtn" style="background: none; border: none; cursor: pointer;">
-            <img src="../images/exclamation-triangle-icon.png" alt="Warning">
-        </button>
         <button id="logoutBtn" style="background: none; border: none; cursor: pointer;">
             <img src="../images/logout.png" alt="Logout" title="Logout" style="width: 24px; height: 24px;">
         </button>

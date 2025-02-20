@@ -634,12 +634,13 @@ def update_forgotten_password():
         return jsonify({'error': 'Failed to update password'}), 500
 
 @app.route('/report', methods=['POST'])
-def report():
+@token_required
+def report(current_user):
     try:
         data = request.json
         report_type = data.get('reportType', 'Bug')
         message_content = data.get('message', '')
-        reporter_email = data.get('email')  # Getting email like in update_forgotten_password
+        reporter_email = current_user.email
 
         subject = f"New Report: {report_type}"
         body = (
