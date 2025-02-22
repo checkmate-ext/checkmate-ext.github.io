@@ -1,23 +1,42 @@
 import { Stack } from 'expo-router';
-import { useColorScheme } from 'react-native';
+import { useTheme } from 'react-native-paper';
 
 export default function AuthLayout() {
-    const colorScheme = useColorScheme();
+    const theme = {
+        ...useTheme(),
+        colors: {
+            ...useTheme().colors,
+            primary: '#8B7355',
+            secondary: '#D2B48C',
+            accent: '#6B4423',
+            background: '#1A1612',
+            surface: '#2A241E',
+            text: '#E8DCC4',
+        },
+    };
 
     return (
         <Stack
+            initialRouteName="login"
             screenOptions={{
                 headerStyle: {
-                    backgroundColor: colorScheme === 'dark' ? '#1A1A1A' : '#FFFFFF',
+                    backgroundColor: theme.colors.background,
                 },
-                headerTintColor: colorScheme === 'dark' ? '#8B6B44' : '#1A1A1A',
+                headerTintColor: theme.colors.text,
+                headerTitleStyle: {
+                    color: theme.colors.secondary,
+                },
+                headerBackTitleStyle: {
+                    color: theme.colors.secondary,
+                },
+                headerShadowVisible: false,
                 headerBackTitle: 'Back',
             }}
         >
             <Stack.Screen
                 name="login"
                 options={{
-                    title: 'Login',
+                    title: '',
                 }}
             />
             <Stack.Screen

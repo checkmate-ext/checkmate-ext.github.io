@@ -300,9 +300,18 @@ def login_user():
                 'user_id': user.id,
                 'exp': datetime.utcnow() + timedelta(hours=1)
             }, app.config['JWT_SECRET_KEY'], algorithm='HS256')
+
+            user_data = {
+                'id': user.id,
+                'email': user.email,
+                'subscription_plan': user.subscription_plan,
+                'created_at': user.created_at.isoformat(),
+            }
+            print(user_data)
             return jsonify({
                 'message': 'Login successful',
-                'token': token
+                'token': token,
+                'user': user_data
             })
 
         return jsonify({

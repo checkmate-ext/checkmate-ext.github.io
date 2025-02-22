@@ -1,121 +1,185 @@
-import { View, Text, Image, StyleSheet, ScrollView } from 'react-native';
-import { useColorScheme } from 'react-native';
+import {View, Animated, ScrollView, Image} from 'react-native';
+import {useAuth} from '../context/AuthContext';
+import {useState, useRef, useEffect} from 'react';
+import {
+    Button,
+    Text,
+    useTheme,
+    Card,
+    FAB
+} from 'react-native-paper';
+import * as Haptics from 'expo-haptics';
+import {LinearGradient} from 'expo-linear-gradient';
 
 export default function Home() {
-    const colorScheme = useColorScheme();
+    const {signOut, user} = useAuth();
+    const [loading, setLoading] = useState(false);
+
+    const theme = {
+        ...useTheme(),
+        colors: {
+            ...useTheme().colors,
+            primary: '#8B7355',
+            secondary: '#D2B48C',
+            accent: '#6B4423',
+            background: '#1A1612',
+            surface: '#2A241E',
+            text: '#E8DCC4',
+            placeholder: '#A89880',
+            backdrop: 'rgba(26, 22, 18, 0.5)',
+        },
+    };
+
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(50)).current;
+    const scaleAnim = useRef(new Animated.Value(0.95)).current;
+
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 1200,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 1000,
+                useNativeDriver: true,
+            }),
+            Animated.spring(scaleAnim, {
+                toValue: 1,
+                tension: 20,
+                friction: 7,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, []);
+
+    const handleLogout = async () => {
+        try {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+            setLoading(true);
+            await signOut();
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } catch (error) {
+            console.error('Logout error:', error);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
-        <ScrollView style={[
-            styles.container,
-            { backgroundColor: colorScheme === 'dark' ? '#1A1A1A' : '#FFFFFF' }
-        ]}>
-            <View style={styles.header}>
-                <Image
-                    source={require('../../assets/images/logo.png')}
-                    style={styles.logo}
-                    resizeMode="contain"
-                />
-                <Text style={[
-                    styles.welcome,
-                    { color: colorScheme === 'dark' ? '#FFFFFF' : '#000000' }
-                ]}>
-                    Welcome to Checkmate
-                </Text>
-            </View>
+        <LinearGradient
+            colors={['#1A1612', '#241E19', '#2A241E']}
+            style={{flex: 1}}
+        >
+            <ScrollView>
+                <Animated.View
+                    style={{
+                        opacity: fadeAnim,
+                        transform: [
+                            {translateY: slideAnim},
+                            {scale: scaleAnim}
+                        ],
+                        padding: 20,
+                    }}
+                >
+                    <View style={{alignItems: 'center', marginVertical: 30}}>
+                        <Animated.View
+                            style={{
+                                transform: [{scale: scaleAnim}],
+                                shadowColor: theme.colors.secondary,
+                                shadowOffset: {width: 0, height: 0},
+                                shadowRadius: 20,
+                                shadowOpacity: 0.3,
+                            }}
+                        >
+                            <Image
+                                source={require('../../assets/images/logo_no_title.png')}
+                                style={{
+                                    width: 150,
+                                    height: 150,
+                                    marginBottom: 10
+                                }}
+                                resizeMode="contain"
+                            />
+                        </Animated.View>
+                        <Text
+                            variant="displaySmall"
+                            style={{
+                                color: theme.colors.secondary,
+                                textShadowColor: theme.colors.accent,
+                                textShadowOffset: {width: 0, height: 0},
+                                textShadowRadius: 8,
+                                marginTop: 20,
+                            }}
+                        >
+                            Welcome, User
+                        </Text>
+                    </View>
 
-            {/* Add your home screen content here */}
-            <View style={styles.content}>
-                <Text style={[
-                    styles.contentText,
-                    { color: colorScheme === 'dark' ? '#FFFFFF' : '#000000' }
-                ]}>
-                    Your home screen content goes here
-                </Text>
-            </View>
-        </ScrollView>
+                    <Card
+                        style={{
+                            backgroundColor: theme.colors.surface,
+                            marginBottom: 20,
+                            borderRadius: 15,
+                        }}
+                    >
+                        <Card.Content>
+                            <Text
+                                variant="titleLarge"
+                                style={{color: theme.colors.text, marginBottom: 10}}
+                            >
+                                Dashboard
+                            </Text>
+                            <Text
+                                variant="bodyLarge"
+                                style={{color: theme.colors.text}}
+                            >
+                                Your content goes here
+                            </Text>
+                        </Card.Content>
+                    </Card>
+
+                    <Button
+                        mode="contained"
+                        onPress={handleLogout}
+                        loading={loading}
+                        icon="logout"
+                        contentStyle={{paddingVertical: 8}}
+                        buttonColor={theme.colors.accent}
+                        textColor={theme.colors.text}
+                        style={{
+                            borderRadius: 12,
+                            shadowColor: theme.colors.accent,
+                            shadowOffset: {width: 0, height: 4},
+                            shadowOpacity: 0.3,
+                            shadowRadius: 8,
+                            elevation: 8,
+                            marginTop: 20,
+                        }}
+                    >
+                        {loading ? 'Logging out...' : 'Logout'}
+                    </Button>
+                </Animated.View>
+            </ScrollView>
+
+            <FAB
+                icon="account"
+                style={{
+                    position: 'absolute',
+                    margin: 16,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: theme.colors.accent,
+                }}
+                color={theme.colors.text}
+                onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    // Add your FAB action here
+                }}
+            />
+        </LinearGradient>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#8B6B44',
-        marginBottom: 20,
-    },
-    subtitle: {
-        fontSize: 16,
-        color: '#666',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    input: {
-        backgroundColor: '#2A2A2A',
-        padding: 15,
-        borderRadius: 8,
-        color: '#FFF',
-        marginBottom: 15,
-        width: '100%',
-    },
-    button: {
-        backgroundColor: '#8B6B44',
-        padding: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginTop: 10,
-        width: '100%',
-    },
-    buttonText: {
-        color: '#FFF',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    link: {
-        color: '#8B6B44',
-        marginTop: 15,
-        textAlign: 'center',
-    },
-    footer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginTop: 20,
-    },
-    footerText: {
-        color: '#666',
-    },
-    linkText: {
-        color: '#8B6B44',
-        fontWeight: '600',
-    },
-    backButton: {
-        marginTop: 20,
-    },
-    backButtonText: {
-        color: '#8B6B44',
-        fontSize: 16,
-    },
-    header: {
-        alignItems: 'center',
-        marginBottom: 30,
-    },
-    logo: {
-        width: 150,
-        height: 150,
-        marginBottom: 20,
-    },
-    welcome: {
-        fontSize: 24,
-        fontWeight: 'bold',
-    },
-    content: {
-        padding: 20,
-    },
-    contentText: {
-        fontSize: 16,
-        textAlign: 'center',
-    },
-});

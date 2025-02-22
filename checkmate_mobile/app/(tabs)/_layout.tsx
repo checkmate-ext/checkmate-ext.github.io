@@ -1,40 +1,56 @@
-import { Tabs } from 'expo-router';
-import { useColorScheme } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
+import { Stack } from 'expo-router';
+import { useTheme, IconButton } from 'react-native-paper';
+import { useAuth } from '../context/AuthContext';
+import * as Haptics from 'expo-haptics';
 
-export default function TabLayout() {
-    const colorScheme = useColorScheme();
+export default function Layout() {
+    const { signOut } = useAuth();
+
+    // Using the same theme colors as defined in login screen
+    const theme = {
+        ...useTheme(),
+        colors: {
+            ...useTheme().colors,
+            primary: '#8B7355', // Warm brown
+            secondary: '#D2B48C', // Light brown
+            accent: '#6B4423', // Dark brown
+            background: '#1A1612', // Very dark brown
+            surface: '#2A241E', // Dark brown surface
+            text: '#E8DCC4', // Light cream text
+        },
+    };
+
+    const handleLogout = async () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        await signOut();
+    };
 
     return (
-        <Tabs
+        <Stack
             screenOptions={{
-                // Tab bar styling
-                tabBarStyle: {
-                    backgroundColor: colorScheme === 'dark' ? '#1A1A1A' : '#FFFFFF',
-                    borderTopColor: colorScheme === 'dark' ? '#333333' : '#EEEEEE',
-                },
-                tabBarActiveTintColor: '#8B6B44',
-                tabBarInactiveTintColor: colorScheme === 'dark' ? '#888888' : '#999999',
-
-                // Header styling
                 headerStyle: {
-                    backgroundColor: colorScheme === 'dark' ? '#1A1A1A' : '#FFFFFF',
+                    backgroundColor: theme.colors.background,
                 },
-                headerTintColor: colorScheme === 'dark' ? '#8B6B44' : '#1A1A1A',
-
-                // Animation
-                tabBarHideOnKeyboard: true,
+                headerTintColor: theme.colors.text,
+                headerTitleStyle: {
+                    color: theme.colors.secondary,
+                },
+                headerRight: () => (
+                    <IconButton
+                        icon="logout"
+                        iconColor={theme.colors.secondary}
+                        size={24}
+                        onPress={handleLogout}
+                    />
+                ),
+                headerShadowVisible: false,
+                headerTitle: '', // This removes the title text
             }}
         >
-            <Tabs.Screen
-                name="home"
-                options={{
-                    title: 'Home',
-                    tabBarIcon: ({ color, size }) => (
-                        <FontAwesome name="home" size={size} color={color} />
-                    ),
-                }}
+            <Stack.Screen
+                name="index"
             />
-        </Tabs>
+            {/* Add other screens here */}
+        </Stack>
     );
 }
