@@ -307,7 +307,7 @@ def login_user():
                 'subscription_plan': user.subscription_plan,
                 'created_at': user.created_at.isoformat(),
             }
-            print(user_data)
+            print(token)
             return jsonify({
                 'message': 'Login successful',
                 'token': token,
@@ -675,6 +675,8 @@ def report(current_user):
 @token_required
 def fetch_stats(current_user):
     try:
+
+        print(current_user.email)
         # Get timeframes for different metrics
         twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
         seven_days_ago = datetime.utcnow() - timedelta(days=7)

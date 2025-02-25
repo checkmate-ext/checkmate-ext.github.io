@@ -1,4 +1,4 @@
-import {View, Animated, ScrollView, Image} from 'react-native';
+import {View, Animated, ScrollView, Image, RefreshControl, TouchableOpacity, StyleSheet} from 'react-native';
 import {useAuth} from '../context/AuthContext';
 import {useState, useRef, useEffect} from 'react';
 import {
@@ -6,14 +6,36 @@ import {
     Text,
     useTheme,
     Card,
-    FAB
+    FAB,
+    ActivityIndicator,
+    Divider,
+    IconButton,
+    ProgressBar
 } from 'react-native-paper';
 import * as Haptics from 'expo-haptics';
 import {LinearGradient} from 'expo-linear-gradient';
+import {moderateScale} from 'react-native-size-matters';
+import {authStyles} from '../styles/auth';
+import axios from 'axios';
+import {API_URL} from '../constants/Config';
+import {router} from 'expo-router';
+
+// Helper function to format dates
+const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    });
+};
 
 export default function Home() {
-    const {signOut, user} = useAuth();
+    const {signOut, user, token} = useAuth();
     const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
+    const [stats, setStats] = useState(null);
+    const [recentArticles, setRecentArticles] = useState([]);
 
     const theme = {
         ...useTheme(),
@@ -53,7 +75,33 @@ export default function Home() {
                 useNativeDriver: true,
             }),
         ]).start();
+
+        // Fetch user stats when component mounts
+        fetchUserStats();
     }, []);
+
+    const fetchUserStats = async () => {
+        try {
+            setLoading(true);
+            console.log('home token:',token)
+            const response = await axios.get(`${API_URL}/user/stats`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            setStats(response.data);
+            setRecentArticles(response.data.articles || []);
+        } catch (error) {
+            console.error('Error fetching stats:', error);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchUserStats();
+    };
 
     const handleLogout = async () => {
         try {
@@ -69,96 +117,390 @@ export default function Home() {
         }
     };
 
+    const handleArticlePress = (articleId) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        router.push(`/article/${articleId}`);
+    };
+
+    const handleStatisticsPress = () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        router.push('/(tabs)/stats');
+    };
+
+    const renderArticleCard = (article) => (
+        <TouchableOpacity
+            key={article.id}
+            onPress={() => handleArticlePress(article.id)}
+            activeOpacity={0.7}
+        >
+            <Card
+                style={[
+                    styles.articleCard,
+                    {
+                        borderLeftColor: getScoreColor(article.reliability_score),
+                    }
+                ]}
+            >
+                <Card.Content>
+                    <Text
+                        variant="titleMedium"
+                        style={{
+                            color: theme.colors.text,
+                            marginBottom: 4,
+                            fontWeight: '500'
+                        }}
+                        numberOfLines={2}
+                    >
+                        {article.title}
+                    </Text>
+                    <Text
+                        variant="bodySmall"
+                        style={{
+                            color: theme.colors.placeholder,
+                            marginBottom: 8,
+                        }}
+                    >
+                        {formatDate(article.created_at)}
+                    </Text>
+                    <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <Text
+                                variant="labelMedium"
+                                style={{color: theme.colors.secondary}}
+                            >
+                                Reliability:
+                            </Text>
+                            <Text
+                                variant="bodyMedium"
+                                style={{
+                                    color: getScoreColor(article.reliability_score),
+                                    marginLeft: 4,
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                {article.reliability_score}%
+                            </Text>
+                        </View>
+                        <IconButton
+                            icon="chevron-right"
+                            iconColor={theme.colors.secondary}
+                            size={20}
+                        />
+                    </View>
+                </Card.Content>
+            </Card>
+        </TouchableOpacity>
+    );
+
+    // Function to determine color based on score
+    const getScoreColor = (score) => {
+        if (score >= 80) return '#4CAF50'; // Green
+        if (score >= 60) return '#FFC107'; // Yellow/Amber
+        return '#F44336'; // Red
+    };
+
+    const styles = StyleSheet.create({
+        container: {
+            opacity: 1,
+            padding: moderateScale(24),
+        },
+        sectionTitle: {
+            fontSize: moderateScale(22),
+            fontWeight: '700',
+            color: theme.colors.text,
+            marginBottom: moderateScale(15),
+        },
+        card: {
+            backgroundColor: theme.colors.surface,
+            marginBottom: moderateScale(20),
+            borderRadius: moderateScale(15),
+            shadowColor: theme.colors.accent,
+            shadowOffset: {width: 0, height: 4},
+            shadowOpacity: 0.2,
+            shadowRadius: 6,
+            elevation: 5,
+        },
+        articleCard: {
+            backgroundColor: theme.colors.surface,
+            marginBottom: moderateScale(12),
+            borderRadius: moderateScale(12),
+            borderLeftWidth: 4,
+            shadowColor: theme.colors.accent,
+            shadowOffset: {width: 0, height: 2},
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 3,
+        },
+        statContainer: {
+            flex: 1,
+            alignItems: 'center',
+            padding: moderateScale(10),
+        },
+        statValue: {
+            fontSize: moderateScale(28),
+            fontWeight: 'bold',
+            color: theme.colors.secondary,
+        },
+        statLabel: {
+            fontSize: moderateScale(14),
+            color: theme.colors.text,
+        },
+        divider: {
+            backgroundColor: theme.colors.primary,
+            opacity: 0.3,
+            marginVertical: moderateScale(10),
+        },
+        statsRow: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            marginBottom: moderateScale(15),
+        },
+        usageLabel: {
+            fontSize: moderateScale(14),
+            color: theme.colors.text,
+        },
+        button: {
+            borderRadius: moderateScale(12),
+            marginTop: moderateScale(15),
+        },
+        viewAllButton: {
+            color: theme.colors.secondary,
+        },
+        fab: {
+            position: 'absolute',
+            margin: moderateScale(16),
+            right: 0,
+            bottom: 0,
+            backgroundColor: theme.colors.accent,
+        }
+    });
+
     return (
         <LinearGradient
             colors={['#1A1612', '#241E19', '#2A241E']}
             style={{flex: 1}}
         >
-            <ScrollView>
+            <ScrollView
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor={theme.colors.secondary}
+                        colors={[theme.colors.secondary]}
+                    />
+                }
+            >
                 <Animated.View
-                    style={{
-                        opacity: fadeAnim,
-                        transform: [
-                            {translateY: slideAnim},
-                            {scale: scaleAnim}
-                        ],
-                        padding: 20,
-                    }}
+                    style={[
+                        styles.container,
+                        {
+                            opacity: fadeAnim,
+                            transform: [
+                                {translateY: slideAnim},
+                                {scale: scaleAnim}
+                            ],
+                        }
+                    ]}
                 >
-                    <View style={{alignItems: 'center', marginVertical: 30}}>
+                    <View style={authStyles.logoContainer}>
                         <Animated.View
                             style={{
                                 transform: [{scale: scaleAnim}],
                                 shadowColor: theme.colors.secondary,
                                 shadowOffset: {width: 0, height: 0},
-                                shadowRadius: 20,
+                                shadowRadius: moderateScale(20),
                                 shadowOpacity: 0.3,
                             }}
                         >
                             <Image
                                 source={require('../../assets/images/logo_no_title.png')}
-                                style={{
-                                    width: 150,
-                                    height: 150,
-                                    marginBottom: 10
-                                }}
+                                style={authStyles.logo}
                                 resizeMode="contain"
                             />
                         </Animated.View>
                         <Text
-                            variant="displaySmall"
-                            style={{
-                                color: theme.colors.secondary,
-                                textShadowColor: theme.colors.accent,
-                                textShadowOffset: {width: 0, height: 0},
-                                textShadowRadius: 8,
-                                marginTop: 20,
-                            }}
+                            variant="headlineSmall"
+                            style={[
+                                authStyles.title,
+                                {
+                                    color: theme.colors.secondary,
+                                    textShadowColor: theme.colors.accent,
+                                    textShadowOffset: {width: 0, height: 0},
+                                    textShadowRadius: 4,
+                                }
+                            ]}
                         >
-                            Welcome, User
+                            Welcome, {user?.email?.split('@')[0] || 'User'}
                         </Text>
                     </View>
 
+                    {/* Statistics Overview Card */}
                     <Card
-                        style={{
-                            backgroundColor: theme.colors.surface,
-                            marginBottom: 20,
-                            borderRadius: 15,
-                        }}
+                        style={styles.card}
                     >
                         <Card.Content>
-                            <Text
-                                variant="titleLarge"
-                                style={{color: theme.colors.text, marginBottom: 10}}
+                            <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+                                <Text
+                                    variant="titleLarge"
+                                    style={{color: theme.colors.text, marginBottom: 10}}
+                                >
+                                    Dashboard
+                                </Text>
+                                <IconButton
+                                    icon="chart-bar"
+                                    mode="contained-tonal"
+                                    size={20}
+                                    onPress={handleStatisticsPress}
+                                    containerColor={theme.colors.accent}
+                                    iconColor={theme.colors.text}
+                                />
+                            </View>
+
+                            {loading && !stats ? (
+                                <ActivityIndicator
+                                    color={theme.colors.secondary}
+                                    style={{marginVertical: 20}}
+                                />
+                            ) : stats ? (
+                                <>
+                                    <View style={styles.statsRow}>
+                                        <View style={styles.statContainer}>
+                                            <Text
+                                                variant="displaySmall"
+                                                style={styles.statValue}
+                                            >
+                                                {stats.articles_analyzed}
+                                            </Text>
+                                            <Text variant="bodySmall" style={styles.statLabel}>
+                                                Today
+                                            </Text>
+                                        </View>
+                                        <View style={{width: 1, backgroundColor: theme.colors.primary, opacity: 0.3}} />
+                                        <View style={styles.statContainer}>
+                                            <Text
+                                                variant="displaySmall"
+                                                style={styles.statValue}
+                                            >
+                                                {stats.total_articles}
+                                            </Text>
+                                            <Text variant="bodySmall" style={styles.statLabel}>
+                                                Total
+                                            </Text>
+                                        </View>
+                                    </View>
+
+                                    <Divider style={styles.divider} />
+
+                                    <View style={{marginVertical: moderateScale(10)}}>
+                                        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+                                            <Text variant="bodyMedium" style={styles.usageLabel}>
+                                                Daily Usage
+                                            </Text>
+                                            <Text
+                                                variant="bodyMedium"
+                                                style={{color: theme.colors.secondary}}
+                                            >
+                                                {stats.articles_analyzed}/{stats.daily_limit}
+                                            </Text>
+                                        </View>
+                                        <ProgressBar
+                                            progress={stats.daily_limit ? stats.articles_analyzed / stats.daily_limit : 0}
+                                            color={stats.articles_analyzed / stats.daily_limit > 0.8 ? '#F44336' : theme.colors.secondary}
+                                            style={{height: moderateScale(6), marginTop: moderateScale(6), borderRadius: moderateScale(3)}}
+                                        />
+                                    </View>
+
+                                    <View style={{marginTop: 10}}>
+                                        <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+                                            <Text variant="bodyMedium" style={{color: theme.colors.text}}>
+                                                Weekly Accuracy
+                                            </Text>
+                                            <Text
+                                                variant="bodyMedium"
+                                                style={{color: getScoreColor(stats.weekly_accuracy)}}
+                                            >
+                                                {stats.weekly_accuracy.toFixed(1)}%
+                                            </Text>
+                                        </View>
+                                    </View>
+                                </>
+                            ) : (
+                                <Text
+                                    variant="bodyLarge"
+                                    style={{color: theme.colors.text, marginVertical: 10}}
+                                >
+                                    No stats available
+                                </Text>
+                            )}
+
+                            <Button
+                                mode="outlined"
+                                onPress={handleStatisticsPress}
+                                icon="chart-line"
+                                style={[
+                                    styles.button,
+                                    {
+                                        borderColor: theme.colors.secondary,
+                                    }
+                                ]}
+                                textColor={theme.colors.secondary}
                             >
-                                Dashboard
-                            </Text>
-                            <Text
-                                variant="bodyLarge"
-                                style={{color: theme.colors.text}}
-                            >
-                                Your content goes here
-                            </Text>
+                                View Full Statistics
+                            </Button>
                         </Card.Content>
                     </Card>
+
+                    {/* Recent Articles Section */}
+                    <View style={{marginBottom: moderateScale(20)}}>
+                        <View style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: moderateScale(15)
+                        }}>
+                            <Text
+                                variant="titleLarge"
+                                style={styles.sectionTitle}
+                            >
+                                Recent Articles
+                            </Text>
+                            <Button
+                                mode="text"
+                                onPress={() => router.push('/(tabs)/history')}
+                                textColor={theme.colors.secondary}
+                            >
+                                See All
+                            </Button>
+                        </View>
+
+                        {loading && recentArticles.length === 0 ? (
+                            <ActivityIndicator color={theme.colors.secondary} style={{marginVertical: moderateScale(20)}} />
+                        ) : recentArticles.length > 0 ? (
+                            recentArticles.slice(0, 3).map(article => renderArticleCard(article))
+                        ) : (
+                            <Card style={[styles.card, {padding: moderateScale(15)}]}>
+                                <Text style={{color: theme.colors.text, textAlign: 'center'}}>
+                                    No recent articles found
+                                </Text>
+                            </Card>
+                        )}
+                    </View>
 
                     <Button
                         mode="contained"
                         onPress={handleLogout}
                         loading={loading}
                         icon="logout"
-                        contentStyle={{paddingVertical: 8}}
+                        contentStyle={{paddingVertical: moderateScale(8)}}
                         buttonColor={theme.colors.accent}
                         textColor={theme.colors.text}
-                        style={{
-                            borderRadius: 12,
-                            shadowColor: theme.colors.accent,
-                            shadowOffset: {width: 0, height: 4},
-                            shadowOpacity: 0.3,
-                            shadowRadius: 8,
-                            elevation: 8,
-                            marginTop: 20,
-                        }}
+                        style={[
+                            authStyles.primaryButton,
+                            {
+                                marginTop: moderateScale(10),
+                                marginBottom: moderateScale(20)
+                            }
+                        ]}
                     >
                         {loading ? 'Logging out...' : 'Logout'}
                     </Button>
@@ -166,18 +508,12 @@ export default function Home() {
             </ScrollView>
 
             <FAB
-                icon="account"
-                style={{
-                    position: 'absolute',
-                    margin: 16,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: theme.colors.accent,
-                }}
+                icon="magnify"
+                style={styles.fab}
                 color={theme.colors.text}
                 onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    // Add your FAB action here
+                    router.push('/new-search');
                 }}
             />
         </LinearGradient>

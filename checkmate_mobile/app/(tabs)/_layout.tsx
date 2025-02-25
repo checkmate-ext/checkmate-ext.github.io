@@ -1,56 +1,78 @@
-import { Stack } from 'expo-router';
-import { useTheme, IconButton } from 'react-native-paper';
-import { useAuth } from '../context/AuthContext';
-import * as Haptics from 'expo-haptics';
+import { Tabs } from 'expo-router';
+import { useTheme } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-export default function Layout() {
-    const { signOut } = useAuth();
-
-    // Using the same theme colors as defined in login screen
+export default function TabsLayout() {
     const theme = {
         ...useTheme(),
         colors: {
             ...useTheme().colors,
-            primary: '#8B7355', // Warm brown
-            secondary: '#D2B48C', // Light brown
-            accent: '#6B4423', // Dark brown
-            background: '#1A1612', // Very dark brown
-            surface: '#2A241E', // Dark brown surface
-            text: '#E8DCC4', // Light cream text
+            primary: '#8B7355',
+            secondary: '#D2B48C',
+            accent: '#6B4423',
+            background: '#1A1612',
+            surface: '#2A241E',
+            text: '#E8DCC4',
         },
     };
 
-    const handleLogout = async () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        await signOut();
-    };
-
     return (
-        <Stack
+        <Tabs
             screenOptions={{
+                tabBarStyle: {
+                    backgroundColor: theme.colors.background,
+                    borderTopColor: 'rgba(107, 68, 35, 0.3)',
+                    borderTopWidth: 1,
+                    height: 60,
+                    paddingBottom: 6,
+                },
+                tabBarActiveTintColor: theme.colors.secondary,
+                tabBarInactiveTintColor: 'rgba(232, 220, 196, 0.5)',
                 headerStyle: {
                     backgroundColor: theme.colors.background,
                 },
                 headerTintColor: theme.colors.text,
                 headerTitleStyle: {
                     color: theme.colors.secondary,
-                },
-                headerRight: () => (
-                    <IconButton
-                        icon="logout"
-                        iconColor={theme.colors.secondary}
-                        size={24}
-                        onPress={handleLogout}
-                    />
-                ),
-                headerShadowVisible: false,
-                headerTitle: '', // This removes the title text
+                }
             }}
         >
-            <Stack.Screen
-                name="index"
+            <Tabs.Screen
+                name="home"
+                options={{
+                    title: 'Home',
+                    tabBarIcon: ({ color }) => (
+                        <MaterialCommunityIcons name="home" size={24} color={color} />
+                    ),
+                }}
             />
-            {/* Add other screens here */}
-        </Stack>
+            <Tabs.Screen
+                name="history"
+                options={{
+                    title: 'History',
+                    tabBarIcon: ({ color }) => (
+                        <MaterialCommunityIcons name="history" size={24} color={color} />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="stats"
+                options={{
+                    title: 'Statistics',
+                    tabBarIcon: ({ color }) => (
+                        <MaterialCommunityIcons name="chart-bar" size={24} color={color} />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="profile"
+                options={{
+                    title: 'Profile',
+                    tabBarIcon: ({ color }) => (
+                        <MaterialCommunityIcons name="account" size={24} color={color} />
+                    ),
+                }}
+            />
+        </Tabs>
     );
 }

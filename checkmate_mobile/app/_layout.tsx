@@ -1,8 +1,11 @@
 import { Stack } from 'expo-router';
 import { AuthProvider } from "@/app/context/AuthContext";
+import { Provider as PaperProvider } from 'react-native-paper';
+
 
 export default function RootLayout() {
     return (
+        <PaperProvider>
         <AuthProvider>
             <Stack
                 screenOptions={{
@@ -14,5 +17,6 @@ export default function RootLayout() {
                 <Stack.Screen name="(tabs)" />
             </Stack>
         </AuthProvider>
+        </PaperProvider>
     );
 }

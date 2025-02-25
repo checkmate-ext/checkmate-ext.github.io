@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { router, useSegments, useRootNavigationState } from 'expo-router';
 import { AuthStorage } from '../storage/AuthStorage';
+import {API_URL} from '../constants/Config';
 
 const AuthContext = createContext({});
 
@@ -32,6 +33,7 @@ function useProtectedRoute(user) {
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
+    const [token, setToken] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useProtectedRoute(user);
@@ -44,9 +46,10 @@ export function AuthProvider({ children }) {
         try {
             const token = await AuthStorage.getToken();
             const userData = await AuthStorage.getUser();
-
+            console.log('token is',token)
             if (token && userData) {
                 setUser(userData);
+                setToken(token);
             }
         } catch (error) {
             console.error('Error loading user:', error);
@@ -58,7 +61,7 @@ export function AuthProvider({ children }) {
     async function signIn(email, password) {
         try {
             // Make API call to your backend
-            const response = await fetch('http://10.0.2.2:5000/user/login', {
+            const response = await fetch(`${API_URL}/user/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -68,6 +71,7 @@ export function AuthProvider({ children }) {
 
             const data = await response.json();
 
+            console.log("token:",data.token);
             if (!response.ok) {
                 throw new Error(data.message);
             }
@@ -77,6 +81,7 @@ export function AuthProvider({ children }) {
             await AuthStorage.setUser(data.user);
 
             setUser(data.user);
+            setToken(data.token);
             return { success: true };
         } catch (error) {
             return { success: false, error: error.message };
@@ -86,6 +91,7 @@ export function AuthProvider({ children }) {
     async function signOut() {
         await AuthStorage.clearAll();
         setUser(null);
+        setToken(null);
         router.replace('/login');
     }
 
@@ -96,6 +102,7 @@ export function AuthProvider({ children }) {
                 signOut,
                 user,
                 loading,
+                token,
             }}>
             {children}
         </AuthContext.Provider>
