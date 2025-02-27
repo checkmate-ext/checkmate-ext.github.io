@@ -165,7 +165,8 @@ def scrap_and_search(current_user):
                 'article': article_data,
                 'similar_articles': similar_articles_data,
                 'images_data': [],
-                'website_credibility': website_credibility['credibility_score']
+                'website_credibility': website_credibility['credibility_score'],
+                'article_id': past_article.id,
             })
 
         print(f"Processing URL: {url}")
@@ -222,6 +223,7 @@ def scrap_and_search(current_user):
             'similar_articles': similar_articles,
             'images_data': images_data,
             'website_credibility': website_credibility['credibility_score'],
+            'article_id': new_search.id
         })
 
     except Exception as e:

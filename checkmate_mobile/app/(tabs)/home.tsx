@@ -31,7 +31,7 @@ const formatDate = (dateString) => {
 };
 
 export default function Home() {
-    const {signOut, user, token} = useAuth();
+    const {signOut, user, token, validateToken} = useAuth();
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [stats, setStats] = useState(null);
@@ -77,13 +77,16 @@ export default function Home() {
         ]).start();
 
         // Fetch user stats when component mounts
-        fetchUserStats();
-    }, []);
+        if(token){
+            fetchUserStats();
+        }
+    }, [token]);
 
     const fetchUserStats = async () => {
         try {
             setLoading(true);
             console.log('home token:',token)
+
             const response = await axios.get(`${API_URL}/user/stats`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
