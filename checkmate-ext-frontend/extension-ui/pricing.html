@@ -37,7 +37,7 @@
         .container {
             width: 380px;
             height: 600px;
-            background: var(--neutral-bg);
+            background: white;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             border-radius: 12px;
             display: flex;
@@ -45,34 +45,39 @@
             position: relative;
         }
 
+        /* Header Styling - Consistent with other pages */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 20px;
-            flex: 0 0 auto;
+            margin-bottom: 25px;
+            padding: 20px 25px 0 25px;
         }
 
-        .header-icons img {
+        .header-icons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .header-icon {
             cursor: pointer;
             opacity: 0.7;
-            transition: all 0.3s ease;
+            width: 24px;
+            height: 24px;
         }
 
-        .header-icons img:hover {
+        .header-icon:hover {
             opacity: 1;
             transform: scale(1.1) rotate(5deg);
         }
 
-        .logo-container,
+        /* Logo Styling */
         .logo {
             display: flex;
             justify-content: center;
-            margin: 5px 0;
-            flex: 0 0 auto;
+            margin-bottom: 30px;
         }
 
-        .logo-container img,
         .logo img {
             width: 100px;
         }
@@ -143,8 +148,25 @@
             transform: scale(1.1) rotate(5deg);
         }
 
+        /* Button container for centering */
+        .buttons-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding: 0 20px;
+        }
+
         .button-margin {
-            margin: 10px;
+            margin-bottom: 15px;
+            width: 80%;
+        }
+
+        /* Plan message styling */
+        #planMessage {
+            text-align: center;
+            margin: 15px 0;
+            padding: 0 20px;
         }
 
         /* Responsive Adjustments */
@@ -155,52 +177,40 @@
             }
             .container {
                 border-radius: 8px;
-                padding: 20px;
-            }
-            .input-box textarea {
-                height: 70px;
             }
             .button {
                 font-size: 14px;
                 padding: 10px 16px;
             }
         }
-
-        @media (max-width: 600px) {
-            .upgrade-options {
-                flex-direction: column;
-                align-items: center;
-            }
-            .plan-card {
-                width: 100%;
-                max-width: 300px;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header Section -->
+        <!-- Header Section - Adjusted spacing -->
         <div class="header">
             <div class="header-icons">
-                <img src="../images/menu-bar-icon.png" alt="Menu" width="24" id="menuBtn" class="header-icon">
+                <img src="../images/menu-bar-icon.png" alt="Menu" id="menuBtn" class="header-icon">
             </div>
             <div class="header-icons">
-                <img src="../images/user-profile-icon.png" alt="Profile" width="24" id="profileBtn" class="header-icon">
+                <img src="../images/user-profile-icon.png" alt="Profile" id="profileBtn" class="header-icon">
             </div>
         </div>
 
         <!-- Logo Section -->
         <div class="logo">
-            <img src="../images/CheckMate_Transparent_Logo.png" alt="Checkmate Logo" width="100">
+            <img src="../images/CheckMate_Transparent_Logo.png" alt="Checkmate Logo">
         </div>
 
         <!-- Dynamic Plan Message -->
         <h3 id="planMessage" class="subtitle is-5"></h3>
 
-        <!-- Upgrade/Plan Action Buttons -->
-        <button class="button button-margin" id="premiumBtn"></button>
-        <button class="button button-margin" id="enterpriseBtn"></button>        
+        <!-- Buttons Container for Centering -->
+        <div class="buttons-container">
+            <!-- Upgrade/Plan Action Buttons -->
+            <button class="button button-margin" id="premiumBtn"></button>
+            <button class="button button-margin" id="enterpriseBtn"></button>
+        </div>
 
         <!-- Bottom Icons -->
         <div class="bottom-icons">
@@ -213,5 +223,6 @@
     </div>
     <script src="../navigation/navigate.js"></script>
     <script src="../scripts/pricing.js"></script>
+    <script type="module" src="../scripts/logout-script.js"></script>
 </body>
 </html>
