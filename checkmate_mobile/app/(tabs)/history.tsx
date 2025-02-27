@@ -8,7 +8,6 @@ import { API_URL } from '../constants/Config';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { moderateScale } from 'react-native-size-matters';
-import { authStyles } from '../styles/auth';
 
 // Helper function to format dates
 const formatDate = (dateString) => {
