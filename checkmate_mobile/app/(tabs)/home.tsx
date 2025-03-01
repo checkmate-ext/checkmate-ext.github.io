@@ -91,7 +91,16 @@ export default function Home() {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            setStats(response.data);
+            // Ensure numeric values are proper numbers
+            const processedData = {
+                ...response.data,
+                articles_analyzed_daily: Number(response.data.articles_analyzed_daily) || 0,
+                total_articles: Number(response.data.total_articles) || 0,
+                daily_limit: Number(response.data.daily_limit) || 1, // Default to 1 to avoid division by zero
+                weekly_accuracy: Number(response.data.weekly_accuracy) || 0
+            };
+
+            setStats(processedData);
             setRecentArticles(response.data.articles || []);
         } catch (error) {
             console.error('Error fetching stats:', error);
@@ -128,6 +137,39 @@ export default function Home() {
     const handleStatisticsPress = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         router.push('/(tabs)/stats');
+    };
+
+    // Safe calculation for progress value
+    const calculateProgress = () => {
+        if (!stats || !stats.daily_limit || stats.daily_limit === 0) {
+            return 0;
+        }
+
+        const articlesAnalyzed = Number(stats.articles_analyzed_daily) || 0;
+        const dailyLimit = Number(stats.daily_limit);
+
+        // Ensure the progress is between 0 and 1
+        return Math.min(Math.max(articlesAnalyzed / dailyLimit, 0), 1);
+    };
+
+    // Safe calculation for progress color
+    const getProgressColor = () => {
+        if (!stats || !stats.daily_limit || stats.daily_limit === 0) {
+            return theme.colors.secondary;
+        }
+
+        const articlesAnalyzed = Number(stats.articles_analyzed_daily) || 0;
+        const dailyLimit = Number(stats.daily_limit);
+
+        return (articlesAnalyzed / dailyLimit > 0.8) ? '#F44336' : theme.colors.secondary;
+    };
+
+    // Function to safely get the weekly accuracy with fallback
+    const getWeeklyAccuracy = () => {
+        if (!stats || stats.weekly_accuracy === undefined || stats.weekly_accuracy === null) {
+            return 0;
+        }
+        return Number(stats.weekly_accuracy);
     };
 
     const renderArticleCard = (article) => (
@@ -195,10 +237,11 @@ export default function Home() {
         </TouchableOpacity>
     );
 
-    // Function to determine color based on score
+    // Function to determine color based on score - safely handle non-numeric values
     const getScoreColor = (score) => {
-        if (score >= 80) return '#4CAF50'; // Green
-        if (score >= 60) return '#FFC107'; // Yellow/Amber
+        const numericScore = Number(score) || 0;
+        if (numericScore >= 80) return '#4CAF50'; // Green
+        if (numericScore >= 60) return '#FFC107'; // Yellow/Amber
         return '#F44336'; // Red
     };
 
@@ -305,33 +348,38 @@ export default function Home() {
                         }
                     ]}
                 >
-                    <View style={authStyles.logoContainer}>
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginBottom: moderateScale(15)
+                    }}>
                         <Animated.View
                             style={{
                                 transform: [{scale: scaleAnim}],
                                 shadowColor: theme.colors.secondary,
                                 shadowOffset: {width: 0, height: 0},
-                                shadowRadius: moderateScale(20),
-                                shadowOpacity: 0.3,
+                                shadowRadius: moderateScale(8),
+                                shadowOpacity: 0.2,
                             }}
                         >
                             <Image
                                 source={require('../../assets/images/logo_no_title.png')}
-                                style={authStyles.logo}
+                                style={{
+                                    width: moderateScale(40),
+                                    height: moderateScale(40),
+                                }}
                                 resizeMode="contain"
                             />
                         </Animated.View>
                         <Text
-                            variant="headlineSmall"
-                            style={[
-                                authStyles.title,
-                                {
-                                    color: theme.colors.secondary,
-                                    textShadowColor: theme.colors.accent,
-                                    textShadowOffset: {width: 0, height: 0},
-                                    textShadowRadius: 4,
-                                }
-                            ]}
+                            variant="titleMedium"
+                            style={{
+                                color: theme.colors.secondary,
+                                marginLeft: moderateScale(10),
+                                textShadowColor: theme.colors.accent,
+                                textShadowOffset: {width: 0, height: 0},
+                                textShadowRadius: 2,
+                            }}
                         >
                             Welcome, {user?.email?.split('@')[0] || 'User'}
                         </Text>
@@ -372,7 +420,7 @@ export default function Home() {
                                                 variant="displaySmall"
                                                 style={styles.statValue}
                                             >
-                                                {stats.articles_analyzed}
+                                                {stats.articles_analyzed_daily}
                                             </Text>
                                             <Text variant="bodySmall" style={styles.statLabel}>
                                                 Today
@@ -403,12 +451,12 @@ export default function Home() {
                                                 variant="bodyMedium"
                                                 style={{color: theme.colors.secondary}}
                                             >
-                                                {stats.articles_analyzed}/{stats.daily_limit}
+                                                {stats.articles_analyzed_daily}/{stats.daily_limit}
                                             </Text>
                                         </View>
                                         <ProgressBar
-                                            progress={stats.daily_limit ? stats.articles_analyzed / stats.daily_limit : 0}
-                                            color={stats.articles_analyzed / stats.daily_limit > 0.8 ? '#F44336' : theme.colors.secondary}
+                                            progress={calculateProgress()}
+                                            color={getProgressColor()}
                                             style={{height: moderateScale(6), marginTop: moderateScale(6), borderRadius: moderateScale(3)}}
                                         />
                                     </View>
@@ -420,9 +468,9 @@ export default function Home() {
                                             </Text>
                                             <Text
                                                 variant="bodyMedium"
-                                                style={{color: getScoreColor(stats.weekly_accuracy)}}
+                                                style={{color: getScoreColor(getWeeklyAccuracy())}}
                                             >
-                                                {stats.weekly_accuracy.toFixed(1)}%
+                                                {getWeeklyAccuracy().toFixed(1)}%
                                             </Text>
                                         </View>
                                     </View>

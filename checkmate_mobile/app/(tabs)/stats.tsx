@@ -137,21 +137,33 @@ export default function Stats() {
         return '#F44336'; // Red
     };
 
-    // Convert daily distribution data to chart format
-    const prepareDailyData = () => {
-        if (!stats || !stats.daily_distribution) return null;
+    // Helper function to format date for display
+    const formatDate = (dateString, format) => {
+        const date = new Date(dateString);
+        if (format === 'month') {
+            return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        } else if (format === 'week') {
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        } else {
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+    };
+
+    // Convert distribution data to chart format
+    const prepareChartData = (distributionData, format) => {
+        if (!stats || !distributionData) return null;
 
         // Sort the dates
-        const sortedDates = Object.keys(stats.daily_distribution).sort();
+        const sortedDates = Object.keys(distributionData).sort();
+
+        // If we don't have enough data
+        if (sortedDates.length < 2) return null;
 
         // Format dates to be more readable
-        const formattedDates = sortedDates.map(date => {
-            const d = new Date(date);
-            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        });
+        const formattedDates = sortedDates.map(date => formatDate(date, format));
 
         // Get corresponding values
-        const values = sortedDates.map(date => stats.daily_distribution[date] || 0);
+        const values = sortedDates.map(date => distributionData[date] || 0);
 
         return {
             labels: formattedDates,
@@ -182,56 +194,91 @@ export default function Stats() {
         }
     };
 
-    const renderStatCard = () => (
-        <Card style={styles.card}>
-            <Text style={styles.cardTitle}>Usage Statistics</Text>
+    const renderStatCard = () => {
+        let articlesAnalyzed = stats.articles_analyzed_daily;
+        let averageAccuracy = stats.daily_accuracy;
 
-            <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Articles Analyzed Today</Text>
-                <Text style={styles.statValue}>{stats.articles_analyzed}</Text>
-            </View>
+        if (timeframe === 'week') {
+            articlesAnalyzed = stats.articles_analyzed_weekly;
+            averageAccuracy = stats.weekly_accuracy;
+        } else if (timeframe === 'month') {
+            articlesAnalyzed = stats.articles_analyzed_monthly;
+            averageAccuracy = stats.monthly_accuracy;
+        }
 
-            <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Daily Limit</Text>
-                <Text style={styles.statValue}>{stats.daily_limit}</Text>
-            </View>
+        return (
+            <Card style={styles.card}>
+                <Text style={styles.cardTitle}>Usage Statistics</Text>
 
-            <Divider style={styles.divider} />
+                <View style={styles.statRow}>
+                    <Text style={styles.statLabel}>
+                        Articles Analyzed ({timeframe === 'week' ? 'This Week' : timeframe === 'month' ? 'This Month' : 'Today'})
+                    </Text>
+                    <Text style={styles.statValue}>{articlesAnalyzed}</Text>
+                </View>
 
-            <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Total Articles Analyzed</Text>
-                <Text style={styles.statValue}>{stats.total_articles}</Text>
-            </View>
+                <View style={styles.statRow}>
+                    <Text style={styles.statLabel}>Daily Limit</Text>
+                    <Text style={styles.statValue}>{stats.daily_limit}</Text>
+                </View>
 
-            <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Weekly Average Accuracy</Text>
-                <Text style={[
-                    styles.statValue,
-                    {color: getScoreColor(stats.weekly_accuracy)}
-                ]}>
-                    {stats.weekly_accuracy.toFixed(1)}%
-                </Text>
-            </View>
+                <Divider style={styles.divider} />
 
-            <View style={styles.statRow}>
-                <Text style={styles.statLabel}>Current Subscription Plan</Text>
-                <Text style={[
-                    styles.statValue,
-                    {color: stats.subscription_plan === 'Premium' ? '#4CAF50' : theme.colors.secondary}
-                ]}>
-                    {stats.subscription_plan}
-                </Text>
-            </View>
-        </Card>
-    );
+                <View style={styles.statRow}>
+                    <Text style={styles.statLabel}>Total Articles Analyzed</Text>
+                    <Text style={styles.statValue}>{stats.total_articles}</Text>
+                </View>
 
-    const renderDailyDistributionChart = () => {
-        const data = prepareDailyData();
+                <View style={styles.statRow}>
+                    <Text style={styles.statLabel}>
+                        {timeframe === 'week' ? 'Weekly' : timeframe === 'month' ? 'Monthly' : 'Daily'} Average Accuracy
+                    </Text>
+                    <Text style={[
+                        styles.statValue,
+                        {color: getScoreColor(averageAccuracy)}
+                    ]}>
+                        {averageAccuracy.toFixed(1)}%
+                    </Text>
+                </View>
+
+                <View style={styles.statRow}>
+                    <Text style={styles.statLabel}>Current Subscription Plan</Text>
+                    <Text style={[
+                        styles.statValue,
+                        {color: stats.subscription_plan === 'Premium' ? '#4CAF50' : theme.colors.secondary}
+                    ]}>
+                        {stats.subscription_plan}
+                    </Text>
+                </View>
+            </Card>
+        );
+    };
+
+    const renderDistributionChart = () => {
+        let distributionData;
+        let chartTitle;
+        let format;
+
+        if (timeframe === 'week') {
+            distributionData = stats.daily_distribution;
+            chartTitle = 'Daily Articles';
+            format = 'day';
+        } else if (timeframe === 'month') {
+            distributionData = stats.weekly_distribution;
+            chartTitle = 'Weekly Articles';
+            format = 'week';
+        } else { // year view
+            distributionData = stats.monthly_distribution;
+            chartTitle = 'Monthly Articles';
+            format = 'month';
+        }
+
+        const data = prepareChartData(distributionData, format);
 
         if (!data || data.labels.length < 2) {
             return (
                 <Card style={styles.chartCard}>
-                    <Text style={styles.chartTitle}>Daily Articles</Text>
+                    <Text style={styles.chartTitle}>{chartTitle}</Text>
                     <Text style={{color: theme.colors.text, textAlign: 'center'}}>
                         Not enough data to display chart
                     </Text>
@@ -241,7 +288,7 @@ export default function Stats() {
 
         return (
             <Card style={styles.chartCard}>
-                <Text style={styles.chartTitle}>Daily Articles</Text>
+                <Text style={styles.chartTitle}>{chartTitle}</Text>
                 <BarChart
                     data={data}
                     width={screenWidth * 0.9}
@@ -251,6 +298,28 @@ export default function Stats() {
                     fromZero
                     showValuesOnTopOfBars
                 />
+            </Card>
+        );
+    };
+
+    const renderAccuracyChart = () => {
+        // For future implementation or if you want to implement it now
+        return (
+            <Card style={styles.chartCard}>
+                <Text style={styles.chartTitle}>Reliability Distribution</Text>
+                <Text style={{color: theme.colors.text, textAlign: 'center', marginBottom: moderateScale(10)}}>
+                    Feature coming soon!
+                </Text>
+                <Button
+                    mode="outlined"
+                    onPress={() => {
+                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                    }}
+                    textColor={theme.colors.secondary}
+                    style={{borderColor: theme.colors.secondary, borderRadius: moderateScale(8)}}
+                >
+                    Request This Feature
+                </Button>
             </Card>
         );
     };
@@ -310,8 +379,18 @@ export default function Stats() {
                 <View style={styles.container}>
                     <SegmentedButtons
                         value={timeframe}
-                        onValueChange={setTimeframe}
+                        onValueChange={(value) => {
+                            setTimeframe(value);
+                            Haptics.selectionAsync(); // Add haptic feedback on selection
+                        }}
                         buttons={[
+                            {
+                                value: 'day',
+                                label: 'Day',
+                                style: {
+                                    backgroundColor: timeframe === 'day' ? theme.colors.accent : theme.colors.surface
+                                }
+                            },
                             {
                                 value: 'week',
                                 label: 'Week',
@@ -326,36 +405,13 @@ export default function Stats() {
                                     backgroundColor: timeframe === 'month' ? theme.colors.accent : theme.colors.surface
                                 }
                             },
-                            {
-                                value: 'year',
-                                label: 'Year',
-                                style: {
-                                    backgroundColor: timeframe === 'year' ? theme.colors.accent : theme.colors.surface
-                                }
-                            },
                         ]}
                         style={styles.timeframeSelector}
                     />
 
                     {renderStatCard()}
-                    {renderDailyDistributionChart()}
-
-                    <Card style={styles.chartCard}>
-                        <Text style={styles.chartTitle}>Reliability Distribution</Text>
-                        <Text style={{color: theme.colors.text, textAlign: 'center', marginBottom: moderateScale(10)}}>
-                            Feature coming soon!
-                        </Text>
-                        <Button
-                            mode="outlined"
-                            onPress={() => {
-                                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-                            }}
-                            textColor={theme.colors.secondary}
-                            style={{borderColor: theme.colors.secondary, borderRadius: moderateScale(8)}}
-                        >
-                            Request This Feature
-                        </Button>
-                    </Card>
+                    {renderDistributionChart()}
+                    {renderAccuracyChart()}
                 </View>
             </ScrollView>
         </LinearGradient>

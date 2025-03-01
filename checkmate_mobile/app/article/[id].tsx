@@ -235,12 +235,6 @@ export default function ArticleDetailScreen() {
                         {articleData.article.title}
                     </Text>
 
-                    <TouchableOpacity onPress={() => handleOpenArticle(articleData.article.url)}>
-                        <Text style={styles.articleUrl} numberOfLines={1}>
-                            {articleData.article.url}
-                        </Text>
-                    </TouchableOpacity>
-
                     {/* Reliability Scores Card */}
                     <Card style={styles.card}>
                         <Text style={styles.cardTitle}>Reliability Analysis</Text>
@@ -288,7 +282,7 @@ export default function ArticleDetailScreen() {
                                 style={[styles.actionButton, {borderColor: theme.colors.secondary}]}
                                 textColor={theme.colors.secondary}
                             >
-                                Open
+                                Open Article
                             </Button>
 
                             <Button

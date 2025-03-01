@@ -119,7 +119,7 @@ export default function NewSearch() {
                 // Find the article ID from the backend response
                 // This depends on how your backend structures the response
                 const articleId = response.data.article_id || "1"; // Fallback ID
-
+                console.log('article_id: ', articleId);
                 // Navigate to the article detail screen
                 router.push(`/article/${articleId}`);
 

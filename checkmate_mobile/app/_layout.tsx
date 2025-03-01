@@ -12,9 +12,10 @@ export default function RootLayout() {
                     headerShown: false
                 }}
                 initialRouteName="(auth)"  // Set initial route to auth group
-            >
+            >r
                 <Stack.Screen name="(auth)" />
                 <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="article" />
             </Stack>
         </AuthProvider>
         </PaperProvider>

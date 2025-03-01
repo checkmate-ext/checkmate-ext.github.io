@@ -677,11 +677,11 @@ def report(current_user):
 @token_required
 def fetch_stats(current_user):
     try:
-
         print(current_user.email)
         # Get timeframes for different metrics
         twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
 
         # Get recent articles (last 24 hours)
         recent_articles = ArticleSearch.query.join(ArticleRequest).filter(
@@ -695,16 +695,35 @@ def fetch_stats(current_user):
             ArticleRequest.created_at >= seven_days_ago
         ).all()
 
+        # Get monthly articles
+        monthly_articles = ArticleSearch.query.join(ArticleRequest).filter(
+            ArticleRequest.user_id == current_user.id,
+            ArticleRequest.created_at >= thirty_days_ago
+        ).all()
+
         # Get all-time articles count
         total_articles = ArticleRequest.query.filter(
             ArticleRequest.user_id == current_user.id
         ).count()
 
         # Calculate average scores for accuracy metrics
+        # Daily (last 24 hours)
+        daily_scores = []
+        for article in recent_articles:
+            daily_scores.append(article.reliability_score)
+        avg_daily_accuracy = sum(daily_scores) / len(daily_scores) if daily_scores else 0
+
+        # Weekly
         weekly_scores = []
         for article in weekly_articles:
             weekly_scores.append(article.reliability_score)
-        avg_accuracy = sum(weekly_scores) / len(weekly_scores) if weekly_scores else 0
+        avg_weekly_accuracy = sum(weekly_scores) / len(weekly_scores) if weekly_scores else 0
+
+        # Monthly
+        monthly_scores = []
+        for article in monthly_articles:
+            monthly_scores.append(article.reliability_score)
+        avg_monthly_accuracy = sum(monthly_scores) / len(monthly_scores) if monthly_scores else 0
 
         # Get article distribution by day for the past week
         daily_counts = db.session.query(
@@ -721,6 +740,38 @@ def fetch_stats(current_user):
             str(day.date): day.count for day in daily_counts
         }
 
+        # Get article distribution by week (last 4 weeks)
+        four_weeks_ago = datetime.utcnow() - timedelta(weeks=4)
+        weekly_counts = db.session.query(
+            func.date_trunc('week', ArticleRequest.created_at).label('week'),
+            func.count(ArticleRequest.article_id).label('count')
+        ).filter(
+            ArticleRequest.user_id == current_user.id,
+            ArticleRequest.created_at >= four_weeks_ago
+        ).group_by(
+            func.date_trunc('week', ArticleRequest.created_at)
+        ).all()
+
+        weekly_distribution = {
+            str(week.week.date()): week.count for week in weekly_counts
+        }
+
+        # Get article distribution by month (last 6 months)
+        six_months_ago = datetime.utcnow() - timedelta(days=180)
+        monthly_counts = db.session.query(
+            func.date_trunc('month', ArticleRequest.created_at).label('month'),
+            func.count(ArticleRequest.article_id).label('count')
+        ).filter(
+            ArticleRequest.user_id == current_user.id,
+            ArticleRequest.created_at >= six_months_ago
+        ).group_by(
+            func.date_trunc('month', ArticleRequest.created_at)
+        ).all()
+
+        monthly_distribution = {
+            str(month.month.date()): month.count for month in monthly_counts
+        }
+
         # Format recent articles data
         articles_data = [{
             'url': article.url,
@@ -734,11 +785,24 @@ def fetch_stats(current_user):
         } for article in recent_articles]
 
         return jsonify({
-            'articles_analyzed': len(recent_articles),
+            # Daily stats
+            'articles_analyzed_daily': len(recent_articles),
             'daily_usage_left': app.config['DAILY_USAGE'] - len(recent_articles),
-            'total_articles': total_articles,
-            'weekly_accuracy': avg_accuracy,
+            'daily_accuracy': avg_daily_accuracy,
             'daily_distribution': daily_distribution,
+
+            # Weekly stats
+            'articles_analyzed_weekly': len(weekly_articles),
+            'weekly_accuracy': avg_weekly_accuracy,
+            'weekly_distribution': weekly_distribution,
+
+            # Monthly stats
+            'articles_analyzed_monthly': len(monthly_articles),
+            'monthly_accuracy': avg_monthly_accuracy,
+            'monthly_distribution': monthly_distribution,
+
+            # Other stats
+            'total_articles': total_articles,
             'articles': articles_data,
             'subscription_plan': current_user.subscription_plan,
             'daily_limit': app.config['DAILY_USAGE']
@@ -747,8 +811,6 @@ def fetch_stats(current_user):
     except Exception as e:
         db.session.rollback()
         print(f"Error fetching stats: {str(e)}")
-        return jsonify({'error': 'Failed to fetch daily stats'}), 500
-
-
+        return jsonify({'error': 'Failed to fetch stats'}), 500
 if __name__ == '__main__':
     app.run(debug=True)
