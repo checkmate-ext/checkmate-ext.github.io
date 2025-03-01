@@ -194,7 +194,7 @@ class DashboardManager {
     updateUserInfo() {
         const welcomeText = document.querySelector('.welcome-text');
         if (welcomeText && this.statsData.subscription_plan) {
-            welcomeText.textContent = `${this.statsData.subscription_plan} Plan`;
+            welcomeText.textContent = `Welcome Back`;
         }
     }
 
