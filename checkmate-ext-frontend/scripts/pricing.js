@@ -50,7 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (planMessage) {
       planMessage.innerHTML = 'You are on the <span style="color:#0d47a1; font-weight:700;">Enterprise</span> plan';
     }
-    premiumBtn.style.display = 'none';
+    premiumBtn.textContent = 'Downgrade to Premium';
+    premiumBtn.style.background = 'linear-gradient(145deg, #f9f1c5, #ffcc00)';
+    premiumBtn.style.color = '#7B6225';
+    premiumBtn.style.fontWeight = '600';
+    premiumBtn.style.border = '1px solid rgba(255, 204, 0, 0.5)';
     
     enterpriseBtn.textContent = 'Cancel Subscription';
     enterpriseBtn.style.background = '#f2f2f2';
@@ -125,6 +129,7 @@ function createPlanCards(currentPlan, container) {
     card.className = 'plan-card';
     card.style.opacity = plan.active ? '1' : '0.75';
     card.style.transform = plan.active ? 'scale(1.05)' : 'scale(1)';
+    card.style.marginTop = plan.active ? '15px' : '5px'; // Add margin for active plan
     
     // Apply special styling for Premium and Enterprise plans
     if (plan.name === 'Premium') {
@@ -141,8 +146,10 @@ function createPlanCards(currentPlan, container) {
       card.style.border = '1px solid #eee';
     }
     
-    // Add a current plan indicator if this is the active plan
-    const currentPlanBadge = plan.active ? `<div class="plan-badge" style="z-index: 10;">CURRENT</div>` : '';
+    // Add a current plan indicator if this is the active plan - FIXED BADGE VISIBILITY
+    const currentPlanBadge = plan.active ? 
+      `<div class="plan-badge">CURRENT</div>` 
+      : '';
     
     // Apply special text colors for Premium and Enterprise cards
     const nameColor = plan.textColor || '#333';
@@ -213,9 +220,11 @@ async function updateSubscriptionPlan(newPlan, successMessage) {
       throw new Error('Authentication required. Please log in.');
     }
 
-    // Show loading indicator on the active button 
+    // Store the original button text for reset if needed
     const activeButton = document.activeElement;
     const originalText = activeButton.textContent;
+    
+    // Show loading indicator on the active button 
     activeButton.innerHTML = '<span class="loading-spinner"></span> Processing...';
     activeButton.disabled = true;
 
@@ -249,11 +258,22 @@ async function updateSubscriptionPlan(newPlan, successMessage) {
     const notification = document.createElement('div');
     notification.className = 'plan-notification';
     notification.textContent = successMessage;
+    notification.style.position = 'fixed';
+    notification.style.top = '20px';
+    notification.style.left = '50%';
+    notification.style.transform = 'translateX(-50%)';
+    notification.style.background = '#3cb371';
+    notification.style.color = 'white';
+    notification.style.padding = '10px 20px';
+    notification.style.borderRadius = '8px';
+    notification.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+    notification.style.zIndex = '1000';
     document.body.appendChild(notification);
     
     // Remove notification after 3 seconds
     setTimeout(() => {
       notification.style.opacity = '0';
+      notification.style.transition = 'opacity 0.5s ease';
       setTimeout(() => notification.remove(), 500);
     }, 3000);
     
@@ -286,6 +306,11 @@ document.getElementById('premiumBtn')?.addEventListener('click', async () => {
     if (confirm('Are you sure you want to cancel your Premium subscription?')) {
       await updateSubscriptionPlan('free', 'Premium subscription cancelled.');
     }
+  } else if (currentPlan === 'enterprise') {
+    // Handle downgrade from Enterprise to Premium
+    if (confirm('Are you sure you want to downgrade to Premium?')) {
+      await updateSubscriptionPlan('premium', 'Successfully downgraded to Premium.');
+    }
   } else {
     alert('This action is not available.');
   }
@@ -296,7 +321,7 @@ document.getElementById('enterpriseBtn')?.addEventListener('click', async () => 
   const currentPlan = localStorage.getItem('userPlan') || 'free';
 
   if (['free', 'premium'].includes(currentPlan)) {
-    await updateSubscriptionPlan('enterprise', 'Successfully upgraded to enterprise!');
+    await updateSubscriptionPlan('enterprise', 'Successfully upgraded to Enterprise!');
   } else if (currentPlan === 'enterprise') {
     if (confirm('Are you sure you want to cancel your Enterprise subscription?')) {
       await updateSubscriptionPlan('free', 'Enterprise subscription cancelled.');
