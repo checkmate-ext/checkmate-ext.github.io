@@ -182,28 +182,28 @@ function createPlanCards(currentPlan, container) {
       
       switch (action) {
         case 'upgrade-to-premium':
-          await updateSubscriptionPlan('premium', 'Successfully upgraded to Premium!');
+          await updateSubscriptionPlan('premium', 'Successfully upgraded!');
           break;
           
         case 'upgrade-to-enterprise':
-          await updateSubscriptionPlan('enterprise', 'Successfully upgraded to Enterprise!');
+          await updateSubscriptionPlan('enterprise', 'Successfully upgraded!');
           break;
           
         case 'cancel-premium':
           if (confirm('Are you sure you want to cancel your Premium subscription?')) {
-            await updateSubscriptionPlan('free', 'Premium subscription cancelled.');
+            await updateSubscriptionPlan('free', 'Subscription cancelled.');
           }
           break;
           
         case 'cancel-enterprise':
           if (confirm('Are you sure you want to cancel your Enterprise subscription?')) {
-            await updateSubscriptionPlan('free', 'Enterprise subscription cancelled.');
+            await updateSubscriptionPlan('free', 'Subscription cancelled.');
           }
           break;
           
         case 'downgrade-to-premium':
           if (confirm('Are you sure you want to downgrade to Premium?')) {
-            await updateSubscriptionPlan('premium', 'Successfully downgraded to Premium.');
+            await updateSubscriptionPlan('premium', 'Successfully downgraded.');
           }
           break;
           
