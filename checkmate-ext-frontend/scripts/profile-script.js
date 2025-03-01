@@ -45,8 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Capitalize the first letter of the plan name
         const planName = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
         
-        // Apply premium styling for premium/enterprise users
-        if (currentPlan.toLowerCase() === 'premium' || currentPlan.toLowerCase() === 'enterprise') {
+        // Apply premium styling for premium users
+        if (currentPlan.toLowerCase() === 'premium') {
             // Apply golden gradient to plan box
             if (planBox) {
                 planBox.style.background = 'linear-gradient(145deg, #f9f1c5 0%, #ffcc00 100%)';
@@ -64,9 +64,30 @@ document.addEventListener('DOMContentLoaded', () => {
             // Add a premium badge
             const badge = document.createElement('div');
             badge.innerHTML = `<div style="background: #ffcc00; color: #7B6225; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; position: absolute; top: -10px; right: 10px; border: 1px solid #7B6225; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transform: rotate(3deg);">PREMIUM</div>`;
-            planBox.style.position = 'relative'; // Make sure the box has position relative for the badge positioning
+            planBox.style.position = 'relative';
             planBox.appendChild(badge);
+        } 
+        // Apply enterprise styling for enterprise users
+        else if (currentPlan.toLowerCase() === 'enterprise') {
+            // Apply blue gradient to plan box
+            if (planBox) {
+                planBox.style.background = 'linear-gradient(145deg, #e6f0ff, #1a73e8)';
+                planBox.style.boxShadow = '0 4px 12px rgba(26, 115, 232, 0.25)';
+                planBox.style.border = '1px solid rgba(26, 115, 232, 0.5)';
+            }
             
+            // Make plan info text fancier with blue theme
+            planInfo.innerHTML = `<span style="display: flex; align-items: center; justify-content: center;">
+                <span style="font-size: 18px; margin-right: 4px;">🌐</span>
+                <span style="font-weight: bold; color: #0d47a1;">Enterprise Plan</span>
+                <span style="font-size: 18px; margin-left: 4px;">🌐</span>
+            </span>`;
+            
+            // Add an enterprise badge
+            const badge = document.createElement('div');
+            badge.innerHTML = `<div style="background: #1a73e8; color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; position: absolute; top: -10px; right: 10px; border: 1px solid #0d47a1; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transform: rotate(3deg);">ENTERPRISE</div>`;
+            planBox.style.position = 'relative';
+            planBox.appendChild(badge);
         } else {
             planInfo.innerHTML = `<span style="font-weight: 500;">Current Plan: <span style="color: #3cb371;">${planName}</span></span>`;
         }
@@ -85,14 +106,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'enterprise':
                 upgradeBtn.textContent = 'Enterprise Settings';
-                upgradeBtn.style.background = 'linear-gradient(145deg, #ffeb3b 0%, #ffc107 100%)';
-                upgradeBtn.style.color = '#7B6225';
+                upgradeBtn.style.background = 'linear-gradient(145deg, #4285f4, #0d47a1)';
+                upgradeBtn.style.color = 'white';
                 upgradeBtn.style.fontWeight = 'bold';
-                upgradeBtn.style.boxShadow = '0 4px 10px rgba(255, 204, 0, 0.3)';
-                upgradeBtn.style.border = '1px solid rgba(255, 204, 0, 0.6)';
+                upgradeBtn.style.boxShadow = '0 4px 10px rgba(26, 115, 232, 0.3)';
+                upgradeBtn.style.border = '1px solid rgba(13, 71, 161, 0.6)';
                 break;
             default: // 'free'
-                upgradeBtn.textContent = 'Upgrade Now';
+                upgradeBtn.textContent = '⭐ Upgrade Now';
                 upgradeBtn.style.background = '#ffcc00';
                 upgradeBtn.style.color = '#7B6225';
                 upgradeBtn.style.fontWeight = 'bold';
@@ -140,20 +161,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // If premium, add animated gold glow effect
+    // If premium or enterprise, add appropriate animated glow effect
     if (currentPlan.toLowerCase() === 'premium' || currentPlan.toLowerCase() === 'enterprise') {
         const styleElement = document.createElement('style');
-        styleElement.textContent = `
-            @keyframes goldPulse {
-                0% { box-shadow: 0 0 8px rgba(255, 204, 0, 0.5); }
-                50% { box-shadow: 0 0 16px rgba(255, 204, 0, 0.8); }
-                100% { box-shadow: 0 0 8px rgba(255, 204, 0, 0.5); }
-            }
-            #upgradeBtn:hover {
-                animation: goldPulse 1.5s infinite;
-                transform: translateY(-2px);
-            }
-        `;
+        
+        if (currentPlan.toLowerCase() === 'premium') {
+            styleElement.textContent = `
+                @keyframes goldPulse {
+                    0% { box-shadow: 0 0 8px rgba(255, 204, 0, 0.5); }
+                    50% { box-shadow: 0 0 16px rgba(255, 204, 0, 0.8); }
+                    100% { box-shadow: 0 0 8px rgba(255, 204, 0, 0.5); }
+                }
+                #upgradeBtn:hover {
+                    animation: goldPulse 1.5s infinite;
+                    transform: translateY(-2px);
+                }
+            `;
+        } else { // enterprise
+            styleElement.textContent = `
+                @keyframes bluePulse {
+                    0% { box-shadow: 0 0 8px rgba(26, 115, 232, 0.5); }
+                    50% { box-shadow: 0 0 16px rgba(26, 115, 232, 0.8); }
+                    100% { box-shadow: 0 0 8px rgba(26, 115, 232, 0.5); }
+                }
+                #upgradeBtn:hover {
+                    animation: bluePulse 1.5s infinite;
+                    transform: translateY(-2px);
+                }
+            `;
+        }
+        
         document.head.appendChild(styleElement);
     }
 });

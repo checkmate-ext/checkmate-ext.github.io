@@ -5,12 +5,16 @@
     <title>Checkmate - Pricing</title>
     <!-- Bulma CSS Framework -->
     <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
-    <!-- Font Awesome for Icons (Optional for better iconography) -->
+    <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     <style>
         :root {
             --primary-color: #3cb371;
             --secondary-color: #2e8b57;
+            --premium-color: #ffcc00;
+            --premium-text: #7B6225;
+            --enterprise-color: #1a73e8;
+            --enterprise-text: #0d47a1;
             --bg-light: #f4f4f4;
             --text-dark: #333;
             --border-radius: 8px;
@@ -45,12 +49,12 @@
             position: relative;
         }
 
-        /* Header Styling - Consistent with other pages */
+        /* Header Styling */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 10px;
             padding: 20px 25px 0 25px;
         }
 
@@ -75,11 +79,117 @@
         .logo {
             display: flex;
             justify-content: center;
-            margin-bottom: 30px;
+            margin-bottom: 10px;
         }
 
         .logo img {
-            width: 100px;
+            width: 90px;
+        }
+
+        /* Plan Message */
+        #planMessage {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            margin: 10px 0;
+            padding: 0 20px;
+        }
+
+        /* Plan Cards Container */
+        .plans-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 0 20px;
+            overflow-y: auto;
+            max-height: 320px;
+            margin-bottom: 15px;
+        }
+
+        /* Scrollbar styling */
+        .plans-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .plans-container::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .plans-container::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
+        }
+
+        /* Individual Plan Card */
+        .plan-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+
+        .plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .plan-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .plan-price {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .plan-features ul {
+            list-style: none;
+            padding-left: 5px;
+            margin: 0;
+        }
+
+        .plan-features li {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .plan-badge {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            background: var(--primary-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            transform: rotate(3deg);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Button container for centering */
+        .buttons-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding: 0 20px;
+            margin-top: auto;
         }
 
         .button {
@@ -96,6 +206,7 @@
             transition: all var(--transition-speed) ease;
             font-size: 16px;
             text-align: center;
+            margin-bottom: 10px;
         }
 
         .button::before {
@@ -117,11 +228,16 @@
         }
 
         .button:hover {
-            background: var(--secondary-color);
-            box-shadow: 0 5px 15px rgba(60,179,113,0.3);
-            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
+        .button-margin {
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        /* Bottom Icons */
         .bottom-icons {
             position: absolute;
             bottom: 0;
@@ -148,25 +264,37 @@
             transform: scale(1.1) rotate(5deg);
         }
 
-        /* Button container for centering */
-        .buttons-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            padding: 0 20px;
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            vertical-align: middle;
         }
 
-        .button-margin {
-            margin-bottom: 15px;
-            width: 80%;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
-        /* Plan message styling */
-        #planMessage {
-            text-align: center;
-            margin: 15px 0;
-            padding: 0 20px;
+        /* Notification */
+        .plan-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            opacity: 1;
+            transition: opacity 0.5s ease;
         }
 
         /* Responsive Adjustments */
@@ -183,11 +311,15 @@
                 padding: 10px 16px;
             }
         }
+        .card-upgrade-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header Section - Adjusted spacing -->
+        <!-- Header Section -->
         <div class="header">
             <div class="header-icons">
                 <img src="../images/menu-bar-icon.png" alt="Menu" id="menuBtn" class="header-icon">
@@ -205,7 +337,12 @@
         <!-- Dynamic Plan Message -->
         <h3 id="planMessage" class="subtitle is-5"></h3>
 
-        <!-- Buttons Container for Centering -->
+        <!-- Plan Cards Container -->
+        <div class="plans-container" id="planCardsContainer">
+            <!-- Plan cards will be inserted here dynamically -->
+        </div>
+
+        <!-- Buttons Container for Actions -->
         <div class="buttons-container">
             <!-- Upgrade/Plan Action Buttons -->
             <button class="button button-margin" id="premiumBtn"></button>
