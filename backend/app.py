@@ -6,7 +6,7 @@ from google.auth.transport import requests
 from sqlalchemy import func
 
 from models import db, User, ArticleSearch, SimilarArticle, ArticleRequest
-from GoogleSearch import GoogleSearch
+from ArticleAnalyzer import ArticleAnalyzer
 import os
 import random
 import jwt
@@ -172,7 +172,7 @@ def scrap_and_search(current_user):
         print(f"Processing URL: {url}")
 
         # Initialize GoogleSearch and perform scraping & custom search
-        google_search = GoogleSearch(app.config['G_API_KEY'], app.config['CX_ID'], app.config['VISION_API_KEY'], url)
+        google_search = ArticleAnalyzer(app.config['G_API_KEY'], app.config['CX_ID'], app.config['VISION_API_KEY'], url)
         similar_articles = google_search.get_similar()
         article = google_search.article  # Original article data
         images_data = google_search.get_images_data()  # Analyze images for web detection

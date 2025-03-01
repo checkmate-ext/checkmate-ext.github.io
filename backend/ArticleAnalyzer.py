@@ -75,7 +75,7 @@ def _extract_article_hybrid(url):
         return None
 
 
-class GoogleSearch:
+class ArticleAnalyzer:
     def __init__(self, api_key: str, cx: str, vision_api_key: str, article_url: str):
         self.api_key = api_key
         self.cx = cx
