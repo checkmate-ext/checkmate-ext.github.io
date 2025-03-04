@@ -157,22 +157,84 @@ document.addEventListener('DOMContentLoaded', function() {
         const navButton = document.querySelector('.nav-button');
         if (navButton) {
             navButton.style.background = themeValues.primaryColor;
-            navButton.style.color = theme === 'dark' ? '#fff' : '#fff';
+            navButton.style.color = 'white'; // Always white text on button for better contrast
+            
+            // Handle icon inside nav button (history icon)
+            const navButtonIcon = navButton.querySelector('.icon');
+            if (navButtonIcon) {
+                navButtonIcon.style.opacity = themeValues.headerIconOpacity;
+                navButtonIcon.style.filter = theme === 'dark' ? 'invert(1)' : 'none';
+            }
         }
         
         // Bottom icons
         const bottomIcons = document.querySelector('.bottom-icons');
         if (bottomIcons) {
             bottomIcons.style.background = themeValues.containerBg;
+            bottomIcons.style.borderTopColor = theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+            
+            // Apply inverted filter to all bottom icons
+            bottomIcons.querySelectorAll('img').forEach(img => {
+                img.style.opacity = themeValues.headerIconOpacity;
+                img.style.filter = theme === 'dark' ? 'invert(1)' : 'none';
+            });
         }
         
-        // Header icons
+        // Header icons - using invert like in profile page
         document.querySelectorAll('img').forEach(img => {
-            if (img.alt === 'Menu' || img.alt === 'Profile') {
-                img.style.filter = theme === 'dark' ? 'brightness(2)' : 'none';
+            if (img.alt === 'Menu' || img.alt === 'Profile' || img.alt === 'History') {
                 img.style.opacity = themeValues.headerIconOpacity;
+                img.style.filter = theme === 'dark' ? 'invert(1)' : 'none';
             }
         });
+        
+        // Chart card icon
+        const chartCardIcon = document.querySelector('.chart-card .icon');
+        if (chartCardIcon) {
+            chartCardIcon.style.opacity = themeValues.headerIconOpacity;
+            chartCardIcon.style.filter = theme === 'dark' ? 'invert(1)' : 'none';
+        }
+        
+        // Add any custom dynamic styles
+        updateDynamicStyles(theme, themeValues);
+    }
+    
+    function updateDynamicStyles(theme, themeValues) {
+        let styleElement = document.getElementById('dashboard-dynamic-styles');
+        if (!styleElement) {
+            styleElement = document.createElement('style');
+            styleElement.id = 'dashboard-dynamic-styles';
+            document.head.appendChild(styleElement);
+        }
+        
+        styleElement.textContent = `
+            /* Hover effects for cards in current theme */
+            .stat-card:hover {
+                box-shadow: ${theme === 'dark' ? 
+                    '0 8px 20px rgba(0,0,0,0.3) !important' : 
+                    '0 8px 20px rgba(0,0,0,0.1) !important'
+                };
+                transform: translateY(-2px);
+            }
+            
+            /* Scrollbar styling */
+            ::-webkit-scrollbar {
+                width: 6px;
+            }
+            
+            ::-webkit-scrollbar-thumb {
+                background: ${themeValues.scrollbarThumb};
+                border-radius: 3px;
+            }
+            
+            ::-webkit-scrollbar-thumb:hover {
+                background: ${theme === 'dark' ? '#888' : '#bbb'};
+            }
+            
+            ::-webkit-scrollbar-track {
+                background: ${themeValues.scrollbarTrack};
+            }
+        `;
     }
     
     // Listen for system theme changes

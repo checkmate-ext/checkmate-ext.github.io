@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Theme settings
+    // Theme settings remain the same
     const themes = {
         light: {
             bgColor: '#f4f4f4',
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // Check for saved theme preference or use system preference
+    // Other initialization code remains the same
     let currentTheme = localStorage.getItem('theme') || 
         (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 
@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'theme') {
             const newTheme = e.newValue;
             if (newTheme === 'dark' || newTheme === 'light') {
+                currentTheme = newTheme;
                 applyTheme(newTheme);
             }
         }
@@ -94,25 +95,59 @@ document.addEventListener('DOMContentLoaded', function() {
         if (bottomIcons) {
             bottomIcons.style.background = themeValues.containerBg;
             bottomIcons.style.borderTopColor = themeValues.borderColor;
+            
+            // Apply invert to all bottom icons (like in profile page)
+            bottomIcons.querySelectorAll('img').forEach(img => {
+                img.style.opacity = themeValues.headerIconOpacity;
+                img.style.filter = theme === 'dark' ? 'invert(1)' : 'none';
+            });
         }
         
         // Header styling
         const header = document.querySelector('.header');
         if (header) {
             header.style.background = themeValues.containerBg;
+            
+            // Apply invert to all header icons
+            header.querySelectorAll('img').forEach(img => {
+                img.style.opacity = themeValues.headerIconOpacity;
+                img.style.filter = theme === 'dark' ? 'invert(1)' : 'none';
+            });
         }
         
-        // Icon colors adjustment
-        document.querySelectorAll('.bottom-icons img, .header-icons img').forEach(img => {
+        // Handle all icons throughout the page for consistency
+        document.querySelectorAll('img').forEach(img => {
+            // Skip icons that might have specific styling (like score indicators)
+            if (img.closest('.score-indicator') || 
+                img.closest('.reliability-score') || 
+                img.alt === 'Logo') {
+                return;
+            }
+            
+            // Apply the filter to all navigation and UI icons
+            if (img.closest('.header') || 
+                img.closest('.bottom-icons') || 
+                img.alt === 'Menu' || 
+                img.alt === 'Profile' || 
+                img.alt === 'History' ||
+                img.alt === 'Back' ||
+                img.alt === 'Delete') {
+                img.style.opacity = themeValues.headerIconOpacity;
+                img.style.filter = theme === 'dark' ? 'invert(1)' : 'none';
+            }
+        });
+        
+        // Also handle any buttons with icons
+        document.querySelectorAll('button img').forEach(img => {
             img.style.opacity = themeValues.headerIconOpacity;
-            img.style.filter = theme === 'dark' ? 'brightness(1.2)' : 'none';
+            img.style.filter = theme === 'dark' ? 'invert(1)' : 'none';
         });
         
         // Update scrollbar styles
         updateScrollbarStyles(theme, themeValues);
     }
     
-    // Function to style all history items
+    // Rest of the functions remain the same
     function styleHistoryItems(themeValues) {
         // Style existing history items
         document.querySelectorAll('.history-item').forEach(item => {
@@ -126,7 +161,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Function to style a single history item
     function styleHistoryItem(item, themeValues) {
         item.style.background = themeValues.cardBg;
         item.style.borderColor = themeValues.cardBorderColor;
@@ -150,11 +184,19 @@ document.addEventListener('DOMContentLoaded', function() {
             dateEl.style.color = themeValues.dateColor;
         }
         
-        // Score doesn't need styling as it has its own colors
+        // Also ensure any icons within history items are properly styled
+        const icons = item.querySelectorAll('img');
+        icons.forEach(icon => {
+            // Skip score indicator icons
+            if (icon.closest('.score-indicator')) return;
+            
+            icon.style.opacity = themeValues.headerIconOpacity;
+            icon.style.filter = themeValues === themes.dark ? 'invert(1)' : 'none';
+        });
     }
     
-    // Set up a mutation observer to watch for dynamically added history items
     function setupMutationObserver() {
+        // Same implementation
         const historyList = document.querySelector('.history-list');
         if (!historyList) return;
         
@@ -180,8 +222,8 @@ document.addEventListener('DOMContentLoaded', function() {
         observer.observe(historyList, { childList: true, subtree: true });
     }
     
-    // Update scrollbar styles
     function updateScrollbarStyles(theme, themeValues) {
+        // Same implementation
         let styleElement = document.getElementById('theme-scrollbar-styles');
         if (!styleElement) {
             styleElement = document.createElement('style');
@@ -214,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         `;
     }
-    
+        
     // Listen for system theme changes
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
         if (localStorage.getItem('theme') === null) {
