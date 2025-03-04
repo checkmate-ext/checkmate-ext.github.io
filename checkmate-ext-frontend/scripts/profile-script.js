@@ -128,38 +128,26 @@ document.addEventListener('DOMContentLoaded', () => {
         pastSearchesBtn.style.border = '1px solid #eee';
         pastSearchesBtn.style.borderLeft = '4px solid #3cb371';
     }
-    
-    // Add History button
-    const contentWrapper = document.querySelector('.content-wrapper');
-    if (contentWrapper && pastSearchesBtn) {
-        const historyBtn = document.createElement('div');
-        historyBtn.id = 'historyBtn';
-        historyBtn.className = 'past-searches';
-        historyBtn.innerHTML = `
-            <img src="../images/clock.256x256.png" alt="History">
-            <span>View Search History</span>
-        `;
+
+    const historyBtn = document.getElementById('historyBtn');
+    if (historyBtn) {
         historyBtn.style.background = 'white';
         historyBtn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
         historyBtn.style.border = '1px solid #eee';
         historyBtn.style.borderLeft = '4px solid #3cb371';
-        historyBtn.style.marginTop = '10px';
-        historyBtn.style.cursor = 'pointer';
-        
-        // Insert after pastSearches
-        pastSearchesBtn.parentNode.insertBefore(historyBtn, pastSearchesBtn.nextSibling);
-        
-        // Add event listener
-        historyBtn.addEventListener('click', () => {
-            // Use the navigate function from navigate.js
-            if (typeof navigateTo === 'function') {
-                navigateTo('HistoryPage.html');
-            } else {
-                // Fallback if navigateTo is not available
-                window.location.href = 'HistoryPage.html';
-            }
-        });
     }
+
+    // Add event listener
+    historyBtn.addEventListener('click', () => {
+        // Use the navigate function from navigate.js
+        if (typeof navigateTo === 'function') {
+            navigateTo('HistoryPage.html');
+        } else {
+            // Fallback if navigateTo is not available
+            window.location.href = 'HistoryPage.html';
+        }
+    });
+    
     
     // If premium or enterprise, add appropriate animated glow effect
     if (currentPlan.toLowerCase() === 'premium' || currentPlan.toLowerCase() === 'enterprise') {
