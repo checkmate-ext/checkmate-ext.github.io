@@ -6,7 +6,6 @@ from ArticleExtractor import ArticleExtractor
 import random
 import json
 
-
 def _extract_with_requests(url, min_text_length=300):
     """
     Attempt to fetch + parse article using requests + BeautifulSoup.
@@ -16,9 +15,13 @@ def _extract_with_requests(url, min_text_length=300):
             'content': str,
             'date': None,
             'url': url,
-            'images': []
+            'images': [
+                {
+                    'src': str,  # full image URL
+                    'alt': str,  # alternative text
+                }
+            ],
             'similarity_score': float
-
         }
     If the result seems too small or fails, return None to signal fallback.
     """
@@ -27,27 +30,44 @@ def _extract_with_requests(url, min_text_length=300):
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
 
+        # Title extraction
         title_elem = soup.find("title")
         title = title_elem.get_text(strip=True) if title_elem else "No Title"
 
-        # Extract text content quickly
+        # Extract text content
         text_content = soup.get_text(separator="\n").strip()
 
         # If the text is too short, treat it as "not enough data"
         if len(text_content) < min_text_length:
             return None
 
+        # Image extraction
+        images = []
+        for img in soup.find_all('img'):
+            # Get full image URL (absolute path)
+            img_src = img.get('src')
+            if img_src:
+                # Convert relative URLs to absolute
+                if not img_src.startswith(('http://', 'https://')):
+                    from urllib.parse import urljoin
+                    img_src = urljoin(url, img_src)
+
+                images.append({
+                    'src': img_src,
+                    'alt': img.get('alt', '')
+                })
+
         return {
             "title": title,
             "content": text_content,
-            "date": None,  # We could do more date extraction here if desired
+            "date": None,
             "url": url,
-            "images": [],
+            "images": images,
+            "similarity_score": random.random()
         }
     except Exception as e:
         print(f"Lightweight fetch failed for {url}: {e}")
         return None
-
 
 def _extract_article_hybrid(url, main_article=None):
     """
