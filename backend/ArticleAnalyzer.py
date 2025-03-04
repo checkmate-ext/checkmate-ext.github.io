@@ -6,7 +6,6 @@ from ArticleExtractor import ArticleExtractor
 import random
 import json
 
-
 def _extract_with_requests(url, min_text_length=300):
     """
     Attempt to fetch + parse article using requests + BeautifulSoup.
@@ -69,7 +68,6 @@ def _extract_with_requests(url, min_text_length=300):
     except Exception as e:
         print(f"Lightweight fetch failed for {url}: {e}")
         return None
-
 
 def _extract_article_hybrid(url, main_article=None):
     """

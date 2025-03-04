@@ -240,6 +240,75 @@
             opacity: 1;
             transform: scale(1.1) rotate(5deg);
         }
+        /* Theme Toggle Box */
+        .theme-toggle-box {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin: 15px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        
+        /* Switch styling */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .3s;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .slider.round {
+            border-radius: 24px;
+        }
+        
+        .slider.round:before {
+            border-radius: 50%;
+        }
     </style>
 </head>
 <body>
@@ -267,7 +336,15 @@
             <img src="../images/DashboardIcon.png" alt="Dashboard">
             <span>Dashboard</span>
         </div>
+
+        <div class="past-searches" id="historyBtn">
+            <img src="../images/clock.256x256.png" alt="History">
+            <span>View Search History</span>
+        </div>
+        
     </div>
+
+
 
     <div class="bottom-icons">
         <img src="../images/settings-icon.png" alt="Settings">
@@ -283,5 +360,6 @@
 <script src="../navigation/navigate.js"></script>
 <script type="module" src="../scripts/logout-script.js"></script>
 <script src="../scripts/profile-script.js"></script>
+<script src="../theme_scripts/profile_theme.js"></script>
 </body>
 </html>
