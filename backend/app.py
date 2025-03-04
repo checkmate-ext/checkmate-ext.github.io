@@ -178,7 +178,6 @@ def scrap_and_search(current_user):
         images_data = google_search.get_images_data()  # Analyze images for web detection
         reliability_score = random.randint(30, 95)
         credibility_score = random.randint(30, 95)
-        objectivity_score = random.randint(30, 95)
         bias_score = random.randint(30, 95)
 
         print("article : ", article)
@@ -188,7 +187,7 @@ def scrap_and_search(current_user):
             title=article['title'],
             reliability_score=reliability_score,
             credibility_score=credibility_score,
-            objectivity_score=objectivity_score,
+            objectivity_score=article['objectivity_score'],
             bias_score=bias_score
         )
 
@@ -201,7 +200,7 @@ def scrap_and_search(current_user):
         )
         db.session.add(article_request)
 
-        similiar_articles_to_insert = [
+        similar_articles_to_insert = [
             SimilarArticle(
                 main_article_id=new_search.id,
                 title=article['title'],
@@ -211,8 +210,8 @@ def scrap_and_search(current_user):
             for article in similar_articles
         ]
 
-        if similiar_articles_to_insert:
-            db.session.bulk_save_objects(similiar_articles_to_insert)
+        if similar_articles_to_insert:
+            db.session.bulk_save_objects(similar_articles_to_insert)
 
         db.session.commit()
         print(similar_articles)
@@ -812,5 +811,7 @@ def fetch_stats(current_user):
         db.session.rollback()
         print(f"Error fetching stats: {str(e)}")
         return jsonify({'error': 'Failed to fetch stats'}), 500
+
+
 if __name__ == '__main__':
     app.run(debug=True)

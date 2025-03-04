@@ -4,6 +4,7 @@ import concurrent.futures
 from bs4 import BeautifulSoup
 from ArticleExtractor import ArticleExtractor
 import random
+import json
 
 
 def _extract_with_requests(url, min_text_length=300):
@@ -17,6 +18,7 @@ def _extract_with_requests(url, min_text_length=300):
             'url': url,
             'images': []
             'similarity_score': float
+
         }
     If the result seems too small or fails, return None to signal fallback.
     """
@@ -41,35 +43,61 @@ def _extract_with_requests(url, min_text_length=300):
             "date": None,  # We could do more date extraction here if desired
             "url": url,
             "images": [],
-            "similarity_score": random.random()
         }
     except Exception as e:
         print(f"Lightweight fetch failed for {url}: {e}")
         return None
 
 
-def _extract_article_hybrid(url):
+def _extract_article_hybrid(url, main_article=None):
     """
     Hybrid approach:
     1) Try requests + BeautifulSoup first.
-    2) If that yields insufficient content, fallback to ArticleExtractor 
+    2) If that yields insufficient content, fallback to ArticleExtractor
        (which uses undetectable Chrome).
     """
-    # 1) Try the lightweight approach
     article_data = _extract_with_requests(url)
     if article_data is not None:
+        if main_article is None:
+            clean_content = article_data['content'].replace('\n', ' ').replace('\r', ' ')
+            clean_content = ' '.join(clean_content.split())
+            try:
+                response = requests.post(
+                    "http://52.90.193.31:8000/predict",
+                    headers={"Content-Type": "application/json"},
+                    json={"text": clean_content},
+                )
+                response.raise_for_status()
+                article_data['objectivity_score'] = response.json().get('score', random.random())
+            except (requests.RequestException, ValueError, KeyError) as e:
+                print(f"Error getting objectivity score from API: {e}")
+                article_data['objectivity_score'] = -1
+        else:
+            article_data['similarity_score'] = random.random()
         return article_data
 
-    # 2) Fallback to the heavier approach
-    #    (launches undetectable Chrome via ArticleExtractor)
     try:
         scrapper = ArticleExtractor()
-        data = scrapper.extract_article(url)
-        data['similarity_score'] = random.random()
-        # Clean up
+        article_data = scrapper.extract_article(url)
+        if main_article is None:
+            clean_content = article_data['content'].replace('\n', ' ').replace('\r', ' ')
+            clean_content = ' '.join(clean_content.split())
+            try:
+                response = requests.post(
+                    "http://52.90.193.31:8000/predict",
+                    headers={"Content-Type": "application/json"},
+                    json={"text": clean_content},
+                )
+                response.raise_for_status()
+                article_data['objectivity_score'] = response.json().get('score', random.random())
+            except (requests.RequestException, ValueError, KeyError) as e:
+                print(f"Error getting objectivity score from API: {e}")
+                article_data['objectivity_score'] = -1
+        else:
+            article_data['similarity_score'] = random.random()
         if scrapper.driver:
             scrapper.driver.quit()
-        return data
+        return article_data
     except Exception as e:
         print(f"Browser-based extraction failed for {url}: {e}")
         return None
@@ -102,7 +130,7 @@ class ArticleAnalyzer:
 
         with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
             future_to_url = {
-                executor.submit(_extract_article_hybrid, url): url
+                executor.submit(_extract_article_hybrid, url, self.article): url
                 for url in urls
             }
             for future in concurrent.futures.as_completed(future_to_url):
