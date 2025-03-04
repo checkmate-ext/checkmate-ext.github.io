@@ -1,7 +1,10 @@
-from flask import Flask
-from models import db, User, ArticleSearch, SimilarArticle
-from dotenv import load_dotenv
 import os
+
+from dotenv import load_dotenv
+from flask import Flask
+
+from models import db
+
 
 def create_app():
     """Creates and configures the Flask application"""
@@ -29,6 +32,7 @@ def create_app():
 
     return app
 
+
 def init_database():
     """Initialize the database by creating all tables"""
     try:
@@ -50,6 +54,7 @@ def init_database():
     except Exception as e:
         print(f"\nError during database initialization: {str(e)}")
         raise
+
 
 if __name__ == "__main__":
     init_database()

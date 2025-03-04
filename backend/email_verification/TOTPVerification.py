@@ -2,6 +2,7 @@ import pyotp
 from base64 import b32encode
 import hashlib
 
+
 class TOTPVerification:
     def __init__(self, secret_key):
         self.secret_key = secret_key

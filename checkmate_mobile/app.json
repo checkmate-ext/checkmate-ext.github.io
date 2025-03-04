@@ -5,17 +5,52 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "checkmate",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.checkmate",
+      "associatedDomains": [
+        "applinks:checkmate-app.example.com"
+      ]
     },
     "android": {
+      "permissions": ["INTERNET"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.yourcompany.checkmate",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "*.checkmate-app.example.com",
+              "pathPrefix": "/analyze"
+            },
+            {
+              "scheme": "checkmate"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "SEND",
+          "category": [
+            "DEFAULT"
+          ],
+          "data": {
+            "mimeType": "text/plain"
+          }
+        }
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -36,6 +71,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "your-project-id"
+      }
     }
   }
 }

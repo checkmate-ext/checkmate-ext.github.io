@@ -44,7 +44,11 @@ def create_app():
         r"/*": {
             "origins": [
                 "chrome-extension://jknabnhokhooponmdfanhjonneoeckjm",  # Your extension ID
-                "http://localhost:5000"  # Local development
+                "http://localhost:5000",  # Local development
+                "http://172.20.10.9:5000",  # Add your phone's network connection
+                "capacitor://localhost",   # For Capacitor if you're using it
+                "http://localhost",        # Generic localhost
+                "*"                        # Allow all origins (use for testing only!)
             ],
             "methods": ["GET", "POST", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"]
@@ -814,4 +818,5 @@ def fetch_stats(current_user):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Run the app on all network interfaces (0.0.0.0) instead of just localhost
+    app.run(host='0.0.0.0', port=5000, debug=True)

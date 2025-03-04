@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, TextInput, Button, Card, useTheme, ActivityIndicator, IconButton } from 'react-native-paper';
+// app/new-search.tsx
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Linking, Alert } from 'react-native';
+import { Text, TextInput, Button, Card, useTheme, ActivityIndicator, IconButton, Banner, Snackbar } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from './context/AuthContext';
+import { useDeepLinkContext } from './context/DeepLinkContext';
+import { useLocalSearchParams } from 'expo-router';
 import { moderateScale } from 'react-native-size-matters';
 import axios from 'axios';
 import { API_URL } from './constants/Config';
@@ -12,9 +15,15 @@ import { authStyles } from './styles/auth';
 
 export default function NewSearch() {
     const { token } = useAuth();
+    const { handleAnalyzeUrl } = useDeepLinkContext();
+    const { sharedUrl } = useLocalSearchParams();
     const [url, setUrl] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [isSharedUrl, setIsSharedUrl] = useState(false);
+    const [showBanner, setShowBanner] = useState(false);
+    const [snackVisible, setSnackVisible] = useState(false);
+    const [snackMessage, setSnackMessage] = useState('');
 
     const theme = {
         ...useTheme(),
@@ -85,7 +94,87 @@ export default function NewSearch() {
             marginTop: moderateScale(30),
             marginBottom: moderateScale(15),
         },
+        banner: {
+            backgroundColor: theme.colors.surface,
+            marginBottom: moderateScale(15),
+            borderRadius: moderateScale(8),
+        },
+        bannerContent: {
+            backgroundColor: theme.colors.surface,
+        },
     });
+
+    // Add this useEffect hook to handle shared URLs
+    useEffect(() => {
+        if (sharedUrl) {
+            const decodedUrl = decodeURIComponent(sharedUrl);
+            setUrl(decodedUrl);
+            setIsSharedUrl(true);
+            setShowBanner(true);
+            setSnackMessage('URL received from another app');
+            setSnackVisible(true);
+
+            // Optionally auto-analyze
+            if (token && decodedUrl) {
+                handleAnalyzeArticle(decodedUrl);
+            }
+        }
+
+        // Additionally, check for initial URL (in case deep linking opened the app)
+        const checkInitialUrl = async () => {
+            try {
+                const initialUrl = await Linking.getInitialURL();
+                if (initialUrl) {
+                    console.log('App opened with URL:', initialUrl);
+
+                    // Extract actual URL from deep link
+                    let extractedUrl = initialUrl;
+                    if (initialUrl.startsWith('checkmate://')) {
+                        extractedUrl = initialUrl.replace('checkmate://', '');
+                        extractedUrl = decodeURIComponent(extractedUrl);
+
+                        setUrl(extractedUrl);
+                        setIsSharedUrl(true);
+                        setShowBanner(true);
+                        setSnackMessage('URL received via deep link');
+                        setSnackVisible(true);
+
+                        // Optionally auto-analyze
+                        if (token) {
+                            handleAnalyzeArticle(extractedUrl);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Error checking initial URL:', e);
+            }
+        };
+
+        checkInitialUrl();
+
+        // Set up listener for incoming links while app is open
+        const subscription = Linking.addEventListener('url', (event) => {
+            if (event.url) {
+                console.log('Received URL while app is running:', event.url);
+
+                let extractedUrl = event.url;
+                if (event.url.startsWith('checkmate://')) {
+                    extractedUrl = event.url.replace('checkmate://', '');
+                    extractedUrl = decodeURIComponent(extractedUrl);
+
+                    setUrl(extractedUrl);
+                    setIsSharedUrl(true);
+                    setShowBanner(true);
+                    setSnackMessage('URL received via deep link');
+                    setSnackVisible(true);
+                }
+            }
+        });
+
+        return () => {
+            subscription.remove();
+        };
+    }, [sharedUrl, token]);
 
     const validateUrl = (input) => {
         // Basic URL validation
@@ -93,13 +182,16 @@ export default function NewSearch() {
         return urlPattern.test(input);
     };
 
-    const handleAnalyzeArticle = async () => {
-        if (!url) {
+    // Modify the handleAnalyzeArticle function to accept an optional URL parameter
+    const handleAnalyzeArticle = async (articleUrl = null) => {
+        const urlToAnalyze = articleUrl || url;
+
+        if (!urlToAnalyze) {
             setError('Please enter a URL');
             return;
         }
 
-        if (!validateUrl(url)) {
+        if (!validateUrl(urlToAnalyze)) {
             setError('Please enter a valid URL');
             return;
         }
@@ -111,20 +203,24 @@ export default function NewSearch() {
 
             const response = await axios.post(
                 `${API_URL}/scrap_and_search`,
-                { url },
+                { url: urlToAnalyze },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
             if (response.data && response.data.article) {
                 // Find the article ID from the backend response
-                // This depends on how your backend structures the response
                 const articleId = response.data.article_id || "1"; // Fallback ID
                 console.log('article_id: ', articleId);
                 // Navigate to the article detail screen
                 router.push(`/article/${articleId}`);
 
-                // Reset the form
-                setUrl('');
+                // Reset the form if it wasn't a shared URL
+                if (!isSharedUrl) {
+                    setUrl('');
+                }
+
+                setIsSharedUrl(false);
+                setShowBanner(false);
             } else {
                 setError('Failed to analyze the article. Please try again.');
             }
@@ -141,6 +237,30 @@ export default function NewSearch() {
     const handleExampleUrl = (exampleUrl) => {
         setUrl(exampleUrl);
         setError('');
+        setIsSharedUrl(false);
+    };
+
+    const handleClearUrl = () => {
+        setUrl('');
+        setError('');
+        setIsSharedUrl(false);
+        setShowBanner(false);
+    };
+
+    const handlePasteUrl = async () => {
+        try {
+            const clipboardContent = await Clipboard.getString();
+            if (validateUrl(clipboardContent)) {
+                setUrl(clipboardContent);
+                setError('');
+                Haptics.selectionAsync();
+            } else {
+                setError('Clipboard does not contain a valid URL');
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            }
+        } catch (error) {
+            console.error('Error accessing clipboard:', error);
+        }
     };
 
     return (
@@ -165,6 +285,30 @@ export default function NewSearch() {
                             }}
                         />
 
+                        {/* Add a banner for shared URLs */}
+                        {showBanner && (
+                            <Banner
+                                visible={showBanner}
+                                icon="link-variant"
+                                actions={[
+                                    {
+                                        label: 'Clear',
+                                        onPress: handleClearUrl,
+                                    },
+                                    {
+                                        label: 'Analyze',
+                                        onPress: () => handleAnalyzeArticle(),
+                                    }
+                                ]}
+                                style={styles.banner}
+                                contentStyle={styles.bannerContent}
+                            >
+                                <Text style={{color: theme.colors.text}}>
+                                    URL shared from external app
+                                </Text>
+                            </Banner>
+                        )}
+
                         <Text style={styles.title}>Analyze Article</Text>
                         <Text style={styles.subtitle}>
                             Enter the URL of an article to analyze its reliability and credibility
@@ -177,11 +321,29 @@ export default function NewSearch() {
                                 onChangeText={(text) => {
                                     setUrl(text);
                                     setError('');
+                                    if (isSharedUrl) {
+                                        setIsSharedUrl(false);
+                                    }
                                 }}
                                 mode="outlined"
                                 style={styles.input}
                                 placeholder="https://example.com/article"
                                 left={<TextInput.Icon icon="link" color={theme.colors.secondary} />}
+                                right={
+                                    url ? (
+                                        <TextInput.Icon
+                                            icon="close-circle"
+                                            color={theme.colors.secondary}
+                                            onPress={handleClearUrl}
+                                        />
+                                    ) : (
+                                        <TextInput.Icon
+                                            icon="content-paste"
+                                            color={theme.colors.secondary}
+                                            onPress={handlePasteUrl}
+                                        />
+                                    )
+                                }
                                 textColor={theme.colors.text}
                                 outlineColor={theme.colors.primary}
                                 activeOutlineColor={theme.colors.secondary}
@@ -192,7 +354,7 @@ export default function NewSearch() {
 
                             <Button
                                 mode="contained"
-                                onPress={handleAnalyzeArticle}
+                                onPress={() => handleAnalyzeArticle()}
                                 loading={loading}
                                 disabled={loading}
                                 style={[authStyles.primaryButton, styles.buttonContainer]}
@@ -228,9 +390,36 @@ export default function NewSearch() {
                             </ScrollView>
                         </Card>
 
+                        <Card style={styles.card}>
+                            <Text style={styles.cardTitle}>Share from Browser</Text>
+                            <Text style={{color: theme.colors.text, marginBottom: moderateScale(15)}}>
+                                You can share articles directly from your browser to CheckMate for analysis.
+                            </Text>
+                            <Text style={{color: theme.colors.text}}>
+                                Simply tap the share button in your browser and select "CheckMate" from the share options.
+                            </Text>
+                        </Card>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
+
+            <Snackbar
+                visible={snackVisible}
+                onDismiss={() => setSnackVisible(false)}
+                duration={3000}
+                style={{
+                    backgroundColor: theme.colors.surface,
+                }}
+                action={{
+                    label: 'OK',
+                    onPress: () => setSnackVisible(false),
+                    color: theme.colors.secondary,
+                }}
+            >
+                <Text style={{color: theme.colors.text}}>
+                    {snackMessage}
+                </Text>
+            </Snackbar>
         </LinearGradient>
     );
 }
