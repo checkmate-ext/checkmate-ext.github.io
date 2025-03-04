@@ -82,7 +82,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Report mistake functionality
     document.getElementById('reportMistakeBtn').addEventListener('click', () => {
-        alert('Report mistake functionality goes here.');
+        // Store the report type in localStorage
+        localStorage.setItem('reportType', 'reliability');
+        
+        // Navigate to report page
+        navigateTo('report.html');
     });
 
     // Process Images Data
@@ -153,3 +157,4 @@ document.addEventListener('DOMContentLoaded', async () => {
         detailsList.innerHTML = '<p>No image analysis data found.</p>';
     }
 });
+

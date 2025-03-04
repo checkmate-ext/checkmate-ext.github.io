@@ -1,9 +1,12 @@
 // Button actions (placeholders)
 
 
-
 document.getElementById('reportMistakeBtn').addEventListener('click', () => {
-    alert('Report mistake functionality goes here.');
+    // Store the report type in localStorage
+    localStorage.setItem('reportType', 'reliability');
+    
+    // Navigate to report page
+    navigateTo('report.html');
 });
 
 // Existing code in result-page.js

@@ -46,3 +46,18 @@ function showNotification(message, type) {
         setTimeout(() => notificationDiv.remove(), 5000);
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const reportType = localStorage.getItem('reportType');
+    
+    if (reportType === 'reliability') {
+        // Find the Reliability Score Issue radio button and select it
+        const reliabilityRadio = document.querySelector('input[value="Reliability Score Issue"]');
+        if (reliabilityRadio) {
+            reliabilityRadio.checked = true;
+        }
+        
+        // Clear the reportType from localStorage to avoid affecting future visits to the page
+        localStorage.removeItem('reportType');
+    }
+});

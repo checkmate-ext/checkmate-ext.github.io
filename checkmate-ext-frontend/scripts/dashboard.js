@@ -117,7 +117,7 @@ class DashboardManager {
     updateProgressBar() {
         const usageBar = document.getElementById('usageBar');
         const usageLabel = document.querySelector('.progress-label');
-        const percentage = (this.statsData.articles_analyzed / this.statsData.daily_limit) * 100;
+        const percentage = (this.statsData.articles_analyzed_daily / this.statsData.daily_limit) * 100;
 
         // Animate the progress bar
         usageBar.style.transition = 'width 1s ease-in-out';
@@ -136,7 +136,7 @@ class DashboardManager {
             },
             {
                 title: 'Articles Today',
-                value: this.statsData.articles_analyzed,
+                value: this.statsData.articles_analyzed_daily,
                 subtitle: 'articles analyzed'
             },
             {
