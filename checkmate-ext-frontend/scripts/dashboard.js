@@ -141,7 +141,7 @@ class DashboardManager {
             },
             {
                 title: 'Reliability',
-                value: `${this.statsData.weekly_accuracy}%`,
+                value: `${Number(this.statsData.weekly_accuracy).toFixed(2)}%`,
                 subtitle: 'last 7 days'
             },
             {
