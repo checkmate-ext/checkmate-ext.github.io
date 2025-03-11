@@ -61,51 +61,56 @@ def _extract_with_requests(url: str, min_text_length: int = 300):
         return None
 
 def find_main_content(soup):
-    """Identify the main article content using standard selectors and, if needed, a text density fallback."""
-    # Try common semantic and regex-based selectors first.
+    """Identify the main content of the webpage using multiple heuristics."""
     main_content_candidates = [
+        # Semantic HTML5 tags
         ("article", None),
         ("main", None),
+
+        # ID-based selection with regex for more matches
         ("div", {"id": re.compile(r'(content|main|article|primary|body)', re.I)}),
+
+        # Class-based selection with regex
         ("div", {"class": re.compile(r'(content|main|article|primary|body|post|entry)', re.I)}),
+
+        # Specific semantic selectors
         ("section", {"class": re.compile(r'(article|content|post)', re.I)}),
     ]
 
+    # Try predefined selectors
     for tag, attrs in main_content_candidates:
         try:
-            candidate = soup.find(tag, attrs)
-            if candidate and len(candidate.get_text(strip=True)) > 300:
-                return candidate
+            main_content = soup.find(tag, attrs)
+            if main_content:
+                return main_content
         except Exception as e:
             print(f"Error finding main content with {tag}, {attrs}: {e}")
             continue
 
-    # Fallback: use a text density heuristic on all <div> elements.
-    candidates = soup.find_all('div')
-    best_candidate = None
-    best_score = 0
+    # Advanced heuristics for finding content
+    try:
+        divs = soup.find_all("div")
+        text_rich_divs = [
+            div for div in divs if len(div.get_text(strip=True)) > 300
+        ]
+        if text_rich_divs:
+            # Sort by text length and return the most text-rich div
+            main_content = max(text_rich_divs, key=lambda d: len(d.get_text(strip=True)))
+            return main_content
+    except Exception as e:
+        print(f"Error finding text-rich div: {e}")
 
-    for candidate in candidates:
-        paragraphs = candidate.find_all('p')
-        if not paragraphs:
-            continue
-        text = candidate.get_text(separator=' ', strip=True)
-        score = len(text) * len(paragraphs)  # density score
-
-        if score > best_score and len(text) > 300:
-            best_score = score
-            best_candidate = candidate
-
-    if best_candidate:
-        return best_candidate
-
-    # Final fallback: concatenate all paragraph tags into a new container.
-    paragraphs = soup.find_all("p")
-    if paragraphs:
-        wrapper_div = soup.new_tag("div")
-        for p in paragraphs:
-            wrapper_div.append(p)
-        return wrapper_div
+    # Paragraph-based fallback
+    try:
+        paragraphs = soup.find_all("p")
+        text_paragraphs = [p for p in paragraphs if len(p.get_text(strip=True)) > 50]
+        if text_paragraphs:
+            wrapper_div = soup.new_tag("div")
+            for p in text_paragraphs:
+                wrapper_div.append(p)
+            return wrapper_div
+    except Exception as e:
+        print(f"Error finding paragraphs: {e}")
 
     return soup.body
 
@@ -387,12 +392,22 @@ class ArticleAnalyzer:
         return self.extracted_articles
 
     def get_images_data(self):
+        """
+        Analyze and return images only from the main article.
+        Similar articles remain available (stored in self.extracted_articles)
+        but will not trigger additional Vision API calls.
+        """
         images_data = []
-        # If the main article lacks an 'images' field, handle gracefully
-        for image in self.article.get('images', []):
-            image_url = image.get('src')
-            if image_url:
-                images_data.append(self.__analyze_web_detection(image_url))
+        main_article_images = self.article.get('images', [])
+        for image in main_article_images:
+            # First, filter out images that don't pass validation
+            if not is_valid_article_image(image):
+                continue
+
+            # Analyze the image using Vision API
+            analyzed = self.__analyze_web_detection(image)
+            if analyzed:
+                images_data.append(analyzed)
         return images_data
 
     def __analyze_web_detection(self, image_url: str):
