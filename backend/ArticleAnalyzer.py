@@ -17,15 +17,193 @@ def normalize_url(url: str, base_url: str) -> Optional[str]:
         return url
     return urljoin(base_url, url)
 
-def is_valid_article_image(img) -> bool:
+def _extract_with_requests(url: str, min_text_length: int = 300):
     """
-    Check if the image is a valid article image.
-    Uses width/height attributes and inspects the image source, alt/title attributes,
-    and parent elements for common ad/sponsored/thumbnail keywords.
+    Fetch and parse an article using requests and BeautifulSoup.
+    Extract the title, text content, and images using multiple heuristics.
+    Improved to use ArticleExtractor's effective content and image extraction methods.
     """
+    try:
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "html.parser")
 
-    # 1) Enforce a larger minimum dimension to skip small thumbnails.
-    MIN_DIMENSION = 300
+        # Title extraction
+        title_elem = soup.find("title")
+        title = title_elem.get_text(strip=True) if title_elem else "No Title"
+
+        # Find main content using ArticleExtractor's approach
+        main_content = find_main_content(soup)
+
+        # Extract text content from main content if available, otherwise from the whole page
+        if main_content:
+            text_content = clean_content(main_content)
+        else:
+            text_content = soup.get_text(separator="\n").strip()
+
+        # If the text is too short, fallback by returning None
+        if len(text_content) < min_text_length:
+            return None
+
+        # Extract images using ArticleExtractor's approach
+        images = extract_images(main_content if main_content else soup, url)
+
+        return {
+            "title": title,
+            "content": text_content,
+            "date": None,
+            "url": url,
+            "images": images,
+            "similarity_score": random.random()
+        }
+    except Exception as e:
+        print(f"Lightweight fetch failed for {url}: {e}")
+        return None
+
+def find_main_content(soup):
+    """Identify the main content of the webpage using multiple heuristics."""
+    main_content_candidates = [
+        # Semantic HTML5 tags
+        ("article", None),
+        ("main", None),
+
+        # ID-based selection with regex for more matches
+        ("div", {"id": re.compile(r'(content|main|article|primary|body)', re.I)}),
+
+        # Class-based selection with regex
+        ("div", {"class": re.compile(r'(content|main|article|primary|body|post|entry)', re.I)}),
+
+        # Specific semantic selectors
+        ("section", {"class": re.compile(r'(article|content|post)', re.I)}),
+    ]
+
+    # Try predefined selectors
+    for tag, attrs in main_content_candidates:
+        try:
+            main_content = soup.find(tag, attrs)
+            if main_content:
+                return main_content
+        except Exception as e:
+            print(f"Error finding main content with {tag}, {attrs}: {e}")
+            continue
+
+    # Advanced heuristics for finding content
+    try:
+        divs = soup.find_all("div")
+        text_rich_divs = [
+            div for div in divs if len(div.get_text(strip=True)) > 300
+        ]
+        if text_rich_divs:
+            # Sort by text length and return the most text-rich div
+            main_content = max(text_rich_divs, key=lambda d: len(d.get_text(strip=True)))
+            return main_content
+    except Exception as e:
+        print(f"Error finding text-rich div: {e}")
+
+    # Paragraph-based fallback
+    try:
+        paragraphs = soup.find_all("p")
+        text_paragraphs = [p for p in paragraphs if len(p.get_text(strip=True)) > 50]
+        if text_paragraphs:
+            wrapper_div = soup.new_tag("div")
+            for p in text_paragraphs:
+                wrapper_div.append(p)
+            return wrapper_div
+    except Exception as e:
+        print(f"Error finding paragraphs: {e}")
+
+    return soup.body
+
+def clean_content(element):
+    """Extract text from paragraphs, removing short or empty ones."""
+    if not element:
+        return ''
+
+    try:
+        paragraphs = element.find_all('p')
+        cleaned_paragraphs = []
+        for p in paragraphs:
+            text = p.get_text().strip()
+            if text and len(text) > 20:
+                cleaned_paragraphs.append(text)
+        return '\n\n'.join(cleaned_paragraphs)
+    except Exception as e:
+        print(f"Error cleaning content: {e}")
+        return ''
+
+def extract_images(content_element, base_url) -> List[Dict[str, str]]:
+    """Extract images from the article content using multiple search methods."""
+    if not content_element:
+        return []
+
+    image_sources = set()
+    images = []
+
+    search_methods = [
+        lambda: content_element.find_all("img", src=True),
+        lambda: content_element.find_all("img", {"class": re.compile(r"(image|photo)", re.I)}),
+        lambda: content_element.select('img[src*="/"]')
+    ]
+
+    for method in search_methods:
+        try:
+            found_images = method()
+            for img in found_images:
+                image_data = process_image_element(img, base_url)
+                if image_data and image_data['src'] not in image_sources:
+                    image_sources.add(image_data['src'])
+                    images.append(image_data)
+        except Exception as e:
+            print(f"Error in image search method: {e}")
+
+    return images
+
+def process_image_element(img, base_url) -> Optional[Dict[str, str]]:
+    """
+    Process an individual image element and extract relevant data.
+    Uses a more robust approach from ArticleExtractor.
+    """
+    try:
+        # Get image source
+        src = img.get("src")
+
+        # Skip invalid sources
+        if not src or src.startswith("data:") or src.startswith("blob:"):
+            # Attempt to find lazy-loading attributes
+            for attr in ['data-src', 'data-original-src', 'data-lazy-src']:
+                if img.get(attr):
+                    src = img.get(attr)
+                    break
+            if not src or src.startswith("data:") or src.startswith("blob:"):
+                return None
+
+        # Normalize URL
+        src = normalize_url(src, base_url)
+        if not src:
+            return None
+
+        # Use the enhanced validation from ArticleExtractor
+        if not is_valid_article_image_enhanced(img):
+            return None
+
+        return {
+            'src': src,
+            'alt': img.get('alt', ''),
+            'title': img.get('title', ''),
+            'width': img.get('width', ''),
+            'height': img.get('height', '')
+        }
+    except Exception as e:
+        print(f"Error processing image element: {e}")
+        return None
+
+def is_valid_article_image_enhanced(img) -> bool:
+    """
+    Enhanced version of is_valid_article_image that combines both approaches.
+    Uses the best parts from both ArticleAnalyzer and ArticleExtractor.
+    """
+    # 1) Check dimensions (using a compromise between the two implementations)
+    MIN_DIMENSION = 200  # A middle ground between 100 (ArticleExtractor) and 300 (ArticleAnalyzer)
 
     width = img.get('width')
     height = img.get('height')
@@ -58,12 +236,10 @@ def is_valid_article_image(img) -> bool:
     if any(keyword in title_text for keyword in ad_text_keywords):
         return False
 
-    # 4) Traverse parent elements to check for:
-    #    - anchor tags with ad keywords in href
-    #    - class/id indicating "ad", "sponsored", "promo", "thumbnail", etc.
+    # 4) Traverse parent elements to check for ad indicators (from both implementations)
     parent_indicators = []
     parent = img.parent
-    while parent:
+    while parent and hasattr(parent, 'name') and parent.name:
         # If it's an <a> tag, check href for ad/spammy keywords
         if parent.name == "a" and parent.get("href"):
             href = parent.get("href").lower()
@@ -72,7 +248,10 @@ def is_valid_article_image(img) -> bool:
 
         # Collect class and id attributes
         if "class" in parent.attrs:
-            parent_indicators.extend(parent.attrs["class"])
+            if isinstance(parent.attrs["class"], list):
+                parent_indicators.extend(parent.attrs["class"])
+            else:
+                parent_indicators.append(parent.attrs["class"])
         if "id" in parent.attrs:
             parent_indicators.append(parent.attrs["id"])
 
@@ -80,13 +259,15 @@ def is_valid_article_image(img) -> bool:
 
     indicators_text = " ".join(parent_indicators).lower()
 
-    # Common parent indicators for ads, sponsored sections, or small thumbnails
+    # Combined list of ad indicators from both implementations
     ad_indicators = [
         "ad", "advert", "advertisement", "sponsor", "sponsored", "promo",
         "taboola", "googleads", "ad-container", "ad-box", "doubleclick",
         "googlesyndication", "commercial", "partner", "outbrain",
         "recommend", "recommended", "you-may-like", "sponsored-stories",
-        "thumbnail", "teaser", "widget", "sidebar", "banner"
+        "thumbnail", "teaser", "widget", "sidebar", "banner",
+        "preview", "icon", "logo", "social", "share", "suggestion",
+        "next-article", "related"
     ]
 
     # If any known ad/sponsored/thumbnail keywords appear in parent classes/IDs, skip.
@@ -94,95 +275,6 @@ def is_valid_article_image(img) -> bool:
         return False
 
     return True
-
-def process_image_element(img, base_url: str) -> Optional[Dict[str, str]]:
-    """
-    Process an individual image element and extract its data.
-    If the image source is missing or looks like a data/blob URI,
-    attempts to use lazy-loading attributes.
-    """
-    try:
-        src = img.get("src")
-        if not src or src.startswith("data:") or src.startswith("blob:"):
-            for attr in ['data-src', 'data-original-src', 'data-lazy-src']:
-                if img.get(attr):
-                    src = img.get(attr)
-                    break
-            if not src or src.startswith("data:") or src.startswith("blob:"):
-                return None
-
-        src = normalize_url(src, base_url)
-        if not src:
-            return None
-
-        if not is_valid_article_image(img):
-            return None
-
-        return {
-            'src': src,
-            'alt': img.get('alt', ''),
-            'title': img.get('title', ''),
-            'width': img.get('width', ''),
-            'height': img.get('height', '')
-        }
-    except Exception as e:
-        print(f"Error processing image element: {e}")
-        return None
-
-
-def _extract_with_requests(url: str, min_text_length: int = 300):
-    """
-    Fetch and parse an article using requests and BeautifulSoup.
-    Extract the title, text content, and images using multiple heuristics.
-    """
-    try:
-        resp = requests.get(url, timeout=10)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, "html.parser")
-
-        # Title extraction
-        title_elem = soup.find("title")
-        title = title_elem.get_text(strip=True) if title_elem else "No Title"
-
-        # Extract text content
-        text_content = soup.get_text(separator="\n").strip()
-
-        # If the text is too short, fallback by returning None
-        if len(text_content) < min_text_length:
-            return None
-
-        images = []
-        image_sources = set()
-
-        # Define multiple search methods for finding images.
-        search_methods = [
-            lambda: soup.find_all("img", src=True),
-            lambda: soup.find_all("img", {"class": re.compile(r"(image|photo)", re.I)}),
-            lambda: soup.select('img[src*="/"]')
-        ]
-
-        for method in search_methods:
-            try:
-                found_images = method()
-                for img in found_images:
-                    image_data = process_image_element(img, url)
-                    if image_data and image_data['src'] not in image_sources:
-                        image_sources.add(image_data['src'])
-                        images.append(image_data)
-            except Exception as e:
-                print(f"Error in image search method: {e}")
-
-        return {
-            "title": title,
-            "content": text_content,
-            "date": None,
-            "url": url,
-            "images": images,
-            "similarity_score": random.random()
-        }
-    except Exception as e:
-        print(f"Lightweight fetch failed for {url}: {e}")
-        return None
 
 def _extract_article_hybrid(url, main_article=None):
     """
