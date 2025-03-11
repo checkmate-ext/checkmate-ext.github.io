@@ -124,6 +124,7 @@ def token_required(f):
 
     return decorated
 
+
 @app.route('/scrap_and_search', methods=['POST'])
 @token_required
 def scrap_and_search(current_user):
@@ -134,19 +135,24 @@ def scrap_and_search(current_user):
         if not url:
             return jsonify({'error': 'URL parameter is required'}), 400
 
-        print(f"Processing URL: {url}")
+        print(f"Processing URL:")
         website_credibility = check_website_score(url)
         print(website_credibility['credibility_score'])
-
-        # Check if the article is already in the database
+        # get the article from the database if it is already analyzed
         past_article = ArticleSearch.query.filter_by(url=url).first()
         if past_article:
+            past_similar_articles = SimilarArticle.query.filter_by(main_article_id=past_article.id).all()
+
             article_data = {
                 'url': past_article.url,
                 'title': past_article.title
             }
-            # Since we're not using similar articles anymore, return an empty list.
-            similar_articles_data = []
+
+            similar_articles_data = [{
+                'url': article.url,
+                'title': article.title,
+                'similarity_score': article.similarity_score
+            } for article in past_similar_articles]
 
             past_request = ArticleRequest.query.filter_by(user_id=current_user.id, article_id=past_article.id).first()
             if not past_request:
@@ -162,24 +168,23 @@ def scrap_and_search(current_user):
                 'message': f"Results for {url}",
                 'article': article_data,
                 'similar_articles': similar_articles_data,
-                'images_data': [],  # No new image analysis since it's already in the DB.
+                'images_data': [],
                 'website_credibility': website_credibility['credibility_score'],
                 'article_id': past_article.id,
             })
 
         print(f"Processing URL: {url}")
 
-        # Initialize ArticleAnalyzer and process only the main article.
+        # Initialize GoogleSearch and perform scraping & custom search
         google_search = ArticleAnalyzer(app.config['G_API_KEY'], app.config['CX_ID'], app.config['VISION_API_KEY'], url)
-        article = google_search.article  # Main article data only.
-        images_data = google_search.get_images_data()  # Analyze images from the main article.
-
-        # Generate random scores for demonstration purposes.
+        similar_articles = google_search.get_similar()
+        article = google_search.article  # Original article data
+        images_data = google_search.get_images_data()  # Analyze images for web detection
         reliability_score = random.randint(30, 95)
         credibility_score = random.randint(30, 95)
         bias_score = random.randint(30, 95)
 
-        print("article: ", article)
+        print("article : ", article)
 
         new_search = ArticleSearch(
             url=article['url'],
@@ -199,14 +204,26 @@ def scrap_and_search(current_user):
         )
         db.session.add(article_request)
 
-        # No similar articles are processed, so we don't insert any.
-        db.session.commit()
+        similar_articles_to_insert = [
+            SimilarArticle(
+                main_article_id=new_search.id,
+                title=article['title'],
+                url=article['url'],
+                similarity_score=article['similarity_score']
+            )
+            for article in similar_articles
+        ]
 
+        if similar_articles_to_insert:
+            db.session.bulk_save_objects(similar_articles_to_insert)
+
+        db.session.commit()
+        print(similar_articles)
         return jsonify({
             'reliability_score': reliability_score,
             'message': f"Results for {url}",
             'article': article,
-            'similar_articles': [],  # Return an empty list.
+            'similar_articles': similar_articles,
             'images_data': images_data,
             'website_credibility': website_credibility['credibility_score'],
             'article_id': new_search.id

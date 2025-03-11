@@ -29,6 +29,7 @@ def _extract_with_requests(url: str, min_text_length: int = 300):
         soup = BeautifulSoup(resp.text, "html.parser")
 
         # Title extraction
+        # Title extraction
         title_elem = soup.find("title")
         title = title_elem.get_text(strip=True) if title_elem else "No Title"
 
@@ -51,7 +52,6 @@ def _extract_with_requests(url: str, min_text_length: int = 300):
         return {
             "title": title,
             "content": text_content,
-            "date": None,
             "url": url,
             "images": images,
             "similarity_score": random.random()

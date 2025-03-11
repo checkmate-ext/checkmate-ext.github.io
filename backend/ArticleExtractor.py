@@ -66,7 +66,6 @@ class ArticleExtractor:
             return {
                 'title': '',
                 'content': 'Page load error',
-                'date': None,
                 'url': url,
                 'images': []
             }
@@ -80,7 +79,6 @@ class ArticleExtractor:
         title = self.find_title(soup)
         content_element = self.find_main_content(soup)
         content = self.clean_content(content_element) if content_element else ''
-        date = self.find_date(soup)
         images = self.extract_images(content_element, url) if content_element else []
 
         if not content or len(content) < 100:
@@ -89,7 +87,6 @@ class ArticleExtractor:
         return {
             'title': title,
             'content': content,
-            'date': date,
             'url': url,
             'images': images
         }
@@ -222,96 +219,6 @@ class ArticleExtractor:
         ]
 
         return not any(indicator in ' '.join(parent_classes).lower() for indicator in skip_indicators)
-
-    def find_date(self, soup) -> Optional[str]:
-        """Extract article publication date using multiple methods."""
-        date_patterns = [
-            r'\d{4}-\d{2}-\d{2}',
-            r'\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}',
-            r'(?:January|February|March|April|May|June|July|August|September|October|November)\s+\d{1,2},?\s+\d{4}',
-            r'\d{1,2}/\d{1,2}/\d{4}',
-            r'(\d+)\s*(weeks?|months?|years?)\s+ago',
-            r'half\s+an?\s+(hour|day)\s+ago',
-            r'a\s+few\s+(minutes|hours|days|weeks)\s+ago',
-            r'yesterday'
-        ]
-
-        for meta_property in [
-            'article:published_time',
-            'og:published_time',
-            'publication_date',
-            'date',
-            'datePublished',
-            'publish_date'
-        ]:
-            try:
-                meta = (soup.find('meta', property=meta_property)
-                        or soup.find('meta', attrs={'name': meta_property}))
-                if meta and meta.get('content'):
-                    date_str = meta['content'].split('T')[0]
-                    standardized = self.standardize_date(date_str)
-                    if standardized:
-                        return standardized
-            except Exception as e:
-                print(f"Error parsing meta date ({meta_property}): {e}")
-
-        script_tags = soup.find_all('script', type='application/ld+json')
-        for script in script_tags:
-            try:
-                data = json.loads(script.string)
-                if isinstance(data, dict):
-                    date = data.get('datePublished') or data.get('dateCreated')
-                    if date:
-                        standardized = self.standardize_date(date.split('T')[0])
-                        if standardized:
-                            return standardized
-            except Exception as e:
-                print(f"Error parsing JSON-LD date: {e}")
-
-        try:
-            time_tag = soup.find('time')
-            if time_tag:
-                datetime_attr = time_tag.get('datetime') or time_tag.get('content')
-                if datetime_attr:
-                    standardized = self.standardize_date(datetime_attr.split('T')[0])
-                    if standardized:
-                        return standardized
-        except Exception as e:
-            print(f"Error parsing time tag: {e}")
-
-        for pattern in date_patterns:
-            try:
-                date_match = re.search(pattern, str(soup))
-                if date_match:
-                    standardized = self.standardize_date(date_match.group())
-                    if standardized:
-                        return standardized
-            except Exception as e:
-                print(f"Error matching date pattern '{pattern}': {e}")
-
-        return None
-
-    def standardize_date(self, date_str: str) -> Optional[str]:
-        """Convert various date formats to YYYY-MM-DD without raising exceptions."""
-        date_formats = [
-            '%Y-%m-%d',
-            '%B %d, %Y',
-            '%d %B %Y',
-            '%m/%d/%Y',
-            '%d/%m/%Y',
-            '%Y/%m/%d',
-        ]
-
-        date_str = date_str.strip()
-        for fmt in date_formats:
-            try:
-                parsed_date = datetime.strptime(date_str, fmt)
-                return parsed_date.strftime('%Y-%m-%d')
-            except ValueError:
-                continue
-
-        print(f"Could not parse date: {date_str}")
-        return None
 
     def find_title(self, soup):
         """Attempt to find the page's title by multiple methods."""
