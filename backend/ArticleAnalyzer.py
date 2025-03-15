@@ -10,6 +10,44 @@ from urllib.parse import urljoin, urlparse
 import re
 
 
+def check_similarity(text1, text2):
+    import os
+    from google import genai
+    import numpy as np
+
+    # Get API key from environment variables
+    api_key = os.getenv("GENAI_API_KEY")
+
+    if not api_key:
+        print("Warning: GENAI_API_KEY not found in environment variables")
+        return 0.0
+
+    client = genai.Client(api_key=api_key)
+
+    result1 = client.models.embed_content(
+        model="text-embedding-004",
+        contents=text1,
+    )
+
+    result2 = client.models.embed_content(
+        model="text-embedding-004",
+        contents=text2,
+    )
+
+    embedding1 = np.array(result1.embeddings[0].values)
+    embedding2 = np.array(result2.embeddings[0].values)
+
+    def cosine_similarity(vec1, vec2):
+        dot_product = np.dot(vec1, vec2)
+        norm_vec1 = np.linalg.norm(vec1)
+        norm_vec2 = np.linalg.norm(vec2)
+        return dot_product / (norm_vec1 * norm_vec2)
+
+    similarity = cosine_similarity(embedding1, embedding2)
+    print(f"Cosine Similarity: {similarity}")
+    return float(similarity)
+
+
 def normalize_url(url: str, base_url: str) -> Optional[str]:
     """Normalize relative URLs to absolute URLs."""
     if not url:
@@ -491,7 +529,6 @@ def _extract_with_requests(url: str, min_text_length: int = 300):
             "date": date,
             "url": url,
             "images": images,
-            "similarity_score": random.random()
         }
     except Exception as e:
         print(f"Lightweight fetch failed for {url}: {e}")
@@ -515,10 +552,10 @@ def _extract_article_hybrid(url, main_article=None):
             try:
                 print("before request :DDDDDDD")
                 response = requests.post(
-                    "http://44.201.140.220:8000/subjectivity",
+                    "http://54.152.36.106:8000/subjectivity",
                     headers={"Content-Type": "application/json"},
                     json={"text": clean_content},
-                    timeout=15,
+                    timeout=5,
                 )
                 response.raise_for_status()
                 print("after request:DDDDDD")
@@ -528,7 +565,12 @@ def _extract_article_hybrid(url, main_article=None):
                 print(f"Error getting objectivity score from API: {e}")
                 article_data['objectivity_score'] = -1
         else:
-            article_data['similarity_score'] = random.random()
+            main_clean_content = main_article['content'].replace('\n', ' ').replace('\r', ' ')
+            main_clean_content = ' '.join(main_clean_content.split())
+
+            similar_clean_content = article_data['content'].replace('\n', ' ').replace('\r', ' ')
+            similar_clean_content = ' '.join(similar_clean_content.split())
+            article_data['similarity_score'] = check_similarity(similar_clean_content, main_clean_content)
         return article_data
 
     # If the requests+BeautifulSoup approach failed, try the browser-based approach
@@ -577,7 +619,12 @@ def _extract_article_hybrid(url, main_article=None):
                 print(f"Error getting objectivity score from API: {e}")
                 article_data['objectivity_score'] = -1
         else:
-            article_data['similarity_score'] = random.random()
+            main_clean_content = main_article['content'].replace('\n', ' ').replace('\r', ' ')
+            main_clean_content = ' '.join(main_clean_content.split())
+
+            similar_clean_content = article_data['content'].replace('\n', ' ').replace('\r', ' ')
+            similar_clean_content = ' '.join(similar_clean_content.split())
+            article_data['similarity_score'] = check_similarity(similar_clean_content, main_clean_content)
         if scrapper.driver:
             scrapper.driver.quit()
         return article_data

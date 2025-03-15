@@ -190,7 +190,9 @@ def scrap_and_search(current_user):
 
             similar_articles = google_search.get_similar()
             article = google_search.article  # Original article data
-            images_data = google_search.get_images_data()  # Analyze images for web detection
+            print("passed the get similar :DDDDDDDDDDDD")
+            #images_data = google_search.get_images_data()  # Analyze images for web detection
+            images_data = []
         except ArticleExtractionError as e:
             return jsonify({'error': str(e)}), 400
 
@@ -209,6 +211,8 @@ def scrap_and_search(current_user):
             bias_score=bias_score
         )
 
+        print("before adding new_search :D")
+
         db.session.add(new_search)
         db.session.flush()
 
@@ -216,6 +220,8 @@ def scrap_and_search(current_user):
             user_id=current_user.id,
             article_id=new_search.id
         )
+        print("before adding new request:DDDD:D:D:D :D")
+
         db.session.add(article_request)
 
         similar_articles_to_insert = [
@@ -223,10 +229,11 @@ def scrap_and_search(current_user):
                 main_article_id=new_search.id,
                 title=article['title'],
                 url=article['url'],
-                similarity_score=article['similarity_score']
+                similarity_score=article.get('similarity_score')
             )
             for article in similar_articles
         ]
+        print("before adding similiar articles:DDD :D")
 
         if similar_articles_to_insert:
             db.session.bulk_save_objects(similar_articles_to_insert)
@@ -241,7 +248,7 @@ def scrap_and_search(current_user):
             'images_data': images_data,
             'website_credibility': website_credibility['credibility_score'],
             'article_id': new_search.id,
-            'objectivity_score': article.get('objectivity_score', -1)  # Fixed: Add to response
+            'objectivity_score': article['objectivity_score']  # Fixed: Add to response
         })
 
     except Exception as e:
