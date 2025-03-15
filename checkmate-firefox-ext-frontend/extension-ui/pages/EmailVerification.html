@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password</title>
+    <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3cb371;
+            --secondary-color: #2e8b57;
+            --bg-light: #f4f4f4;
+            --text-dark: #333;
+        }
+        * {
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: var(--bg-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: "Inter", Arial, sans-serif;
+        }
+        .container {
+            background-color: white;
+            padding: 1.25rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+        }
+        .logo {
+            width: 60px;
+            margin-bottom: 1rem;
+        }
+        h1 {
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        p {
+            color: #718096;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+        .form-group {
+            margin-bottom: 0.75rem;
+        }
+        .input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+        .input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(60, 179, 113, 0.2);
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 0.6rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(60,179,113,0.3);
+        }
+        button:disabled {
+            background: #B8B8B8;
+            transform: none;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+        .message {
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: none;
+        }
+        .success-message { color: var(--primary-color); }
+        .error-message { color: #ff3860; }
+
+        #codeSection, #passwordSection { display: none; }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            margin-right: 6px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <img src="../../images/CheckMate_Transparent_Logo.png" alt="Checkmate Logo" class="logo">
+
+    <!-- Email Section -->
+    <div id="emailSection">
+        <h1>Reset Password</h1>
+        <p>Enter your email to receive a verification code</p>
+        <div class="form-group">
+            <input type="email" id="userEmail" class="input" placeholder="Enter your email" required>
+        </div>
+        <button type="button" id="sendCodeButton">Send Verification Code</button>
+    </div>
+
+    <!-- Code Verification Section -->
+    <div id="codeSection">
+        <h1>Enter Verification Code</h1>
+        <p>We've sent a code to:<br><strong id="displayEmail"></strong></p>
+        <div class="form-group">
+            <input type="text" id="verificationCode" class="input" placeholder="Enter Code" maxlength="6">
+        </div>
+        <button type="button" id="confirmButton">Verify Code</button>
+    </div>
+
+    <!-- Password Update Section -->
+    <div id="passwordSection">
+        <h1>Create New Password</h1>
+        <p>Please enter your new password</p>
+        <div class="form-group">
+            <input type="password" id="newPassword" class="input" placeholder="New Password">
+        </div>
+        <div class="form-group">
+            <input type="password" id="confirmPassword" class="input" placeholder="Confirm Password">
+        </div>
+        <button type="button" id="updatePasswordButton">Update Password</button>
+    </div>
+
+    <div id="message" class="message"></div>
+</div>
+<script src="../../scripts/email-verification.js"></script>
+</body>
+</html>

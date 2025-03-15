@@ -1,0 +1,350 @@
+<script src="../browser-polyfill.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkmate - Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3cb371;
+            --secondary-color: #2e8b57;
+            --bg-light: #f4f4f4;
+            --text-dark: #333;
+            --score-red: #e74c3c;
+            --score-neutral: #f1c40f;
+            --score-green: #2ecc71;
+            --warning-color: #f1c40f;
+            --neutral-bg: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', Arial, sans-serif;
+            background-color: var(--bg-light);
+            width: 380px;
+            height: 600px;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 380px;
+            height: 600px;
+            background: var(--neutral-bg);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px; /* Reduced padding */
+        }
+
+        .header-icons img {
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .header-icons img:hover {
+            opacity: 1;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin: 5px 0; /* Reduced margin to fit content better */
+        }
+
+        .logo-container img {
+            width: 100px;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: row;
+            padding: 0 20px;
+            flex: 1;
+        }
+
+        /* Left side: Reliability score card */
+        .score-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            margin-top: 10px; /* Reduced top margin */
+            margin-right: 10px;
+        }
+
+        .score-box {
+            background-color: var(--score-red);
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 90px;
+            height: 90px;
+            border-radius: 8px;
+            cursor: 'default';
+            user-select: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .score-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .score-box.red {
+            background-color: var(--score-red);
+        }
+
+        .score-box.neutral {
+            background-color: var(--score-neutral);
+        }
+
+        .score-box.green {
+            background-color: var(--score-green);
+        }
+
+        .score-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s;
+            opacity: 0;
+        }
+
+        .score-box:hover::before {
+            opacity: 1;
+            transform: translate(25%, 25%) rotate(45deg);
+        }
+
+
+        .score-label {
+            margin-top: 5px;
+            font-size: 14px;
+            color: var(--text-dark);
+            text-align: center;
+        }
+
+        .report-mistake-button {
+            margin-top: 10px;
+            background: var(--warning-color);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            padding: 5px 10px;
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .report-mistake-button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s;
+            opacity: 0;
+        }
+
+        .report-mistake-button:hover {
+            box-shadow: 0 5px 15px rgba(241, 196, 15, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .report-mistake-button:hover::before {
+            opacity: 1;
+            transform: translate(25%, 25%) rotate(45deg);
+        }
+
+        /* Right side: Details card */
+        .details-section {
+            flex: 1;
+            margin-top: 10px; /* Reduced top margin */
+        }
+
+        .details-box {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            /* Add max-height and scroll */
+            max-height: 400px;       /* You can adjust this height as needed */
+            overflow-y: auto;
+        }
+
+        /* Custom scrollbar styling to match moredetails page */
+        .details-box::-webkit-scrollbar {
+            width: 6px;
+        }
+        .details-box::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+        .details-box::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
+        }
+
+        .details-box h2 {
+            font-size: 14px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .details-box ul {
+            list-style-type: disc;
+            padding-left: 5px;
+            margin-bottom: 5px;
+        }
+
+        .details-box li {
+            margin-bottom: 5px;
+            font-size: 12px; /* Smaller font to fit content */
+            word-break: break-all;
+        }
+
+        .details-box a {
+            word-break: break-all;
+        }
+
+        .more-details-button {
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 5px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            margin-top: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .more-details-button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s;
+            opacity: 0;
+        }
+
+        .more-details-button:hover::before {
+            opacity: 1;
+            transform: translate(25%, 25%) rotate(45deg);
+        }
+
+        .more-details-button:hover {
+            background: var(--secondary-color);
+            box-shadow: 0 5px 15px rgba(60, 179, 113, 0.3);
+        }
+
+        /* Bottom icons (if any) */
+        .bottom-left-icon, .bottom-right-icon {
+            position: absolute;
+            bottom: 10px;
+        }
+
+        .bottom-left-icon {
+            left: 10px;
+        }
+
+        .bottom-right-icon {
+            right: 10px;
+        }
+
+        .bottom-icon-img {
+            width: 24px;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .bottom-icon-img:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header">
+        <div class="header-icons" >
+            <img src="../images/menu-bar-icon.png" alt="Menu" width="24" id="menuBtn">
+        </div>
+        <div class="header-icons">
+            <img src="../images/user-profile-icon.png" alt="Profile" width="24" id="profileBtn">
+        </div>
+    </div>
+
+    <div class="logo-container">
+        <img src="../images/CheckMate_Transparent_Logo.png" alt="Checkmate Logo">
+    </div>
+
+    <div class="content">
+        <div class="score-section">
+            <div class="score-box" id="resultPageReliabilityScore">--</div>
+            <div class="score-label">Reliability<br>Score</div>
+            <button class="report-mistake-button" id="reportMistakeBtn">Report Mistake</button>
+        </div>
+        <div class="details-section">
+            <div class="details-box">
+                <h2>Details</h2>
+                <ul id="detailsList"></ul>
+            </div>
+            <button class="more-details-button" id="moreDetailsBtn">More Details</button>
+        </div>
+    </div>
+
+    <div class="bottom-left-icon">
+        <img class="bottom-icon-img" src="../images/settings-icon.png" alt="Settings">
+    </div>
+    <div class="bottom-right-icon">
+        <img class="bottom-icon-img" src="../images/exclamation-triangle-icon.png" alt="Warning">
+    </div>
+</div>
+
+<script src="../navigation/navigate.js"></script>
+<script src="../scripts/result-page.js"></script>
+<script src="../theme_scripts/result_theme.js"></script>
+
+</body>
+</html>
