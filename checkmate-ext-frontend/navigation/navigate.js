@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const historyButton = document.getElementById('historyBtn');
     const priceButton = document.getElementById('upgradeBtn');
     const reportButton = document.getElementById('reportBtn');
+    const signupBackButton = document.getElementById('signup-back-button');
 
     if (signInButton) {
         signInButton.addEventListener('click', () => navigateTo('SignInPage.html'));
@@ -123,6 +124,10 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
             navigateTo('report.html');
         });
+    }
+
+    if (signupBackButton) {
+        signupBackButton.addEventListener('click', () => navigateTo('FirstPage.html'));
     }
 });
 
