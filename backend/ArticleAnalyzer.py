@@ -9,6 +9,7 @@ from typing import Optional, List, Dict
 from urllib.parse import urljoin, urlparse
 import re
 
+
 def normalize_url(url: str, base_url: str) -> Optional[str]:
     """Normalize relative URLs to absolute URLs."""
     if not url:
@@ -16,6 +17,7 @@ def normalize_url(url: str, base_url: str) -> Optional[str]:
     if bool(urlparse(url).netloc):
         return url
     return urljoin(base_url, url)
+
 
 def is_valid_article_image(img) -> bool:
     """
@@ -95,6 +97,7 @@ def is_valid_article_image(img) -> bool:
 
     return True
 
+
 def process_image_element(img, base_url: str) -> Optional[Dict[str, str]]:
     """
     Process an individual image element and extract its data.
@@ -130,52 +133,288 @@ def process_image_element(img, base_url: str) -> Optional[Dict[str, str]]:
         return None
 
 
+def find_enhanced_title(soup):
+    """Extract title using advanced selectors, copied from ArticleExtractor."""
+    meta_title = soup.find('meta', property='og:title')
+    if meta_title and meta_title.get('content'):
+        return meta_title.get('content').strip()
+
+    h1_candidates = soup.find_all('h1')
+    for h in h1_candidates:
+        text = h.get_text().strip()
+        if text and len(text) > 10:
+            if h.has_attr('class'):
+                class_str = ' '.join(h['class']).lower()
+                if 'headline' in class_str or 'title' in class_str:
+                    return text
+            else:
+                return text
+
+    title_tag = soup.find('title')
+    if title_tag:
+        return title_tag.get_text().strip()
+
+    return ""
+
+
+def find_enhanced_content(soup):
+    """Find the main content using advanced selectors, copied from ArticleExtractor."""
+    selectors = [
+        ('div', {'class': re.compile(r'(ArticleBody|article-body|entry-content|content-body)', re.I)}),
+        ('article', None),
+        ('section', {'class': re.compile(r'(article|content)', re.I)})
+    ]
+
+    for tag, attrs in selectors:
+        try:
+            candidate = soup.find(tag, attrs=attrs)
+            if candidate:
+                paragraphs = candidate.find_all('p')
+                if paragraphs and len(paragraphs) > 3:
+                    return candidate
+        except Exception as e:
+            print(f"Error using enhanced selector {tag} with attrs {attrs}: {e}")
+
+    try:
+        divs = soup.find_all("div")
+        text_rich_divs = [div for div in divs if len(div.get_text(strip=True)) > 300]
+        if text_rich_divs:
+            candidate = max(text_rich_divs, key=lambda d: len(d.get_text(strip=True)))
+            return candidate
+    except Exception as e:
+        print(f"Error finding text-rich div: {e}")
+
+    return soup.body
+
+
+def find_main_content(soup):
+    """Find the main content with common patterns, copied from ArticleExtractor."""
+    main_content_candidates = [
+        ("article", None),
+        ("main", None),
+        ("div", {"id": re.compile(r'(content|main|article|primary|body)', re.I)}),
+        ("div", {"class": re.compile(r'(content|main|article|primary|body|post|entry)', re.I)}),
+        ("section", {"class": re.compile(r'(article|content|post)', re.I)})
+    ]
+
+    for tag, attrs in main_content_candidates:
+        try:
+            candidate = soup.find(tag, attrs=attrs)
+            if candidate:
+                return candidate
+        except Exception as e:
+            print(f"Error finding main content with {tag}, {attrs}: {e}")
+            continue
+
+    try:
+        divs = soup.find_all("div")
+        text_rich_divs = [div for div in divs if len(div.get_text(strip=True)) > 300]
+        if text_rich_divs:
+            candidate = max(text_rich_divs, key=lambda d: len(d.get_text(strip=True)))
+            return candidate
+    except Exception as e:
+        print(f"Error finding text-rich div: {e}")
+
+    try:
+        paragraphs = soup.find_all("p")
+        if paragraphs:
+            wrapper_div = soup.new_tag("div")
+            for p in paragraphs:
+                wrapper_div.append(p)
+            return wrapper_div
+    except Exception as e:
+        print(f"Error finding paragraphs: {e}")
+
+    return soup.body
+
+
+def extract_images(content_element, base_url):
+    """Extract images from content, copied from ArticleExtractor."""
+    if not content_element:
+        return []
+
+    image_sources = set()
+    images = []
+
+    search_methods = [
+        lambda: content_element.find_all("img", src=True),
+        lambda: content_element.find_all("img", {"class": re.compile(r"(image|photo)", re.I)}),
+        lambda: content_element.select('img[src*="/"]')
+    ]
+
+    for method in search_methods:
+        try:
+            found_images = method()
+            for img in found_images:
+                image_data = process_image_element(img, base_url)
+                if image_data and image_data['src'] not in image_sources:
+                    image_sources.add(image_data['src'])
+                    images.append(image_data)
+        except Exception as e:
+            print(f"Error in image search method: {e}")
+
+    return images
+
+
+def find_title(soup):
+    """Backup method to find title, copied from ArticleExtractor."""
+    for title_finder in [
+        lambda s: s.find('h1', class_=re.compile(r'title|headline|article-title', re.I)),
+        lambda s: s.find('h1'),
+        lambda s: s.find('meta', property='og:title'),
+        lambda s: s.find('meta', {'name': 'title'}),
+        lambda s: s.find('title')
+    ]:
+        try:
+            element = title_finder(soup)
+            if element:
+                if element.name in ['meta']:
+                    return element.get('content', '').strip()
+                return element.get_text().strip()
+        except Exception as e:
+            print(f"Error finding title with {title_finder.__name__}: {e}")
+    return ""
+
+
+def clean_content(element):
+    """Clean the content by extracting paragraphs, copied from ArticleExtractor."""
+    if not element:
+        return ''
+    try:
+        paragraphs = element.find_all('p')
+        cleaned_paragraphs = []
+        for p in paragraphs:
+            text = p.get_text().strip()
+            if text and len(text) > 20:
+                cleaned_paragraphs.append(text)
+        return '\n\n'.join(cleaned_paragraphs)
+    except Exception as e:
+        print(f"Error cleaning content: {e}")
+        return ''
+
+
+def find_date(soup):
+    """Find the publication date using various methods, copied from ArticleExtractor."""
+    date_patterns = [
+        r'\d{4}-\d{2}-\d{2}',
+        r'\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}',
+        r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}',
+        r'\d{1,2}/\d{1,2}/\d{4}',
+        r'(\d+)\s*(weeks?|months?|years?)\s+ago',
+        r'half\s+an?\s+(hour|day)\s+ago',
+        r'a\s+few\s+(minutes|hours|days|weeks)\s+ago',
+        r'yesterday'
+    ]
+
+    for meta_property in [
+        'article:published_time',
+        'og:published_time',
+        'publication_date',
+        'date',
+        'datePublished',
+        'publish_date'
+    ]:
+        try:
+            meta = (soup.find('meta', property=meta_property)
+                    or soup.find('meta', attrs={'name': meta_property}))
+            if meta and meta.get('content'):
+                date_str = meta['content'].split('T')[0]
+                standardized = standardize_date(date_str)
+                if standardized:
+                    return standardized
+        except Exception as e:
+            print(f"Error parsing meta date ({meta_property}): {e}")
+
+    script_tags = soup.find_all('script', type='application/ld+json')
+    for script in script_tags:
+        try:
+            data = json.loads(script.string)
+            if isinstance(data, dict):
+                date = data.get('datePublished') or data.get('dateCreated')
+                if date:
+                    standardized = standardize_date(date.split('T')[0])
+                    if standardized:
+                        return standardized
+        except Exception as e:
+            print(f"Error parsing JSON-LD date: {e}")
+
+    try:
+        time_tag = soup.find('time')
+        if time_tag:
+            datetime_attr = time_tag.get('datetime') or time_tag.get('content')
+            if datetime_attr:
+                standardized = standardize_date(datetime_attr.split('T')[0])
+                if standardized:
+                    return standardized
+    except Exception as e:
+        print(f"Error parsing time tag: {e}")
+
+    for pattern in date_patterns:
+        try:
+            date_match = re.search(pattern, str(soup))
+            if date_match:
+                standardized = standardize_date(date_match.group())
+                if standardized:
+                    return standardized
+        except Exception as e:
+            print(f"Error matching date pattern '{pattern}': {e}")
+
+    return None
+
+
+def standardize_date(date_str):
+    """Standardize date to YYYY-MM-DD format, copied from ArticleExtractor."""
+    date_formats = [
+        '%Y-%m-%d',
+        '%B %d, %Y',
+        '%d %B %Y',
+        '%m/%d/%Y',
+        '%d/%m/%Y',
+        '%Y/%m/%d',
+    ]
+    date_str = date_str.strip()
+    for fmt in date_formats:
+        try:
+            parsed_date = datetime.strptime(date_str, fmt)
+            return parsed_date.strftime('%Y-%m-%d')
+        except ValueError:
+            continue
+    print(f"Could not parse date: {date_str}")
+    return None
+
+
 def _extract_with_requests(url: str, min_text_length: int = 300):
     """
     Fetch and parse an article using requests and BeautifulSoup.
     Extract the title, text content, and images using multiple heuristics.
+    Enhanced with methods from ArticleExtractor.
     """
     try:
         resp = requests.get(url, timeout=10)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
 
-        # Title extraction
-        title_elem = soup.find("title")
-        title = title_elem.get_text(strip=True) if title_elem else "No Title"
+        # Title extraction using enhanced methods
+        title = find_enhanced_title(soup) or find_title(soup)
 
-        # Extract text content
-        text_content = soup.get_text(separator="\n").strip()
+        # Content extraction using enhanced methods
+        content_element = find_enhanced_content(soup) or find_main_content(soup)
+        text_content = clean_content(content_element) if content_element else ''
+
+        # Date extraction
+        date = find_date(soup)
 
         # If the text is too short, fallback by returning None
         if len(text_content) < min_text_length:
             return None
 
-        images = []
-        image_sources = set()
-
-        # Define multiple search methods for finding images.
-        search_methods = [
-            lambda: soup.find_all("img", src=True),
-            lambda: soup.find_all("img", {"class": re.compile(r"(image|photo)", re.I)}),
-            lambda: soup.select('img[src*="/"]')
-        ]
-
-        for method in search_methods:
-            try:
-                found_images = method()
-                for img in found_images:
-                    image_data = process_image_element(img, url)
-                    if image_data and image_data['src'] not in image_sources:
-                        image_sources.add(image_data['src'])
-                        images.append(image_data)
-            except Exception as e:
-                print(f"Error in image search method: {e}")
+        # Image extraction
+        images = extract_images(content_element, url) if content_element else []
 
         return {
             "title": title,
             "content": text_content,
-            "date": None,
+            "date": date,
             "url": url,
             "images": images,
             "similarity_score": random.random()
@@ -183,6 +422,7 @@ def _extract_with_requests(url: str, min_text_length: int = 300):
     except Exception as e:
         print(f"Lightweight fetch failed for {url}: {e}")
         return None
+
 
 def _extract_article_hybrid(url, main_article=None):
     """
@@ -198,12 +438,12 @@ def _extract_article_hybrid(url, main_article=None):
             clean_content = ' '.join(clean_content.split())
             try:
                 response = requests.post(
-                    "http://52.90.193.31:8000/predict",
+                    "http://44.201.140.220:8000/subjectivity",
                     headers={"Content-Type": "application/json"},
                     json={"text": clean_content},
                 )
                 response.raise_for_status()
-                article_data['objectivity_score'] = response.json().get('score', random.random())
+                article_data['objectivity_score'] = response.json().get('objectivity_prob', -1)
             except (requests.RequestException, ValueError, KeyError) as e:
                 print(f"Error getting objectivity score from API: {e}")
                 article_data['objectivity_score'] = -1

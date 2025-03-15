@@ -171,6 +171,7 @@ def scrap_and_search(current_user):
                 'images_data': [],
                 'website_credibility': website_credibility['credibility_score'],
                 'article_id': past_article.id,
+                'objectivity_score': past_article['objectivity_score']
             })
 
         print(f"Processing URL: {url}")
@@ -789,7 +790,7 @@ def fetch_stats(current_user):
 
         return jsonify({
             # Daily stats
-            'articles_analyzed_daily': len(recent_articles),
+            'articles_analyzed': len(recent_articles),
             'daily_usage_left': app.config['DAILY_USAGE'] - len(recent_articles),
             'daily_accuracy': avg_daily_accuracy,
             'daily_distribution': daily_distribution,

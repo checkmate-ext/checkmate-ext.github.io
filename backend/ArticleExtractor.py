@@ -1,22 +1,27 @@
 import re
 import json
 import random
+import time
 from typing import Optional, List, Dict
 from datetime import datetime
 from bs4 import BeautifulSoup
 import undetected_chromedriver as uc
 from urllib.parse import urljoin, urlparse
+import requests
 
 
 class ArticleExtractor:
-
     def __init__(self, use_proxy=False, proxy=None):
         options = uc.ChromeOptions()
-
         # Essential configuration
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_argument('--start-maximized')
         options.add_argument('--disable-popup-blocking')
+
+        # Set a custom user agent to help bypass anti-bot measures
+        options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                             "AppleWebKit/537.36 (KHTML, like Gecko) "
+                             "Chrome/112.0.0.0 Safari/537.36")
 
         if use_proxy and proxy:
             options.add_argument(f'--proxy-server={proxy}')
@@ -25,33 +30,27 @@ class ArticleExtractor:
         options.add_argument('--disable-notifications')
         options.add_argument(f'--window-size={random.randint(1050, 1920)},{random.randint(800, 1080)}')
         options.add_argument('--accept-lang=en-US,en')
-        options.add_argument('--accept-lang=en-US,en')
         options.add_argument('--disable-web-security')
         options.add_argument('--allow-running-insecure-content')
 
-        # Initialize driver safely
+        # Initialize driver safely and increase page load timeout
         self.driver = None
         try:
             self.driver = uc.Chrome(options=options)
             self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-            self.driver.set_page_load_timeout(40)
+            self.driver.set_page_load_timeout(60)  # Increased timeout
         except Exception as e:
             print(f"Error initializing the Chrome driver: {e}")
 
     def normalize_url(self, url, base_url):
-        """Normalize relative URLs to absolute URLs."""
         if not url:
             return None
-        # Check if the URL is already absolute
         if bool(urlparse(url).netloc):
             return url
-        # Join the relative URL with the base URL
         return urljoin(base_url, url)
 
     def extract_article(self, url):
-        # Clear cookies and cache
         if not self.driver:
-            # If the driver couldn't be initialized, return fallback
             return {
                 'title': '',
                 'content': 'Could not initialize driver.',
@@ -65,20 +64,28 @@ class ArticleExtractor:
         except Exception as e:
             print(f"Error deleting cookies: {e}")
 
-        # Navigate to the page
-        try:
-            self.driver.get(url)
-        except Exception as e:
-            print(f"Error navigating to {url}: {e}")
-            return {
-                'title': '',
-                'content': 'Page load error',
-                'date': None,
-                'url': url,
-                'images': []
-            }
+        # Retry mechanism for loading the page (explicit wait removed)
+        max_retries = 2
+        for attempt in range(max_retries):
+            try:
+                self.driver.get(url)
+                break  # Exit loop if successful
+            except Exception as e:
+                print(f"Error loading page (attempt {attempt + 1}/{max_retries}): {e}")
+                if attempt == max_retries - 1:
+                    return {
+                        'title': '',
+                        'content': 'Page load error',
+                        'date': None,
+                        'url': url,
+                        'images': []
+                    }
+                try:
+                    self.driver.delete_all_cookies()
+                except Exception as e:
+                    print(f"Error deleting cookies on retry: {e}")
+                time.sleep(1)  # brief pause before retrying
 
-        # Execute scroll to load dynamic content
         try:
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight/2);")
         except Exception as e:
@@ -86,9 +93,9 @@ class ArticleExtractor:
 
         soup = BeautifulSoup(self.driver.page_source, 'html.parser')
 
-        # Extract content
-        title = self.find_title(soup)
-        content_element = self.find_main_content(soup)
+        # Use the enhanced methods first, with fallback to original heuristics
+        title = self.find_enhanced_title(soup) or self.find_title(soup)
+        content_element = self.find_enhanced_content(soup) or self.find_main_content(soup)
         content = self.clean_content(content_element) if content_element else ''
         date = self.find_date(soup)
         images = self.extract_images(content_element, url) if content_element else []
@@ -104,53 +111,88 @@ class ArticleExtractor:
             'images': images
         }
 
-    def find_main_content(self, soup):
-        """Identify the main content of the webpage using multiple heuristics."""
-        main_content_candidates = [
-            # Semantic HTML5 tags
-            ("article", None),
-            ("main", None),
+    def find_enhanced_title(self, soup):
+        meta_title = soup.find('meta', property='og:title')
+        if meta_title and meta_title.get('content'):
+            return meta_title.get('content').strip()
 
-            # ID-based selection with regex for more matches
-            ("div", {"id": re.compile(r'(content|main|article|primary|body)', re.I)}),
+        h1_candidates = soup.find_all('h1')
+        for h in h1_candidates:
+            text = h.get_text().strip()
+            if text and len(text) > 10:
+                if h.has_attr('class'):
+                    class_str = ' '.join(h['class']).lower()
+                    if 'headline' in class_str or 'title' in class_str:
+                        return text
+                else:
+                    return text
 
-            # Class-based selection with regex
-            ("div", {"class": re.compile(r'(content|main|article|primary|body|post|entry)', re.I)}),
+        title_tag = soup.find('title')
+        if title_tag:
+            return title_tag.get_text().strip()
 
-            # Specific semantic selectors
-            ("section", {"class": re.compile(r'(article|content|post)', re.I)}),
+        return ""
+
+    def find_enhanced_content(self, soup):
+        selectors = [
+            ('div', {'class': re.compile(r'(ArticleBody|article-body|entry-content|content-body)', re.I)}),
+            ('article', None),
+            ('section', {'class': re.compile(r'(article|content)', re.I)})
         ]
 
-        # Try predefined selectors
+        for tag, attrs in selectors:
+            try:
+                candidate = soup.find(tag, attrs=attrs)
+                if candidate:
+                    paragraphs = candidate.find_all('p')
+                    if paragraphs and len(paragraphs) > 3:
+                        return candidate
+            except Exception as e:
+                print(f"Error using enhanced selector {tag} with attrs {attrs}: {e}")
+
+        try:
+            divs = soup.find_all("div")
+            text_rich_divs = [div for div in divs if len(div.get_text(strip=True)) > 300]
+            if text_rich_divs:
+                candidate = max(text_rich_divs, key=lambda d: len(d.get_text(strip=True)))
+                return candidate
+        except Exception as e:
+            print(f"Error finding text-rich div: {e}")
+
+        return soup.body
+
+    def find_main_content(self, soup):
+        main_content_candidates = [
+            ("article", None),
+            ("main", None),
+            ("div", {"id": re.compile(r'(content|main|article|primary|body)', re.I)}),
+            ("div", {"class": re.compile(r'(content|main|article|primary|body|post|entry)', re.I)}),
+            ("section", {"class": re.compile(r'(article|content|post)', re.I)})
+        ]
+
         for tag, attrs in main_content_candidates:
             try:
-                main_content = soup.find(tag, attrs)
-                if main_content:
-                    return main_content
+                candidate = soup.find(tag, attrs=attrs)
+                if candidate:
+                    return candidate
             except Exception as e:
                 print(f"Error finding main content with {tag}, {attrs}: {e}")
                 continue
 
-        # Advanced heuristics for finding content
         try:
             divs = soup.find_all("div")
-            text_rich_divs = [
-                div for div in divs if len(div.get_text(strip=True)) > 300
-            ]
+            text_rich_divs = [div for div in divs if len(div.get_text(strip=True)) > 300]
             if text_rich_divs:
-                # Sort by text length and return the most text-rich div
-                main_content = max(text_rich_divs, key=lambda d: len(d.get_text(strip=True)))
-                return main_content
+                candidate = max(text_rich_divs, key=lambda d: len(d.get_text(strip=True)))
+                return candidate
         except Exception as e:
             print(f"Error finding text-rich div: {e}")
 
-        # Paragraph-based fallback
         try:
             paragraphs = soup.find_all("p")
-            text_paragraphs = [p for p in paragraphs if len(p.get_text(strip=True)) > 50]
-            if text_paragraphs:
+            if paragraphs:
                 wrapper_div = soup.new_tag("div")
-                for p in text_paragraphs:
+                for p in paragraphs:
                     wrapper_div.append(p)
                 return wrapper_div
         except Exception as e:
@@ -159,7 +201,6 @@ class ArticleExtractor:
         return soup.body
 
     def extract_images(self, content_element, base_url) -> List[Dict[str, str]]:
-        """Extract images from the article content using multiple search methods."""
         if not content_element:
             return []
 
@@ -186,30 +227,20 @@ class ArticleExtractor:
         return images
 
     def process_image_element(self, img, base_url) -> Optional[Dict[str, str]]:
-        """Process an individual image element and extract relevant data."""
         try:
-            # Get image source
             src = img.get("src")
-
-            # Skip invalid sources
             if not src or src.startswith("data:") or src.startswith("blob:"):
-                # Attempt to find lazy-loading attributes
                 for attr in ['data-src', 'data-original-src', 'data-lazy-src']:
                     if img.get(attr):
                         src = img.get(attr)
                         break
                 if not src or src.startswith("data:") or src.startswith("blob:"):
                     return None
-
-            # Normalize URL
             src = self.normalize_url(src, base_url)
             if not src:
                 return None
-
-            # Skip small images and advertisements
             if not self.is_valid_article_image(img):
                 return None
-
             return {
                 'src': src,
                 'alt': img.get('alt', ''),
@@ -222,7 +253,6 @@ class ArticleExtractor:
             return None
 
     def is_valid_article_image(self, img) -> bool:
-        """Check if the image is a valid article image."""
         width = img.get('width')
         height = img.get('height')
         if width and height:
@@ -245,11 +275,9 @@ class ArticleExtractor:
             'share', 'recommended', 'suggestion', 'next-article'
         ]
 
-        return not any(indicator in ' '.join(parent_classes).lower()
-                       for indicator in skip_indicators)
+        return not any(indicator in ' '.join(parent_classes).lower() for indicator in skip_indicators)
 
     def find_date(self, soup) -> Optional[str]:
-        """Extract article publication date using multiple methods."""
         date_patterns = [
             r'\d{4}-\d{2}-\d{2}',
             r'\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}',
@@ -261,7 +289,6 @@ class ArticleExtractor:
             r'yesterday'
         ]
 
-        # Check meta tags
         for meta_property in [
             'article:published_time',
             'og:published_time',
@@ -281,7 +308,6 @@ class ArticleExtractor:
             except Exception as e:
                 print(f"Error parsing meta date ({meta_property}): {e}")
 
-        # Check JSON-LD structured data
         script_tags = soup.find_all('script', type='application/ld+json')
         for script in script_tags:
             try:
@@ -295,7 +321,6 @@ class ArticleExtractor:
             except Exception as e:
                 print(f"Error parsing JSON-LD date: {e}")
 
-        # Look for time tags
         try:
             time_tag = soup.find('time')
             if time_tag:
@@ -307,7 +332,6 @@ class ArticleExtractor:
         except Exception as e:
             print(f"Error parsing time tag: {e}")
 
-        # Search for dates in text
         for pattern in date_patterns:
             try:
                 date_match = re.search(pattern, str(soup))
@@ -321,7 +345,6 @@ class ArticleExtractor:
         return None
 
     def standardize_date(self, date_str: str) -> Optional[str]:
-        """Convert various date formats to YYYY-MM-DD without raising exceptions."""
         date_formats = [
             '%Y-%m-%d',
             '%B %d, %Y',
@@ -330,7 +353,6 @@ class ArticleExtractor:
             '%d/%m/%Y',
             '%Y/%m/%d',
         ]
-
         date_str = date_str.strip()
         for fmt in date_formats:
             try:
@@ -338,13 +360,10 @@ class ArticleExtractor:
                 return parsed_date.strftime('%Y-%m-%d')
             except ValueError:
                 continue
-
-        # If parsing fails entirely, just return None (no exception thrown)
         print(f"Could not parse date: {date_str}")
         return None
 
     def find_title(self, soup):
-        """Attempt to find the page's title by multiple methods."""
         for title_finder in [
             lambda s: s.find('h1', class_=re.compile(r'title|headline|article-title', re.I)),
             lambda s: s.find('h1'),
@@ -360,14 +379,11 @@ class ArticleExtractor:
                     return element.get_text().strip()
             except Exception as e:
                 print(f"Error finding title with {title_finder.__name__}: {e}")
-
-        return ''
+        return ""
 
     def clean_content(self, element):
-        """Extract text from paragraphs, removing short or empty ones."""
         if not element:
             return ''
-
         try:
             paragraphs = element.find_all('p')
             cleaned_paragraphs = []
