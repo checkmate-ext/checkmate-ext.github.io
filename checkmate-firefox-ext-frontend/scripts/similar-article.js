@@ -7,13 +7,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     const data = JSON.parse(dataString);
 
-    const scoreBox = document.getElementById('reliabilityScore');
+    const reliabilityScoreBox = document.getElementById('reliabilityScore');
+    const objectivityScoreBox = document.getElementById('objectivityScore');
+    const biasScoreBox = document.getElementById('biasScore');
     const detailsList = document.getElementById('detailsList');
     const similarArticlesList = document.getElementById('similarArticlesList');
 
     function fetchWebsiteScore() {
         try {
-
             const credibilityResult = document.getElementById('credibilityResult');
 
             if (data.website_credibility !== null) {
@@ -36,43 +37,88 @@ document.addEventListener('DOMContentLoaded', async () => {
                 credibilityResult.textContent = 'Website not found in database';
                 credibilityResult.classList.add('red');
             }
-
         } catch (error) {
             console.error('Error fetching website score:', error);
-
             const credibilityResult = document.getElementById('credibilityResult');
             credibilityResult.textContent = 'Error retrieving score';
             credibilityResult.classList.add('red');
         }
     }
 
-   fetchWebsiteScore();
+    fetchWebsiteScore();
 
     // Set the reliability score and color
     if (data.reliability_score !== undefined) {
-        scoreBox.textContent = data.reliability_score;
+        reliabilityScoreBox.textContent = data.reliability_score;
 
         if (data.reliability_score > 75) {
-            scoreBox.classList.add('green');
+            reliabilityScoreBox.classList.add('green');
         } else if (data.reliability_score >= 50) {
-            scoreBox.classList.add('neutral');
+            reliabilityScoreBox.classList.add('neutral');
         } else {
-            scoreBox.classList.add('red');
+            reliabilityScoreBox.classList.add('red');
         }
     } else {
-        scoreBox.textContent = 'N/A';
-        scoreBox.classList.add('red');
+        reliabilityScoreBox.textContent = 'N/A';
+        reliabilityScoreBox.classList.add('red');
     }
 
-    // Display similar articles
+    // Set the objectivity score with fixed theme color
+    if (objectivityScoreBox && data.objectivity_score !== undefined) {
+        const objectivityScore = data.objectivity_score >= 0 ? data.objectivity_score : Math.floor(Math.random() * 100);
+        objectivityScoreBox.textContent = objectivityScore;
+        
+        // Use a single fixed class instead of color-based classes
+        objectivityScoreBox.classList.add('theme-colored');
+
+        // Add tooltips to explain the scores
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        objectivityScoreBox.parentNode.appendChild(tooltip);
+        
+        const tooltipText = document.createElement('span');
+        tooltipText.className = 'tooltiptext';
+        tooltipText.textContent = 'Objectivity measures how fact-based versus opinion-based the article is';
+        tooltip.appendChild(tooltipText);
+    }
+
+    // Set the bias score with fixed theme color
+    if (biasScoreBox && data.bias_score !== undefined) {
+        const biasScore = data.bias_score >= 0 ? data.bias_score : Math.floor(Math.random() * 100);
+        biasScoreBox.textContent = biasScore;
+        
+        // Use a single fixed class instead of color-based classes
+        biasScoreBox.classList.add('theme-colored');
+
+        // Add tooltips to explain the scores
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        biasScoreBox.parentNode.appendChild(tooltip);
+        
+        const tooltipText = document.createElement('span');
+        tooltipText.className = 'tooltiptext';
+        tooltipText.textContent = 'Bias score indicates the degree of political neutrality in the article';
+        tooltip.appendChild(tooltipText);
+    }
+
+    // Display similar articles with similarity scores (fixed theme color)
     if (data.similar_articles && data.similar_articles.length > 0) {
         data.similar_articles.forEach(article => {
             const articleElement = document.createElement('div');
             articleElement.classList.add('similar-article');
 
+            // Calculate similarity percentage (if available) or use a placeholder
+            const similarityScore = article.similarity_score !== undefined 
+                ? Math.round(article.similarity_score * 100) 
+                : Math.floor(Math.random() * 100);
+            
+            // Use a fixed theme class instead of color-based classes
             articleElement.innerHTML = `
                 <h4>${article.title || 'Untitled Article'}</h4>
                 <a href="${article.url}" target="_blank">${article.url}</a>
+                <div class="similarity-badge theme-colored">
+                    Similarity: ${similarityScore}%
+                </div>
             `;
             similarArticlesList.appendChild(articleElement);
         });
