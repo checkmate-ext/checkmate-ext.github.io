@@ -30,7 +30,6 @@ class DashboardManager {
             this.hideLoadingState();
             
             // Create mock data as fallback
-            this.createMockData();
             this.updateUI();
             try {
                 this.initializeChart();
@@ -38,25 +37,6 @@ class DashboardManager {
                 console.error('Failed to initialize chart with fallback data:', chartError);
             }
         }
-    }
-
-    createMockData() {
-        // Create mock data when the server is unreachable
-        this.statsData = {
-            daily_limit: 10,
-            articles_analyzed_daily: 3,
-            weekly_accuracy: 85.5,
-            total_articles: 42,
-            daily_distribution: {
-                "2023-11-01": 5,
-                "2023-11-02": 3,
-                "2023-11-03": 7,
-                "2023-11-04": 2,
-                "2023-11-05": 4,
-                "2023-11-06": 6,
-                "2023-11-07": 3
-            }
-        };
     }
 
     showLoadingState() {
@@ -154,15 +134,15 @@ class DashboardManager {
         const usageBar = document.getElementById('usageBar');
         const usageLabel = document.querySelector('.progress-label');
         
-        if (!this.statsData.articles_analyzed_daily) {
-            this.statsData.articles_analyzed_daily = 0;
+        if (!this.statsData.articles_analyzed) {
+            this.statsData.articles_analyzed = 0;
         }
         
         if (!this.statsData.daily_limit) {
             this.statsData.daily_limit = 10; // Fallback value
         }
         
-        const percentage = (this.statsData.articles_analyzed_daily / this.statsData.daily_limit) * 100;
+        const percentage = (this.statsData.articles_analyzed / this.statsData.daily_limit) * 100;
 
         // Animate the progress bar
         usageBar.style.transition = 'width 1s ease-in-out';
@@ -181,7 +161,7 @@ class DashboardManager {
             },
             {
                 title: 'Articles Today',
-                value: this.statsData.articles_analyzed_daily || 0,
+                value: this.statsData.articles_analyzed || 0,
                 subtitle: 'articles analyzed'
             },
             {

@@ -68,5 +68,5 @@ function startDashboardUpdates() {
 }
 
 // Start the dashboard updates when the DOM is loaded
-document.addEventListener('DOMContentLoaded', startDashboardUpdates);
+document.addEventListener('DOMContentLoaded', fetchDailyStats);
 
