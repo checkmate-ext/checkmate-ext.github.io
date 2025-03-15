@@ -383,11 +383,69 @@ def standardize_date(date_str):
     return None
 
 
+def is_valid_content(content: str) -> bool:
+    """
+    Check if the extracted content is valid and meaningful.
+    Returns False if content is too short, contains error messages,
+    or doesn't appear to be actual article content.
+    """
+    if not content or len(content) < 100:
+        return False
+
+    # Check for common error messages or placeholder text
+    error_indicators = [
+        'could not extract meaningful content',
+        'page load error',
+        'could not initialize driver',
+        'failed to extract',
+        'no content found',
+        'access denied',
+        'robot check',
+        'captcha'
+    ]
+
+    if any(indicator in content.lower() for indicator in error_indicators):
+        return False
+
+    # Check for actual paragraphs (simple heuristic)
+    paragraphs = content.split('\n\n')
+    valid_paragraphs = [p for p in paragraphs if len(p.strip()) > 40]
+
+    if len(valid_paragraphs) < 2:
+        return False
+
+    return True
+
+
+def validate_article_data(article_data: dict) -> bool:
+    """
+    Validate the complete article data to ensure it's a proper article.
+    Returns True if the article appears valid, False otherwise.
+    """
+    if not article_data:
+        return False
+
+    # Check if we have the minimum required fields
+    if not all(key in article_data for key in ['title', 'content', 'url']):
+        return False
+
+    # Title should be meaningful
+    if not article_data.get('title') or len(article_data.get('title', '')) < 5:
+        return False
+
+    # Content should be valid
+    if not is_valid_content(article_data.get('content', '')):
+        return False
+
+    return True
+
+
 def _extract_with_requests(url: str, min_text_length: int = 300):
     """
     Fetch and parse an article using requests and BeautifulSoup.
     Extract the title, text content, and images using multiple heuristics.
     Enhanced with methods from ArticleExtractor.
+    Returns None if extraction fails or content is insufficient.
     """
     try:
         resp = requests.get(url, timeout=10)
@@ -404,8 +462,24 @@ def _extract_with_requests(url: str, min_text_length: int = 300):
         # Date extraction
         date = find_date(soup)
 
-        # If the text is too short, fallback by returning None
+        # If the text is too short or contains error indicators, return None
         if len(text_content) < min_text_length:
+            return None
+
+        # Check for error messages or placeholder text
+        error_indicators = [
+            'could not extract meaningful content',
+            'page load error',
+            'could not initialize driver',
+            'failed to extract',
+            'no content found',
+            'access denied',
+            'robot check',
+            'captcha'
+        ]
+
+        if any(indicator in text_content.lower() for indicator in error_indicators):
+            print(f"Requests extraction returned error content for {url}")
             return None
 
         # Image extraction
@@ -430,20 +504,26 @@ def _extract_article_hybrid(url, main_article=None):
     1) Try requests + BeautifulSoup first.
     2) If that yields insufficient content, fallback to ArticleExtractor
        (which uses undetectable Chrome).
+    3) If both methods fail, return None (which will trigger an ArticleExtractionError)
     """
     article_data = _extract_with_requests(url)
     if article_data is not None:
         if main_article is None:
             clean_content = article_data['content'].replace('\n', ' ').replace('\r', ' ')
             clean_content = ' '.join(clean_content.split())
+            print(clean_content)
             try:
+                print("before request :DDDDDDD")
                 response = requests.post(
                     "http://44.201.140.220:8000/subjectivity",
                     headers={"Content-Type": "application/json"},
                     json={"text": clean_content},
+                    timeout=15,
                 )
                 response.raise_for_status()
+                print("after request:DDDDDD")
                 article_data['objectivity_score'] = response.json().get('objectivity_prob', -1)
+                print('object: is', article_data['objectivity_score'])
             except (requests.RequestException, ValueError, KeyError) as e:
                 print(f"Error getting objectivity score from API: {e}")
                 article_data['objectivity_score'] = -1
@@ -451,9 +531,37 @@ def _extract_article_hybrid(url, main_article=None):
             article_data['similarity_score'] = random.random()
         return article_data
 
+    # If the requests+BeautifulSoup approach failed, try the browser-based approach
     try:
         scrapper = ArticleExtractor()
         article_data = scrapper.extract_article(url)
+
+        # Check if we actually got meaningful content
+        if not article_data.get('content') or len(article_data.get('content', '')) < 100:
+            print(f"Browser-based extraction failed to get sufficient content for {url}")
+            if scrapper.driver:
+                scrapper.driver.quit()
+            return None
+
+        # Also check for error messages in the content
+        error_indicators = [
+            'could not extract meaningful content',
+            'page load error',
+            'could not initialize driver',
+            'failed to extract',
+            'no content found',
+            'access denied',
+            'robot check',
+            'captcha'
+        ]
+
+        content = article_data.get('content', '').lower()
+        if any(indicator in content for indicator in error_indicators):
+            print(f"Browser-based extraction returned error content for {url}")
+            if scrapper.driver:
+                scrapper.driver.quit()
+            return None
+
         if main_article is None:
             clean_content = article_data['content'].replace('\n', ' ').replace('\r', ' ')
             clean_content = ' '.join(clean_content.split())
@@ -475,7 +583,15 @@ def _extract_article_hybrid(url, main_article=None):
         return article_data
     except Exception as e:
         print(f"Browser-based extraction failed for {url}: {e}")
+        if 'scrapper' in locals() and scrapper.driver:
+            scrapper.driver.quit()
         return None
+
+
+# Define a custom exception for article extraction errors
+class ArticleExtractionError(Exception):
+    """Raised when an article cannot be extracted properly."""
+    pass
 
 
 class ArticleAnalyzer:
@@ -484,7 +600,18 @@ class ArticleAnalyzer:
         self.cx = cx
         self.vision_api_key = vision_api_key
 
+        print("testing :D")
+        # Extract the main article
         self.article = _extract_article_hybrid(article_url)
+        print("passed the extract hybrid :DDD")
+        # Raise an error if article extraction failed
+        if self.article is None:
+            raise ArticleExtractionError(f"Failed to extract content from {article_url}")
+
+        # Validate the article data using our comprehensive validation function
+        if not validate_article_data(self.article):
+            raise ArticleExtractionError(f"Failed to extract meaningful content from {article_url}")
+
         print("Main Article:", self.article)
 
         # Retrieve similar articles (in parallel)

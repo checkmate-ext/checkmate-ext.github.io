@@ -6,7 +6,7 @@ from google.auth.transport import requests
 from sqlalchemy import func
 
 from models import db, User, ArticleSearch, SimilarArticle, ArticleRequest
-from ArticleAnalyzer import ArticleAnalyzer
+from ArticleAnalyzer import ArticleAnalyzer, validate_article_data, ArticleExtractionError
 import os
 import random
 import jwt
@@ -125,6 +125,8 @@ def token_required(f):
     return decorated
 
 
+# Fix for the objectivity_score retrieval in the scrap_and_search route
+
 @app.route('/scrap_and_search', methods=['POST'])
 @token_required
 def scrap_and_search(current_user):
@@ -135,9 +137,11 @@ def scrap_and_search(current_user):
         if not url:
             return jsonify({'error': 'URL parameter is required'}), 400
 
+
         print(f"Processing URL:")
         website_credibility = check_website_score(url)
         print(website_credibility['credibility_score'])
+
         # get the article from the database if it is already analyzed
         past_article = ArticleSearch.query.filter_by(url=url).first()
         if past_article:
@@ -171,16 +175,25 @@ def scrap_and_search(current_user):
                 'images_data': [],
                 'website_credibility': website_credibility['credibility_score'],
                 'article_id': past_article.id,
-                'objectivity_score': past_article['objectivity_score']
+                'objectivity_score': past_article.objectivity_score  # Fixed: Use dot notation
             })
 
         print(f"Processing URL: {url}")
 
-        # Initialize GoogleSearch and perform scraping & custom search
-        google_search = ArticleAnalyzer(app.config['G_API_KEY'], app.config['CX_ID'], app.config['VISION_API_KEY'], url)
-        similar_articles = google_search.get_similar()
-        article = google_search.article  # Original article data
-        images_data = google_search.get_images_data()  # Analyze images for web detection
+        try:
+            # Initialize ArticleAnalyzer and perform scraping & custom search
+            google_search = ArticleAnalyzer(app.config['G_API_KEY'], app.config['CX_ID'], app.config['VISION_API_KEY'], url)
+
+            # Double-check the article data once more
+            if not validate_article_data(google_search.article):
+                return jsonify({'error': f"Could not extract meaningful content from {url}"}), 400
+
+            similar_articles = google_search.get_similar()
+            article = google_search.article  # Original article data
+            images_data = google_search.get_images_data()  # Analyze images for web detection
+        except ArticleExtractionError as e:
+            return jsonify({'error': str(e)}), 400
+
         reliability_score = random.randint(30, 95)
         credibility_score = random.randint(30, 95)
         bias_score = random.randint(30, 95)
@@ -192,7 +205,7 @@ def scrap_and_search(current_user):
             title=article['title'],
             reliability_score=reliability_score,
             credibility_score=credibility_score,
-            objectivity_score=article['objectivity_score'],
+            objectivity_score=article.get('objectivity_score', -1),  # Fixed: Use get() with default
             bias_score=bias_score
         )
 
@@ -227,12 +240,14 @@ def scrap_and_search(current_user):
             'similar_articles': similar_articles,
             'images_data': images_data,
             'website_credibility': website_credibility['credibility_score'],
-            'article_id': new_search.id
+            'article_id': new_search.id,
+            'objectivity_score': article.get('objectivity_score', -1)  # Fixed: Add to response
         })
 
     except Exception as e:
+        # Rollback any database changes if there was an error
+        db.session.rollback()
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/user/register', methods=['POST'])
 def register_user():
