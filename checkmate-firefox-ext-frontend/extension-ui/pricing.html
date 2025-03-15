@@ -1,0 +1,393 @@
+<script src="../browser-polyfill.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkmate - Pricing</title>
+    <!-- Bulma CSS Framework -->
+    <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+    <style>
+        :root {
+            --primary-color: #3cb371;
+            --secondary-color: #2e8b57;
+            --premium-color: #ffcc00;
+            --premium-text: #7B6225;
+            --enterprise-color: #1a73e8;
+            --enterprise-text: #0d47a1;
+            --bg-light: #f4f4f4;
+            --text-dark: #333;
+            --border-radius: 8px;
+            --transition-speed: 0.3s;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            transition: all var(--transition-speed) ease;
+        }
+
+        body {
+            width: 380px;
+            height: 600px;
+            margin: 0;
+            font-family: 'Inter', Arial, sans-serif;
+            background-color: var(--bg-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 380px;
+            height: 600px;
+            background: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Header Styling */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 20px 25px 0 25px;
+            position: relative;
+            z-index: 5;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .header-icon {
+            cursor: pointer;
+            opacity: 0.7;
+            width: 24px;
+            height: 24px;
+        }
+
+        .header-icon:hover {
+            opacity: 1;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        /* Logo Styling */
+        .logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 5;
+        }
+
+        .logo img {
+            width: 90px;
+        }
+
+        /* Plan Message */
+        #planMessage {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            margin: 10px 0;
+            padding: 0 20px;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* Plan Cards Container */
+        .plans-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 0 20px;
+            overflow-y: auto;
+            max-height: 440px; /* Reduced to ensure all content is visible */
+            margin-bottom: 60px; /* Increased to avoid overlap with bottom buttons */
+            position: relative;
+            z-index: 5;
+        }
+
+        /* Scrollbar styling */
+        .plans-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .plans-container::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .plans-container::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
+        }
+
+        /* Individual Plan Card */
+        .plan-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+
+        .plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            margin-top: 5px;
+        }
+
+        .plan-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .plan-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .plan-features ul {
+            list-style: none;
+            padding-left: 5px;
+            margin: 0;
+        }
+
+        .plan-features li {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: flex-start;
+            line-height: 1.3;
+        }
+        
+        .plan-features i {
+            margin-right: 5px;
+            margin-top: 3px;
+        }
+
+        .plan-badge {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            background: var(--primary-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            transform: rotate(3deg);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        /* Card buttons styling - enhanced for visibility */
+        .card-btn {
+            border: none;
+            border-radius: 6px;
+            padding: 10px 15px;
+            margin-top: 10px;
+            width: 100%;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .card-btn:hover {
+            transform: translateY(-3px) !important;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.25) !important;
+        }
+
+        .premium-bg {
+            background: linear-gradient(145deg, #ffeb3b, #ffcc00);
+            color: var(--premium-text);
+            border: 1px solid #daa520;
+        }
+        
+        .enterprise-bg {
+            background: linear-gradient(145deg, #4285f4, #1a73e8);
+            color: white;
+            border: 1px solid #0d47a1;
+        }
+        
+        .cancel-btn {
+            background-color: #f2f2f2;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+        
+        .downgrade-btn {
+            background: linear-gradient(145deg, #f9f1c5, #ffcc00);
+            color: #7B6225;
+            border: 1px solid #daa520;
+        }
+
+        /* Price tag styling */
+        .premium-price {
+            background: rgba(255, 204, 0, 0.2);
+            color: #7B6225;
+            border: 1px dashed #ffcc00;
+        }
+        
+        .enterprise-price {
+            background: rgba(26, 115, 232, 0.2);
+            color: #0d47a1;
+            border: 1px dashed #1a73e8;
+        }
+
+        .free-price {
+            background: rgba(60, 179, 113, 0.1);
+            color: #2e8b57;
+            border: 1px dashed #3cb371;
+        }
+
+        /* Bottom Icons */
+        .bottom-icons {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .bottom-icons img {
+            width: 24px;
+            opacity: 0.7;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .bottom-icons img:hover {
+            opacity: 1;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Notification */
+        .plan-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Enhanced text contrast for premium and enterprise */
+        .premium-card-text {
+            text-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
+        }
+        
+        .enterprise-card-text {
+            text-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 400px) {
+            body {
+                width: 100vw;
+                height: 100vh;
+            }
+            .container {
+                border-radius: 8px;
+            }
+            .card-btn {
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="header-icons">
+                <img src="../images/menu-bar-icon.png" alt="Menu" id="menuBtn" class="header-icon">
+            </div>
+            <div class="header-icons">
+                <img src="../images/user-profile-icon.png" alt="Profile" id="profileBtn" class="header-icon">
+            </div>
+        </div>
+
+        <!-- Logo Section -->
+        <div class="logo">
+            <img src="../images/CheckMate_Transparent_Logo.png" alt="Checkmate Logo">
+        </div>
+
+        <!-- Dynamic Plan Message -->
+        <h3 id="planMessage" class="subtitle is-5"></h3>
+
+        <!-- Plan Cards Container -->
+        <div class="plans-container" id="planCardsContainer">
+            <!-- Plan cards will be inserted here dynamically -->
+        </div>
+
+        <!-- Bottom Icons -->
+        <div class="bottom-icons">
+            <img src="../images/settings-icon.png" alt="Settings">
+            <img src="../images/exclamation-triangle-icon.png" alt="Warning">
+            <button id="logoutBtn" style="background: none; border: none; cursor: pointer;">
+                <img src="../images/logout.png" alt="Logout" title="Logout" style="width: 24px; height: 24px;">
+            </button>
+        </div>
+    </div>
+    <script src="../navigation/navigate.js"></script>
+    <script src="../scripts/pricing.js"></script>
+    <script type="module" src="../scripts/logout-script.js"></script>
+    <script type="module" src="../theme_scripts/pricing_theme.js"></script>
+</body>
+</html>

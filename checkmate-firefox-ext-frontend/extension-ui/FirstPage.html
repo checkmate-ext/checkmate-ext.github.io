@@ -1,0 +1,228 @@
+<script src="../browser-polyfill.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+    <title>CheckMate - Welcome</title>
+    <!-- Bulma CSS Framework -->
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"
+    />
+    <!-- Font Awesome for Icons -->
+    <link
+            rel="stylesheet"
+            href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+    />
+    <style>
+        :root {
+            --primary-color: #3cb371;
+            --secondary-color: #2e8b57;
+            --bg-light: #f4f4f4;
+            --text-dark: #333;
+        }
+        * {
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+        /* Force 380×600 with no scrolling */
+        html, body {
+            width: 380px;
+            height: 600px;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent scrolling */
+            background-color: var(--bg-light);
+            font-family: "Inter", Arial, sans-serif;
+            /* Center card horizontally + vertically */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        /* The card itself matches the entire 380×600 area */
+        .card {
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        /* Card Content */
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding: 20px;
+            justify-content: space-between;
+        }
+        /* Top Section (Logo and Title) */
+        .top-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .top-section .logo img {
+            width: 100px;
+            margin-top: 40px;
+        }
+        .top-section .title {
+            color: var(--text-dark);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        /* Buttons Section */
+        .buttons-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        /* Sign In and Sign Up Buttons */
+        .buttons-section .button {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 0.75rem 1rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .buttons-section .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(60,179,113,0.3);
+        }
+        .buttons-section .button::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: rotate(45deg);
+            transition: 0.5s;
+            opacity: 0;
+        }
+        .buttons-section .button:hover::before {
+            opacity: 1;
+            transform: translate(25%, 25%) rotate(45deg);
+        }
+        /* Divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+        }
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, transparent, #e0e0e0, transparent);
+        }
+        .divider span {
+            padding: 0 10px;
+            color: #718096;
+            font-size: 0.9rem;
+        }
+        /* Social Buttons */
+        .social-buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .social-button {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+        .social-button .icon {
+            width: 24px;
+            height: 24px;
+        }
+        .social-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: var(--primary-color);
+        }
+        /* Footer Section */
+        .footer-section {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #718096;
+            margin-top: 20px;
+        }
+        .footer-section a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        .footer-section a:hover {
+            color: var(--secondary-color);
+        }
+        /* Sign Buttons' Icons */
+        .fas{
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="card-content">
+        <!-- Top Section -->
+        <div class="top-section">
+            <div class="logo">
+                <img src="../images/CheckMate_Transparent_Logo.png" alt="CheckMate Logo">
+            </div>
+        </div>
+
+        <!-- Buttons Section -->
+        <div class="buttons-section">
+            <button id="signInButton" class="button">
+                <i class="fas fa-sign-in-alt"></i>Sign In
+            </button>
+            <button id="signUpButton" class="button">
+                <i class="fas fa-user-plus"></i>Sign Up
+            </button>
+
+            <!-- Divider -->
+            <div class="divider">
+                <span>Or</span>
+            </div>
+
+            <!-- Social Buttons -->
+            <div class="social-buttons-container">
+                <button id="googleSignUpButton" class="social-button">
+                    <img src="../images/Google.png" alt="Google" class="icon">
+                    <span>Sign up with Google</span>
+                </button>
+                <button id="facebookSignUpButton" class="social-button">
+                    <img src="../images/Facebook.png" alt="Facebook" class="icon">
+                    <span>Sign up with Facebook</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer Section (Optional) -->
+        <div class="footer-section">
+         </div>
+    </div>
+</div>
+
+<!-- External JavaScript File -->
+<script src="../navigation/navigate.js"></script>
+</body>
+</html>

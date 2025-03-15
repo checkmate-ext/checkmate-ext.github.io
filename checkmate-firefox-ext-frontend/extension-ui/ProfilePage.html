@@ -1,0 +1,366 @@
+<script src="../browser-polyfill.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Checkmate</title>
+    <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3cb371;
+            --secondary-color: #2e8b57;
+            --bg-light: #f4f4f4;
+            --text-dark: #333;
+            --border-radius: 8px;
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Inter', Arial, sans-serif;
+        }
+
+        .container {
+            width: 380px;
+            height: 600px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Section */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            margin-bottom: 15px;
+        }
+
+        .header-icon {
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+            width: 24px;
+            height: 24px;
+        }
+
+        .header-icon:hover {
+            opacity: 1;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        /* Main Content Wrapper */
+        .content-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-bottom: 60px;
+        }
+
+        /* Scrollbar styling */
+        .content-wrapper::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .content-wrapper::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .content-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
+        }
+
+        /* Profile Section */
+        .profile-section {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(60,179,113,0.1), rgba(46,139,87,0.1));
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .profile-section:hover {
+            transform: translateY(-2px);
+        }
+
+        .profile-info {
+            margin-bottom: 25px;
+            color: var(--text-dark);
+        }
+
+        .profile-email {
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .btn-edit {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 10px 25px;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-edit:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(60,179,113,0.3);
+        }
+
+        .btn-edit::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s;
+            opacity: 0;
+        }
+
+        .btn-edit:hover::before {
+            opacity: 1;
+            transform: translate(25%, 25%) rotate(45deg);
+        }
+
+        /* Plan Box */
+        .plan-box {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .plan-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .plan-info {
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 1em;
+        }
+
+        .btn-upgrade {
+            background: #ffcc00;
+            color: var(--text-dark);
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 8px 15px;
+            font-weight: 600;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-upgrade:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,204,0,0.3);
+        }
+
+        /* Past Searches */
+        .past-searches {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            font-size: 1em;
+        }
+
+        .past-searches:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .past-searches img {
+            width: 20px;
+            opacity: 0.7;
+        }
+
+        /* Bottom Icons */
+        .bottom-icons {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 25px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .bottom-icons img {
+            width: 24px;
+            opacity: 0.7;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .bottom-icons img:hover {
+            opacity: 1;
+            transform: scale(1.1) rotate(5deg);
+        }
+        /* Theme Toggle Box */
+        .theme-toggle-box {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin: 15px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        
+        /* Switch styling */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .3s;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .slider.round {
+            border-radius: 24px;
+        }
+        
+        .slider.round:before {
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <img src="../images/menu-bar-icon.png" alt="Menu" class="header-icon" id="menuBtn">
+    </div>
+
+    <div class="content-wrapper">
+        <div class="profile-section">
+            <div class="profile-info">
+                <div class="profile-email">namesurname@email.com</div>
+            </div>
+            <button class="btn-edit" id="editBtn">Change Password</button>
+        </div>
+
+        <div class="plan-box">
+            <span class="plan-info">Current Plan: Free</span>
+            <button class="btn-upgrade" id="upgradeBtn">
+                ⭐ Upgrade
+            </button>
+        </div>
+
+        <div class="past-searches" id="pastSearches">
+            <img src="../images/DashboardIcon.png" alt="Dashboard">
+            <span>Dashboard</span>
+        </div>
+
+        <div class="past-searches" id="historyBtn">
+            <img src="../images/clock.256x256.png" alt="History">
+            <span>View Search History</span>
+        </div>
+        
+    </div>
+
+
+
+    <div class="bottom-icons">
+        <img src="../images/settings-icon.png" alt="Settings">
+        <button id="reportBtn" style="background: none; border: none; cursor: pointer;">
+            <img src="../images/exclamation-triangle-icon.png" alt="Warning">
+        </button>
+        <button id="logoutBtn" style="background: none; border: none; cursor: pointer;">
+            <img src="../images/logout.png" alt="Logout" title="Logout" style="width: 24px; height: 24px;">
+        </button>
+    </div>
+</div>
+
+<script src="../navigation/navigate.js"></script>
+<script type="module" src="../scripts/logout-script.js"></script>
+<script src="../scripts/profile-script.js"></script>
+<script src="../theme_scripts/profile_theme.js"></script>
+</body>
+</html>
