@@ -79,6 +79,65 @@ document.addEventListener('DOMContentLoaded', function() {
         // Apply basic styles
         document.body.style.backgroundColor = themeValues.bgColor;
         document.body.style.color = themeValues.textColor;
+
+        // Apply theme colors to the theme-colored elements
+        const themeColoredElements = document.querySelectorAll('.theme-colored');
+        themeColoredElements.forEach(element => {
+            element.style.backgroundColor = themeValues.primaryColor;
+            element.style.color = '#FFFFFF'; // Always keep text white for contrast
+            element.style.boxShadow = themeValues.scoreBoxShadow;
+        });
+        
+        // Special handling for objectivity and bias score boxes
+        const objectivityScoreBox = document.getElementById('objectivityScore');
+        if (objectivityScoreBox) {
+            // Add the theme-colored class if not already present
+            if (!objectivityScoreBox.classList.contains('theme-colored')) {
+                objectivityScoreBox.classList.add('theme-colored');
+            }
+            objectivityScoreBox.style.boxShadow = themeValues.scoreBoxShadow;
+            objectivityScoreBox.style.color = '#FFFFFF'; // Force white text
+        }
+        
+        const biasScoreBox = document.getElementById('biasScore');
+        if (biasScoreBox) {
+            // Add the theme-colored class if not already present
+            if (!biasScoreBox.classList.contains('theme-colored')) {
+                biasScoreBox.classList.add('theme-colored');
+            }
+            biasScoreBox.style.boxShadow = themeValues.scoreBoxShadow;
+            biasScoreBox.style.color = '#FFFFFF'; // Force white text
+        }
+        
+        // Standard score boxes should keep their color classes (red/yellow/green)
+        const allScoreBoxes = document.querySelectorAll('.score-box:not(.theme-colored)');
+        allScoreBoxes.forEach(box => {
+            box.style.color = '#FFFFFF';  // Standard score boxes also get white text
+        });
+        
+        // Style similarity badges - make sure text is white
+        const similarityBadges = document.querySelectorAll('.similarity-badge');
+        similarityBadges.forEach(badge => {
+            // Add theme-colored class if not already present
+            if (!badge.classList.contains('theme-colored')) {
+                badge.classList.add('theme-colored');
+            }
+            badge.style.boxShadow = theme === 'dark' ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.1)';
+            badge.style.color = '#FFFFFF'; // Force white text
+        });
+        
+        // Style tooltips - make sure text is white
+        const tooltipTexts = document.querySelectorAll('.tooltiptext');
+        tooltipTexts.forEach(tooltip => {
+            tooltip.style.backgroundColor = theme === 'dark' ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.7)';
+            tooltip.style.color = '#FFFFFF'; // Force white text for tooltips
+        });
+        
+        // All score labels should use secondary text color
+        const allScoreLabels = document.querySelectorAll('.score-label');
+        allScoreLabels.forEach(label => {
+            label.style.color = themeValues.secondaryTextColor;
+        });
         
         // Container styling
         const container = document.querySelector('.container');
@@ -111,16 +170,11 @@ document.addEventListener('DOMContentLoaded', function() {
             scoreSection.style.color = themeValues.textColor;
         }
         
-        // Score label
-        const scoreLabel = document.querySelector('.score-label');
-        if (scoreLabel) {
-            scoreLabel.style.color = themeValues.secondaryTextColor;
-        }
-        
-        // Score box (don't change color as it's based on the score value)
+        // Score box (reliability - don't change color classes as they're based on the score value)
         const scoreBox = document.getElementById('reliabilityScore');
         if (scoreBox) {
             scoreBox.style.boxShadow = themeValues.scoreBoxShadow;
+            scoreBox.style.color = '#FFFFFF'; // Explicitly set text to white
         }
         
         // Articles section
@@ -273,10 +327,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 box-shadow: 0 5px 15px rgba(241, 196, 15, 0.3);
             }
             
-            /* Ensure contrast for score box text */
-            .score-box {
-                color: #fff !important;
+            /* Theme-colored elements - single color that changes with theme */
+            .small-score-box.theme-colored,
+            .similarity-badge.theme-colored {
+                background-color: ${themeValues.primaryColor} !important;
+                color: #FFFFFF !important;
                 text-shadow: ${theme === 'dark' ? '1px 1px 3px rgba(0,0,0,0.5)' : 'none'};
+            }
+            
+            /* Standard score box - keeps its red/yellow/green color but with white text */
+            .score-box {
+                color: #FFFFFF !important;
+                text-shadow: ${theme === 'dark' ? '1px 1px 3px rgba(0,0,0,0.5)' : 'none'};
+            }
+            
+            /* Ensure white text on tooltips */
+            .tooltiptext {
+                color: #FFFFFF !important;
+            }
+            
+            /* Proper coloring for score labels */
+            .score-label {
+                color: ${themeValues.secondaryTextColor} !important;
             }
         `;
     }
