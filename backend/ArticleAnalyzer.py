@@ -552,10 +552,10 @@ def _extract_article_hybrid(url, main_article=None):
             try:
                 print("before request :DDDDDDD")
                 response = requests.post(
-                    "http://54.152.36.106:8000/subjectivity",
+                    "http://34.224.157.120:8000/subjectivity",
                     headers={"Content-Type": "application/json"},
                     json={"text": clean_content},
-                    timeout=5,
+                    timeout=15,
                 )
                 response.raise_for_status()
                 print("after request:DDDDDD")
