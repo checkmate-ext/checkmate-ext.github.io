@@ -130,22 +130,23 @@ def token_required(f):
 @app.route('/scrap_and_search', methods=['POST'])
 @token_required
 def scrap_and_search(current_user):
+    print("[DEBUG] scrap_and_search: Endpoint called for user:", current_user.email)
     try:
-        # Extract URL from request JSON
         data = request.json
         url = data.get('url')
         if not url:
+            print("[DEBUG] scrap_and_search: URL parameter missing")
             return jsonify({'error': 'URL parameter is required'}), 400
+        print(f"[DEBUG] scrap_and_search: Processing URL: {url}")
 
-
-        print(f"Processing URL:")
         website_credibility = check_website_score(url)
-        print(website_credibility['credibility_score'])
+        print("[DEBUG] scrap_and_search: Website credibility score:", website_credibility['credibility_score'])
 
-        # get the article from the database if it is already analyzed
         past_article = ArticleSearch.query.filter_by(url=url).first()
         if past_article:
+            print("[DEBUG] scrap_and_search: Found past article with ID:", past_article.id)
             past_similar_articles = SimilarArticle.query.filter_by(main_article_id=past_article.id).all()
+            print("[DEBUG] scrap_and_search: Found", len(past_similar_articles), "similar articles from database")
 
             article_data = {
                 'url': past_article.url,
@@ -175,30 +176,35 @@ def scrap_and_search(current_user):
                 'images_data': [],
                 'website_credibility': website_credibility['credibility_score'],
                 'article_id': past_article.id,
-                'objectivity_score': past_article.objectivity_score  # Fixed: Use dot notation
+                'objectivity_score': past_article.objectivity_score , # Fixed: Use dot notation
+                'bias_prediction': past_article.bias_prediction,
+                'bias_probabilities': past_article.bias_probabilities
             })
 
         print(f"Processing URL: {url}")
 
+        print(f"[DEBUG] scrap_and_search: No past article found. Proceeding to extract new article for URL: {url}")
         try:
-            # Initialize ArticleAnalyzer and perform scraping & custom search
-            google_search = ArticleAnalyzer(app.config['G_API_KEY'], app.config['CX_ID'], app.config['VISION_API_KEY'], url)
-
-            # Double-check the article data once more
+            google_search = ArticleAnalyzer(
+                app.config['G_API_KEY'],
+                app.config['CX_ID'],
+                app.config['VISION_API_KEY'],
+                url
+            )
             if not validate_article_data(google_search.article):
+                print("[DEBUG] scrap_and_search: Article validation failed")
                 return jsonify({'error': f"Could not extract meaningful content from {url}"}), 400
 
             similar_articles = google_search.get_similar()
-            article = google_search.article  # Original article data
-            print("passed the get similar :DDDDDDDDDDDD")
-            #images_data = google_search.get_images_data()  # Analyze images for web detection
-            images_data = []
-        except ArticleExtractionError as e:
+            article = google_search.article
+            print("[DEBUG] scrap_and_search: Article extracted successfully.")
+            images_data = []  # or google_search.get_images_data() if using image API
+        except Exception as e:
+            print("[DEBUG] scrap_and_search: Exception during article extraction:", e)
             return jsonify({'error': str(e)}), 400
 
         reliability_score = random.randint(30, 95)
         credibility_score = random.randint(30, 95)
-        bias_score = random.randint(30, 95)
 
         print("article : ", article)
 
@@ -208,7 +214,8 @@ def scrap_and_search(current_user):
             reliability_score=reliability_score,
             credibility_score=credibility_score,
             objectivity_score=article.get('objectivity_score', -1),  # Fixed: Use get() with default
-            bias_score=bias_score
+            bias_prediction=article.get('bias_prediction', -1),
+            bias_probabilities=article.get('bias_probabilities', -1)
         )
 
         print("before adding new_search :D")
@@ -233,13 +240,14 @@ def scrap_and_search(current_user):
             )
             for article in similar_articles
         ]
-        print("before adding similiar articles:DDD :D")
+        print("[DEBUG] scrap_and_search: Inserting new article record in the database.")
 
         if similar_articles_to_insert:
             db.session.bulk_save_objects(similar_articles_to_insert)
 
         db.session.commit()
         print(similar_articles)
+        print("[DEBUG] scrap_and_search: Database commit successful. Similar articles count:", len(similar_articles))
         return jsonify({
             'reliability_score': reliability_score,
             'message': f"Results for {url}",
@@ -248,7 +256,9 @@ def scrap_and_search(current_user):
             'images_data': images_data,
             'website_credibility': website_credibility['credibility_score'],
             'article_id': new_search.id,
-            'objectivity_score': article['objectivity_score']  # Fixed: Add to response
+            'objectivity_score': article['objectivity_score'],
+            'bias_prediction': article['bias_prediction'],
+            'bias_probabilities': article['bias_probabilities']
         })
 
     except Exception as e:
@@ -374,6 +384,8 @@ def get_user_searches(current_user):
             'reliability_score': article.reliability_score,
             'credibility_score': article.credibility_score,
             'objectivity_score': article.objectivity_score,
+            'bias_prediction': article.bias_prediction,
+            'bias_probabilities': article.bias_probabilities,
             'created_at': article.created_at,
             'id': article.id,
         } for article in searches]
@@ -805,7 +817,8 @@ def fetch_stats(current_user):
             'reliability_score': article.reliability_score,
             'credibility_score': article.credibility_score,
             'objectivity_score': article.objectivity_score,
-            'bias_score': article.bias_score,
+            'bias_prediction': article.bias_prediction,
+            'bias_probabilities': article.bias_probabilities,
             'created_at': article.created_at.isoformat(),
             'id': article.id,
         } for article in recent_articles]

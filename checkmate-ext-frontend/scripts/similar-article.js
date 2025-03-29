@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Set the bias score with fixed theme color
     if (biasScoreBox && data.bias_score !== undefined) {
-        const biasScore = data.bias_score >= 0 ? data.bias_score : Math.floor(Math.random() * 100);
+        const biasScore = data.bias_prediction >= 0 ? data.bias_prediction : Math.floor(Math.random() * 100);
         biasScoreBox.textContent = biasScore;
         
         // Use a single fixed class instead of color-based classes
