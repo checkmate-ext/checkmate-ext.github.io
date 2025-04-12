@@ -41,6 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const result = await authService.login(email, password);
             if (result.success) {
+                // set the local storage data for email
+                localStorage.setItem('userEmail', email);
                 navigateTo('MainMenuPage.html');
             } else {
                 signInButton.innerHTML = originalSignInButtonText;
