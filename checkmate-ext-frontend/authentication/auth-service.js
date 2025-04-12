@@ -6,16 +6,14 @@ export default class AuthService {
         this.token = localStorage.getItem('token');  // Get token from localStorage if it exists
     }
 
-    // Method to handle user login
-    async login(email, password) {
+    async login(email, password, rememberMe = false) {
         try {
-            // Make POST request to login endpoint
             const response = await fetch(`${this.apiUrl}/user/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email, password, rememberMe })
             });
 
             const data = await response.json();
@@ -24,11 +22,14 @@ export default class AuthService {
                 throw new Error(data.message || 'Login failed');
             }
 
-            // If login successful, save token
             this.token = data.token;
-            localStorage.setItem('token', data.token);
+            // Store token based on the "remember me" flag:
+            if (rememberMe) {
+                localStorage.setItem('token', data.token);
+            } else {
+                sessionStorage.setItem('token', data.token);
+            }
             return { success: true };
-
         } catch (error) {
             return { success: false, error: error.message };
         }

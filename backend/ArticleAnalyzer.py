@@ -9,7 +9,6 @@ from typing import Optional, List, Dict
 from urllib.parse import urljoin, urlparse
 import re
 
-
 def check_similarity(text1, text2):
     import os
     try:

@@ -2,16 +2,13 @@ import AuthService from '../authentication/auth-service.js';
 
 const authService = new AuthService('http://localhost:5000');
 
-
-
-
-
 document.addEventListener('DOMContentLoaded', () => {
     const signInButton = document.getElementById('signInToMain');
     const passwordInput = document.getElementById('password');
     const passwordError = document.getElementById('passwordError');
     const originalSignInButtonText = signInButton.innerHTML;
     const googleButton = document.querySelector('.social-button:first-child'); // This selects the Google button
+    const rememberMeCheckbox = document.getElementById('rememberMe'); // New checkbox element
 
     // Function to show error
     const showError = (message) => {
@@ -34,12 +31,15 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
+        // Read the "Remember Me" checkbox state
+        const rememberMe = rememberMeCheckbox.checked;
 
         clearError(); // Clear any existing errors
         signInButton.innerHTML = '<div class="loading-spinner"></div>';
 
         try {
-            const result = await authService.login(email, password);
+            // Pass the rememberMe parameter to the login call
+            const result = await authService.login(email, password, rememberMe);
             if (result.success) {
                 navigateTo('MainMenuPage.html');
             } else {
