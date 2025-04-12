@@ -297,6 +297,10 @@ def register_user():
         db.session.add(new_user)
         db.session.commit()
 
+        # Send welcome email with the Google Form link after registration
+        form_link = "https://docs.google.com/forms/d/e/1FAIpQLScg1iBTcjGqeX3B-hX12y0whNyyko6CfgKyduYR8g2Dtp_zOQ/viewform?usp=sharing"
+        send_registration_email(email, form_link)
+
         return jsonify({
             'message': 'User registered successfully',
             'user_id': new_user.id
@@ -309,6 +313,22 @@ def register_user():
             'error': 'Registration failed',
             'message': str(e)
         }), 500
+
+
+def send_registration_email(user_email, form_link):
+    msg = Message("Welcome to CheckMate!",
+                  recipients=[user_email])
+    msg.body = (
+        f"Thank you for registering with CheckMate!\n\n"
+        f"We'd love to hear your feedback. Please fill out this brief survey:\n{form_link}\n\n"
+        f"Best regards,\n"
+        f"The CheckMate Team"
+    )
+    try:
+        current_app.mail.send(msg)
+        print(f"Registration email sent to {user_email}")
+    except Exception as e:
+        print(f"Error sending registration email to {user_email}: {e}")
 
 
 @app.route('/user/login', methods=['POST'])
