@@ -7,6 +7,9 @@ function navigateTo(page) {
         'ProfilePage.html',
         'ResultsPage.html',
         'MoreDetails.html',
+        'HistoryPage.html',
+        'pricing.html',
+        'report.html',
     ];
 
     // If navigating to a protected page, check for token first

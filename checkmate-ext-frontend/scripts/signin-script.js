@@ -41,6 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Pass the rememberMe parameter to the login call
             const result = await authService.login(email, password, rememberMe);
             if (result.success) {
+                // set the local storage data for email
+                localStorage.setItem('userEmail', email);
                 navigateTo('MainMenuPage.html');
             } else {
                 signInButton.innerHTML = originalSignInButtonText;
