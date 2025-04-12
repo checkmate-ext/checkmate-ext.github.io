@@ -27,3 +27,5 @@ setuptools==69.0.3
 
 #genai
 google-genai
+
+itsdangerous

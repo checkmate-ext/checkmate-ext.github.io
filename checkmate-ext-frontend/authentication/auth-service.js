@@ -2,8 +2,8 @@
 export default class AuthService {
     // Constructor takes the API URL as a parameter
     constructor(apiUrl) {
-        this.apiUrl = apiUrl;  // Store the API URL (e.g., 'http://your-backend-url')
-        this.token = localStorage.getItem('token');  // Get token from localStorage if it exists
+        this.apiUrl = apiUrl;
+        this.token = localStorage.getItem('token') || sessionStorage.getItem('token');
     }
 
     async login(email, password, rememberMe = false) {
@@ -22,13 +22,10 @@ export default class AuthService {
                 throw new Error(data.message || 'Login failed');
             }
 
+            // Always store the token in localStorage
+            localStorage.setItem('token', data.token);
             this.token = data.token;
-            // Store token based on the "remember me" flag:
-            if (rememberMe) {
-                localStorage.setItem('token', data.token);
-            } else {
-                sessionStorage.setItem('token', data.token);
-            }
+
             return { success: true };
         } catch (error) {
             return { success: false, error: error.message };
