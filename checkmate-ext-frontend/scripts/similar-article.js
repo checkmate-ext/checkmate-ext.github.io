@@ -65,7 +65,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Set the objectivity score with fixed theme color
     if (objectivityScoreBox && data.objectivity_score !== undefined) {
-        const objectivityScore = data.objectivity_score >= 0 ? data.objectivity_score : Math.floor(Math.random() * 100);
         objectivityScoreBox.textContent = objectivityScore;
         
         // Use a single fixed class instead of color-based classes

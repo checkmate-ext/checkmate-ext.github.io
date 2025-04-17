@@ -2,20 +2,18 @@
 export default class AuthService {
     constructor(apiUrl) {
         this.apiUrl = apiUrl;  // Store the API URL (e.g., 'http://localhost:5000')
-        this.token = localStorage.getItem('token');  // Get token from localStorage if it exists
+        this.token = localStorage.getItem('token') || sessionStorage.getItem('token');  // Get token from localStorage if it exists
         this.googleClientId = "94517049358-tgqqobr0kk38dofd1h5l0bm019url60c.apps.googleusercontent.com"; // Google Client ID
     }
 
-    // Method to handle user login
-    async login(email, password) {
+    async login(email, password, rememberMe = false) {
         try {
-            // Make POST request to login endpoint
             const response = await fetch(`${this.apiUrl}/user/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email, password, rememberMe })
             });
 
             const data = await response.json();
@@ -24,11 +22,13 @@ export default class AuthService {
                 throw new Error(data.message || 'Login failed');
             }
 
-            // If login successful, save token
-            this.token = data.token;
+            // Always store the token in localStorage
             localStorage.setItem('token', data.token);
             return { success: true, user: data.user };
 
+            this.token = data.token;
+
+            return { success: true };
         } catch (error) {
             return { success: false, error: error.message };
         }

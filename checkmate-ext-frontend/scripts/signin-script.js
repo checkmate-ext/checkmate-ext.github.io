@@ -1,4 +1,3 @@
-// signin-script.js
 import AuthService from '../authentication/auth-service.js';
 
 const authService = new AuthService('http://localhost:5000');
@@ -9,7 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordError = document.getElementById('passwordError');
     const originalSignInButtonText = signInButton.innerHTML;
     const googleButton = document.querySelector('.social-button:first-child'); // Google button
-    const facebookButton = document.querySelector('.social-button:last-child'); // Facebook button
+    const facebookButton = document.querySelector('.social-button:last-child'); // Facebook button    const rememberMeCheckbox = document.getElementById('rememberMe'); // New checkbox element
+    const rememberMeCheckbox = document.getElementById('rememberMe'); // New checkbox element
 
     // Function to show error
     const showError = (message) => {
@@ -33,18 +33,23 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
+        // Read the "Remember Me" checkbox state
+        const rememberMe = rememberMeCheckbox.checked;
 
         clearError(); // Clear any existing errors
         signInButton.innerHTML = '<div class="loading-spinner"></div> Sign In';
         signInButton.disabled = true; // Disable button during login attempt
 
         try {
-            const result = await authService.login(email, password);
+            // Pass the rememberMe parameter to the login call
+            const result = await authService.login(email, password, rememberMe);
             if (result.success) {
                 // Store user data if needed
                 if (result.user) {
                     localStorage.setItem('user', JSON.stringify(result.user));
                 }
+                // set the local storage data for email
+                localStorage.setItem('userEmail', email);
                 navigateTo('MainMenuPage.html');
             } else {
                 signInButton.innerHTML = originalSignInButtonText;

@@ -5,6 +5,8 @@ from flask_cors import CORS
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from sqlalchemy import func
+from itsdangerous import URLSafeTimedSerializer
+from flask import url_for
 
 from models import db, User, ArticleSearch, SimilarArticle, ArticleRequest
 from ArticleAnalyzer import ArticleAnalyzer, validate_article_data, ArticleExtractionError
@@ -62,6 +64,7 @@ def create_app():
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
     app.config['EMAIL_VERIFICATION_SECRET_KEY'] = os.getenv('EMAIL_VERIFICATION_SECRET_KEY')
     app.config['GOOGLE_CLIENT_ID'] = "94517049358-tgqqobr0kk38dofd1h5l0bm019url60c.apps.googleusercontent.com"
+    app.config["SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 
     # Database configuration
     DB_USER = os.getenv("DB_USER")
@@ -268,6 +271,54 @@ def scrap_and_search(current_user):
         return jsonify({'error': str(e)}), 500
 
 
+# --- Helper functions for token generation ---
+def generate_confirmation_token(email):
+    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+    return serializer.dumps(email, salt='email-confirm-salt')
+
+def confirm_token(token, expiration=3600):
+    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+    try:
+        email = serializer.loads(token, salt='email-confirm-salt', max_age=expiration)
+    except Exception as e:
+        print(f"[DEBUG] Token verification error: {e}")
+        return False
+    return email
+
+# --- Email sending functions ---
+def send_registration_email(user_email, form_link):
+    msg = Message("Welcome to CheckMate!",
+                  recipients=[user_email])
+    msg.body = (
+        f"Thank you for registering with CheckMate!\n\n"
+        f"We'd love to hear your feedback. Please fill out this brief survey:\n{form_link}\n\n"
+        f"Best regards,\n"
+        f"The CheckMate Team"
+    )
+    try:
+        current_app.mail.send(msg)
+        print(f"Registration email sent to {user_email}")
+    except Exception as e:
+        print(f"Error sending registration email to {user_email}: {e}")
+
+def send_confirmation_email(user_email, token):
+    confirm_url = url_for('confirm_email', token=token, _external=True)
+    msg = Message("Confirm Your Email - CheckMate",
+                  recipients=[user_email])
+    msg.body = (
+        f"Welcome to CheckMate!\n\n"
+        f"Please click the link below to confirm your email address and complete your registration:\n\n"
+        f"{confirm_url}\n\n"
+        f"If you did not register, please ignore this email.\n\n"
+        f"Thank you,\n"
+        f"The CheckMate Team"
+    )
+    try:
+        current_app.mail.send(msg)
+        print(f"[DEBUG] Confirmation email sent to {user_email}")
+    except Exception as e:
+        print(f"[DEBUG] Error sending confirmation email to {user_email}: {e}")
+
 @app.route('/user/register', methods=['POST'])
 def register_user():
     """
@@ -278,32 +329,28 @@ def register_user():
         data = request.json
         email = data.get('email')
         password = data.get('password')
-
         if not email or not password:
             return jsonify({
                 'error': 'Missing credentials',
                 'message': 'Both email and password are required'
             }), 400
-
-        # Check if user already exists
         if User.query.filter_by(email=email).first():
             return jsonify({
                 'error': 'Registration failed',
                 'message': 'Email already registered'
             }), 400
-
-        # Create new user
         new_user = User(email=email)
         new_user.set_password(password)
-
         db.session.add(new_user)
         db.session.commit()
-
+        form_link = "https://docs.google.com/forms/d/e/13xinckAbE8UdKVr_ILxrPqueQfMRy85MaCuJUU-pXv4/viewform?usp=sharing"
+        send_registration_email(email, form_link)
+        token = generate_confirmation_token(email)
+        send_confirmation_email(email, token)
         return jsonify({
-            'message': 'User registered successfully',
+            'message': 'User registered successfully. A confirmation email has been sent.',
             'user_id': new_user.id
         }), 201
-
     except Exception as e:
         db.session.rollback()
         print(f"Error registering user: {str(e)}")
@@ -312,6 +359,20 @@ def register_user():
             'message': str(e)
         }), 500
 
+@app.route('/user/confirm-email')
+def confirm_email():
+    token = request.args.get('token')
+    if not token:
+        return "Missing token", 400
+    email = confirm_token(token)
+    if not email:
+        return "The confirmation link is invalid or has expired.", 400
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return "User not found.", 404
+    user.is_verified = True
+    db.session.commit()
+    return "Your email has been confirmed. Thank you!"
 
 @app.route('/user/login', methods=['POST'])
 def login_user():
@@ -319,53 +380,81 @@ def login_user():
     Endpoint for user login.
     Verifies email and password and returns a JWT token if successful.
     """
-
-    print("Login request received")
+    print("[DEBUG] Login request received")
     try:
         data = request.json
         email = data.get('email')
         password = data.get('password')
 
         if not email or not password:
+            print("[DEBUG] Missing credentials: email or password not provided")
             return jsonify({
                 'error': 'Missing credentials',
                 'message': 'Both email and password are required'
             }), 400
 
-        # Find and verify user
+        # Find the user by email
         user = User.query.filter_by(email=email).first()
-        if user and user.check_password(password):
-            # Generate a JWT token valid for 1 hour
-            token = jwt.encode({
-                'user_id': user.id,
-                'exp': datetime.utcnow() + timedelta(hours=1)
-            }, app.config['JWT_SECRET_KEY'], algorithm='HS256')
-
-            user_data = {
-                'id': user.id,
-                'email': user.email,
-                'subscription_plan': user.subscription_plan,
-                'created_at': user.created_at.isoformat(),
-            }
-            print(token)
+        if not user:
+            print(f"[DEBUG] User not found for email: {email}")
             return jsonify({
-                'message': 'Login successful',
-                'token': token,
-                'user': user_data
-            })
+                'error': 'Login failed',
+                'message': 'Invalid email or password'
+            }), 401
+
+        # Debug: log the user's verification status
+        print(f"[DEBUG] Found user: {user.email}, is_verified: {user.is_verified}")
+
+        # Verify the password
+        if not user.check_password(password):
+            print("[DEBUG] Password check failed for user:", email)
+            return jsonify({
+                'error': 'Login failed',
+                'message': 'Invalid email or password'
+            }), 401
+
+        # Optionally enforce email confirmation (uncomment if needed)
+        if not user.is_verified:
+            print("[DEBUG] User email is not confirmed.")
+            return jsonify({
+                'error': 'Login failed',
+                'message': 'Email not confirmed. Please confirm your email before logging in.'
+            }), 401
+
+        # Set token expiration based on the "rememberMe" flag:
+        # If rememberMe is true, the token will expire in 30 days; otherwise, in 1 hour.
+        if data.get('rememberMe'):
+            expiration = timedelta(days=30)
+            print("[DEBUG] Remember me is checked, setting token expiration to 30 days")
+        else:
+            expiration = timedelta(hours=1)
+            print("[DEBUG] Remember me is not checked, setting token expiration to 1 hour")
+
+        # Generate a JWT token with the appropriate expiration:
+        token = jwt.encode({
+            'user_id': user.id,
+            'exp': datetime.utcnow() + expiration
+        }, app.config['JWT_SECRET_KEY'], algorithm='HS256')
+        print(f"[DEBUG] Generated JWT token: {token}")
+
+        user_data = {
+            'id': user.id,
+            'email': user.email,
+            'subscription_plan': user.subscription_plan,
+            'created_at': user.created_at.isoformat(),
+        }
 
         return jsonify({
-            'error': 'Login failed',
-            'message': 'Invalid email or password'
-        }), 401
-
+            'message': 'Login successful',
+            'token': token,
+            'user': user_data
+        })
     except Exception as e:
-        print(f"Error during login: {str(e)}")
+        print(f"[DEBUG] Error during login: {str(e)}")
         return jsonify({
             'error': 'Login failed',
             'message': str(e)
         }), 500
-
 
 @app.route('/user/searches', methods=['GET'])
 @token_required
