@@ -2,7 +2,8 @@ from dotenv import load_dotenv
 from flask import Flask, request, jsonify, current_app
 from flask_mail import Mail, Message
 from flask_cors import CORS
-from google.auth.transport import requests
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 from sqlalchemy import func
 
 from models import db, User, ArticleSearch, SimilarArticle, ArticleRequest
@@ -43,12 +44,12 @@ def create_app():
     CORS(app, resources={
         r"/*": {
             "origins": [
-                "chrome-extension://jknabnhokhooponmdfanhjonneoeckjm",  # Your extension ID
+                "chrome-extension://kmgjckbbdjcmoeflecnlmndlgdjfkdfl",  # Your extension ID
                 "http://localhost:5000",  # Local development
                 "http://172.20.10.9:5000",  # Add your phone's network connection
-                "capacitor://localhost",   # For Capacitor if you're using it
-                "http://localhost",        # Generic localhost
-                "*"                        # Allow all origins (use for testing only!)
+                "capacitor://localhost",  # For Capacitor if you're using it
+                "http://localhost",  # Generic localhost
+                "*"  # Allow all origins (use for testing only!)
             ],
             "methods": ["GET", "POST", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"]
@@ -59,8 +60,8 @@ def create_app():
     app.config['CX_ID'] = os.getenv("CX_ID")
     app.config['VISION_API_KEY'] = os.getenv("VISION_API_KEY")
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
-    app.config['GOOGLE_CLIENT_ID'] = "1029076451566-fdl9g8jq85793ej9290cddon3dt2d6rt.apps.googleusercontent.com",
     app.config['EMAIL_VERIFICATION_SECRET_KEY'] = os.getenv('EMAIL_VERIFICATION_SECRET_KEY')
+    app.config['GOOGLE_CLIENT_ID'] = "94517049358-tgqqobr0kk38dofd1h5l0bm019url60c.apps.googleusercontent.com"
 
     # Database configuration
     DB_USER = os.getenv("DB_USER")
@@ -176,7 +177,7 @@ def scrap_and_search(current_user):
                 'images_data': [],
                 'website_credibility': website_credibility['credibility_score'],
                 'article_id': past_article.id,
-                'objectivity_score': past_article.objectivity_score , # Fixed: Use dot notation
+                'objectivity_score': past_article.objectivity_score,  # Fixed: Use dot notation
                 'bias_prediction': past_article.bias_prediction,
                 'bias_probabilities': past_article.bias_probabilities
             })
@@ -265,6 +266,7 @@ def scrap_and_search(current_user):
         # Rollback any database changes if there was an error
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/user/register', methods=['POST'])
 def register_user():
@@ -561,56 +563,45 @@ def update_user_plan(current_user):
         return jsonify({'error': 'Failed to update plan'}), 500
 
 
-@app.route('/login/google/callback', methods=['POST'])
-def google_auth_callback():
+@app.route('/auth/google', methods=['POST'])
+def google_auth():
+    """
+    Endpoint for Google Sign-In authentication.
+    Receives Google user info from the frontend and either creates a new user
+    or logs in an existing user based on the Google account email.
+    """
     try:
         data = request.json
-        google_token = data.get('google_token')
+        google_id = data.get('google_id')
         email = data.get('email')
-        name = data.get('name')
+        name = data.get('name', '')
 
-        if not google_token or not email:
-            return jsonify({
-                'error': 'Missing credentials',
-                'message': 'Google token and email are required'
-            }), 400
+        if not google_id or not email:
+            return jsonify({'error': 'Missing required user information'}), 400
 
-        # Verify the token with Google
-        google_response = requests.get(
-            'https://www.googleapis.com/oauth2/v3/tokeninfo',
-            params={'access_token': google_token}
-        )
-
-        if not google_response.ok:
-            return jsonify({
-                'error': 'Invalid token',
-                'message': 'Failed to verify Google token'
-            }), 401
-
-        google_data = google_response.json()
-
-        # Verify the audience matches our client ID
-        if google_data.get('aud') != app.config['GOOGLE_CLIENT_ID']:
-            return jsonify({
-                'error': 'Invalid client',
-                'message': 'Token was not issued for this application'
-            }), 401
-
-        # Check if user exists
-        user = User.query.filter_by(email=email).first()
+        # Find user by Google ID or email
+        user = User.query.filter_by(google_id=google_id).first()
 
         if not user:
-            # Create new user
-            user = User(
-                email=email,
-                name=name,
-                google_id=google_data.get('sub')
-            )
-            # Set a random password for Google users
-            random_password = os.urandom(24).hex()
-            user.set_password(random_password)
+            # Check if a user with this email exists
+            user = User.query.filter_by(email=email).first()
 
-            db.session.add(user)
+            if user:
+                # Update existing user with Google ID
+                user.google_id = google_id
+            else:
+                # Create new user
+                user = User(
+                    email=email,
+                    google_id=google_id,
+                    subscription_plan="Free"
+                )
+                # Set a random password for Google users
+                random_password = os.urandom(24).hex()
+                user.set_password(random_password)
+
+                db.session.add(user)
+
             db.session.commit()
 
         # Generate JWT token
@@ -620,8 +611,13 @@ def google_auth_callback():
         }, app.config['JWT_SECRET_KEY'], algorithm='HS256')
 
         return jsonify({
-            'message': 'Login successful',
-            'token': token
+            'message': 'Google authentication successful',
+            'token': token,
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'subscription_plan': user.subscription_plan
+            }
         })
 
     except Exception as e:

@@ -1,9 +1,9 @@
-// AuthService is a class that handles all authentication-related tasks
+// auth-service.js
 export default class AuthService {
-    // Constructor takes the API URL as a parameter
     constructor(apiUrl) {
-        this.apiUrl = apiUrl;  // Store the API URL (e.g., 'http://your-backend-url')
+        this.apiUrl = apiUrl;  // Store the API URL (e.g., 'http://localhost:5000')
         this.token = localStorage.getItem('token');  // Get token from localStorage if it exists
+        this.googleClientId = "94517049358-tgqqobr0kk38dofd1h5l0bm019url60c.apps.googleusercontent.com"; // Google Client ID
     }
 
     // Method to handle user login
@@ -27,109 +27,84 @@ export default class AuthService {
             // If login successful, save token
             this.token = data.token;
             localStorage.setItem('token', data.token);
-            return { success: true };
+            return { success: true, user: data.user };
 
         } catch (error) {
             return { success: false, error: error.message };
         }
     }
 
-    // New method to handle Google Sign-In
+    // Method to handle Google Sign-In
     async googleSignIn() {
-        try {
-            // Get Google OAuth token using Chrome Identity API
-            const googleToken = await this.getGoogleToken();
+        return new Promise((resolve, reject) => {
+            // Use chrome.identity.getAuthToken to get an OAuth token
+            chrome.identity.getAuthToken({ interactive: true }, async (token) => {
+                if (chrome.runtime.lastError) {
+                    reject(new Error(chrome.runtime.lastError.message));
+                    return;
+                }
 
-            // Get user info from Google
-            const userInfo = await this.getGoogleUserInfo(googleToken);
+                try {
+                    // Get user info from Google with the token
+                    const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
 
-            // Send Google token and user info to your backend
-            const response = await fetch(`${this.apiUrl}/login/google/callback`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    google_token: googleToken,
-                    email: userInfo.email,
-                    name: userInfo.name
-                })
-            });
+                    if (!userInfoResponse.ok) {
+                        throw new Error('Failed to get user info from Google');
+                    }
 
-            const data = await response.json();
+                    const userInfo = await userInfoResponse.json();
 
-            if (!response.ok) {
-                throw new Error(data.message || 'Google sign-in failed');
-            }
+                    // Now send the user info to your backend instead of the raw token
+                    const response = await fetch(`${this.apiUrl}/auth/google`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            google_id: userInfo.sub,
+                            email: userInfo.email,
+                            name: userInfo.name
+                        })
+                    });
 
-            // If login successful, save token
-            this.token = data.token;
-            localStorage.setItem('token', data.token);
-            return { success: true };
+                    const data = await response.json();
 
-        } catch (error) {
-            console.error('Google sign-in error:', error);
-            return { success: false, error: error.message };
-        }
-    }
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Google authentication failed');
+                    }
 
-    // Helper method to get Google OAuth token
-    async getGoogleToken() {
-        try {
-            const manifest = chrome.runtime.getManifest();
-
-            // Get token using Chrome Identity API
-            const token = await chrome.identity.getAuthToken({
-                interactive: true,
-                scopes: [
-                    'https://www.googleapis.com/auth/userinfo.email',
-                    'https://www.googleapis.com/auth/userinfo.profile'
-                ]
-            });
-
-            if (!token) {
-                throw new Error('Failed to get Google token');
-            }
-
-            return token;
-        } catch (error) {
-            console.error('Error getting Google token:', error);
-            throw new Error('Google authentication failed');
-        }
-    }
-
-    // Helper method to get user info from Google
-    async getGoogleUserInfo(token) {
-        try {
-            const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
+                    // If auth successful, save token
+                    this.token = data.token;
+                    localStorage.setItem('token', data.token);
+                    resolve({ success: true, user: data.user });
+                } catch (error) {
+                    console.error('Google sign-in error:', error);
+                    reject(error);
                 }
             });
-
-            if (!response.ok) {
-                throw new Error('Failed to get user info from Google');
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error getting user info:', error);
-            throw new Error('Failed to get user information');
-        }
+        });
     }
 
-    // Method to handle token revocation for Google Sign-Out
-    async revokeGoogleToken() {
-        try {
-            const token = await chrome.identity.getAuthToken({ interactive: false });
-            if (token) {
-                await chrome.identity.removeCachedAuthToken({ token });
-                // Optional: Also revoke on Google's servers
-                await fetch(`https://accounts.google.com/o/oauth2/revoke?token=${token}`);
+    // Helper method to dynamically load the Google API script
+    loadGoogleApi() {
+        return new Promise((resolve, reject) => {
+            // Check if script already exists
+            if (document.querySelector('script[src*="apis.google.com/js/api.js"]')) {
+                resolve();
+                return;
             }
-        } catch (error) {
-            console.error('Error revoking Google token:', error);
-        }
+
+            // Create script tag
+            const script = document.createElement('script');
+            script.src = 'https://apis.google.com/js/api.js';
+            script.async = true;
+            script.defer = true;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error('Failed to load Google API'));
+            document.head.appendChild(script);
+        });
     }
 
     async register(name, email, password) {
@@ -140,7 +115,7 @@ export default class AuthService {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({email, password })
+                body: JSON.stringify({ name, email, password })
             });
 
             const data = await response.json();
@@ -196,10 +171,8 @@ export default class AuthService {
             // Decode token payload (assumes JWT format: header.payload.signature)
             const payload = JSON.parse(atob(token.split('.')[1]));
             // exp is in seconds; convert to milliseconds
-            if (payload.exp * 1000 < Date.now()) {
-                return false;  // token expired
-            }
-            return true; // token is valid
+            return payload.exp * 1000 >= Date.now();
+             // token is valid
         } catch (error) {
             return false;
         }
@@ -210,15 +183,37 @@ export default class AuthService {
         return !!this.token && this.isTokenValid();
     }
 
-    // Updated logout method to handle both regular and Google sign-out
+    // Logout method
     async logout() {
         try {
-            await this.revokeGoogleToken(); // Revoke Google token if it exists
-        } catch (error) {
-            console.error('Error during Google logout:', error);
-        } finally {
+            // First clear the authentication token
             this.token = null;
             localStorage.removeItem('token');
+            localStorage.removeItem('user');
+
+            // If using Chrome extension environment and user signed in with Google
+            if (typeof chrome !== 'undefined' && chrome.identity) {
+                // Try to remove the cached token without any complex logic
+                try {
+                    chrome.identity.getAuthToken({ 'interactive': false }, function(token) {
+                        if (token) {
+                            chrome.identity.removeCachedAuthToken({ 'token': token });
+                        }
+                    });
+                } catch (err) {
+                    console.warn('Error clearing Google token:', err);
+                    // Continue regardless of error
+                }
+            }
+
+            return { success: true };
+        } catch (error) {
+            console.error('Error during logout:', error);
+            // Even if there's an error, make sure tokens are cleared
+            this.token = null;
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            return { success: false, error: error.message };
         }
     }
 }

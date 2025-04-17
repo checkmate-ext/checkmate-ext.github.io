@@ -37,10 +37,11 @@
     "128": "images/icon128.png"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
+    "extension_pages": "script-src 'self'; object-src 'self'",
+    "sandbox": "sandbox allow-scripts; script-src 'self' https://apis.google.com https://www.gstatic.com https://www.googleapis.com https://securetoken.googleapis.com; object-src 'self'"
   },
   "oauth2": {
-    "client_id": "1029076451566-fdl9g8jq85793ej9290cddon3dt2d6rt.apps.googleusercontent.com",
+    "client_id": "94517049358-tgqqobr0kk38dofd1h5l0bm019url60c.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/userinfo.profile"
