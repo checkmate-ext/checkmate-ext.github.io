@@ -740,6 +740,111 @@ def google_userinfo_auth():
             'message': str(e)
         }), 500
 
+
+@app.route('/auth/facebook', methods=['POST'])
+def facebook_auth():
+    try:
+        data = request.json
+        facebook_token = data.get('facebook_token')
+
+        if not facebook_token:
+            return jsonify({'error': 'Missing Facebook token'}), 400
+
+        # Step 1: Verify the token with Facebook Graph API
+        app_id = os.getenv('FACEBOOK_APP_ID')
+        app_secret = os.getenv('FACEBOOK_APP_SECRET')
+        
+        # First, get app token for verification
+        app_token_url = f"https://graph.facebook.com/oauth/access_token?client_id={app_id}&client_secret={app_secret}&grant_type=client_credentials"
+        app_token_response = requests.get(app_token_url)
+        
+        if not app_token_response.ok:
+            return jsonify({'error': 'Failed to obtain app token for verification'}), 500
+            
+        app_token = app_token_response.json().get('access_token')
+        
+        # Verify the user token
+        token_verification_url = f"https://graph.facebook.com/debug_token?input_token={facebook_token}&access_token={app_token}"
+        verification_response = requests.get(token_verification_url)
+        
+        if not verification_response.ok:
+            return jsonify({'error': 'Failed to verify token with Facebook'}), 401
+            
+        verification_data = verification_response.json().get('data', {})
+        
+        # Check if token is valid
+        if not verification_data.get('is_valid'):
+            return jsonify({'error': 'Invalid Facebook token'}), 401
+
+        # Step 2: Get user data from Facebook
+        user_data_url = f"https://graph.facebook.com/me?fields=id,name,email&access_token={facebook_token}"
+        user_response = requests.get(user_data_url)
+        
+        if not user_response.ok:
+            return jsonify({'error': 'Failed to get user data from Facebook'}), 500
+            
+        fb_user_data = user_response.json()
+        facebook_id = fb_user_data.get('id')
+        email = fb_user_data.get('email')
+        name = fb_user_data.get('name', '')
+
+        if not facebook_id or not email:
+            return jsonify({'error': 'Facebook account missing required information (email)'}), 400
+
+        # Step 3: Find user by Facebook ID or email
+        user = User.query.filter_by(facebook_id=facebook_id).first()
+
+        if not user:
+            # Check if a user with this email exists
+            user = User.query.filter_by(email=email).first()
+
+            if user:
+                # Update existing user with Facebook ID
+                user.facebook_id = facebook_id
+                # Don't try to set name if not in model
+            else:
+                # Create new user - only use fields that exist in your model
+                user = User(
+                    email=email,
+                    facebook_id=facebook_id,
+                    is_verified=True,  # Facebook users are considered verified
+                    subscription_plan="Free"
+                )
+                
+                # Set a random password for Facebook users
+                random_password = os.urandom(24).hex()
+                user.set_password(random_password)
+
+                db.session.add(user)
+
+            db.session.commit()
+
+        # Step 4: Generate JWT token
+        token = jwt.encode({
+            'user_id': user.id,
+            'exp': datetime.utcnow() + timedelta(hours=1)
+        }, app.config['JWT_SECRET_KEY'], algorithm='HS256')
+
+        # Return only fields that exist in your User model
+        return jsonify({
+            'message': 'Facebook authentication successful',
+            'token': token,
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'subscription_plan': user.subscription_plan
+                # Don't include 'name' here
+            }
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error during Facebook authentication: {str(e)}")
+        return jsonify({
+            'error': 'Authentication failed',
+            'message': str(e)
+        }), 500
+
 @app.route('/user/update-password', methods=['POST'])
 @token_required
 def update_password(current_user):

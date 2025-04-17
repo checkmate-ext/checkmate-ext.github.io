@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordError = document.getElementById('passwordError');
     const originalSignInButtonText = signInButton.innerHTML;
     const googleButton = document.querySelector('.social-button:first-child'); // Google button
-    const facebookButton = document.querySelector('.social-button:last-child'); // Facebook button    const rememberMeCheckbox = document.getElementById('rememberMe'); // New checkbox element
+    const facebookButton = document.getElementById('facebookLoginBtn'); // Facebook button    const rememberMeCheckbox = document.getElementById('rememberMe'); // New checkbox element
     const rememberMeCheckbox = document.getElementById('rememberMe'); // New checkbox element
 
     // Function to show error
@@ -95,11 +95,73 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Handle Facebook sign-in (placeholder for future implementation)
-    facebookButton.addEventListener('click', () => {
-        showError('Facebook sign-in is not implemented yet');
-    });
 
+    function facebookLogin() {
+        // Clear any existing errors
+        clearError();
+    
+        // Save the original button content and show loading state
+        const originalButtonHTML = facebookButton.innerHTML;
+        facebookButton.innerHTML = '<div class="loading-spinner"></div> Facebook';
+        facebookButton.disabled = true; // Disable button during login attempt
+    
+        chrome.identity.launchWebAuthFlow({
+            url: "https://www.facebook.com/v19.0/dialog/oauth?client_id=505389282507431&redirect_uri=https://cagdnalgeabaefilkiopdkmjlifcpnac.chromiumapp.org/facebook-callback&response_type=token&scope=email,public_profile",
+            interactive: true
+        }, async function(redirectUrl) {
+            if (chrome.runtime.lastError || !redirectUrl) {
+                console.error("Facebook login failed:", chrome.runtime.lastError);
+                facebookButton.innerHTML = originalButtonHTML;
+                facebookButton.disabled = false;
+                showError("Facebook login failed. Please try again.");
+                return;
+            }
+    
+            // Extract the access token from the redirect URL
+            const accessToken = new URL(redirectUrl).hash.match(/access_token=([^&]+)/)?.[1];
+            
+            if (!accessToken) {
+                console.error("Access token not found in redirect URL:", redirectUrl);
+                facebookButton.innerHTML = originalButtonHTML;
+                facebookButton.disabled = false;
+                showError("Could not authenticate with Facebook. Please try again.");
+                return;
+            }
+    
+            try {
+                // Send the token to your backend using the facebookSignIn method from authService
+                const result = await authService.facebookSignIn(accessToken);
+                
+                if (result.success) {
+                    // Set the userEmail in localStorage if not already done in the service
+                    if (result.user && result.user.email) {
+                        localStorage.setItem('userEmail', result.user.email);
+                    }
+                    
+                    // Navigate to main menu
+                    navigateTo('MainMenuPage.html');
+                } else {
+                    facebookButton.innerHTML = originalButtonHTML;
+                    facebookButton.disabled = false;
+                    showError(result.error || 'Facebook authentication failed');
+                }
+            } catch (error) {
+                console.error("Error during Facebook authentication:", error);
+                facebookButton.innerHTML = originalButtonHTML;
+                facebookButton.disabled = false;
+                showError(error.message || 'Facebook authentication failed');
+            }
+        });
+    }
+    
+    // Make sure the Facebook button has the correct event listener
+    if (facebookButton) {
+        facebookButton.addEventListener('click', facebookLogin);
+    } else {
+        console.error("Facebook login button not found. Make sure the element with id 'facebookLoginBtn' exists.");
+    }
+
+    
     // Check if user is already authenticated and redirect if needed
     if (authService.isAuthenticated()) {
         navigateTo('MainMenuPage.html');

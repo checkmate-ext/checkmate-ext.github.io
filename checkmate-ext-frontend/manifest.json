@@ -9,6 +9,9 @@
     "tabs",
     "identity"
   ],
+  "host_permissions": [
+    "https://*.facebook.com/"
+  ],
   "web_accessible_resources": [{
     "resources": [
       "/extension-ui/pages/EmailVerification.html",

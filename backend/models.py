@@ -15,6 +15,7 @@ class User(db.Model):
     subscription_plan = db.Column(db.String(50), default="Free")
     article_requests = db.relationship('ArticleRequest', backref='user', lazy=True)
     google_id = db.Column(db.String(128), unique=True, nullable=True)
+    facebook_id = db.Column(db.String(128), nullable=True, unique=True)
     is_verified = db.Column(db.Boolean, default=False)
 
     def set_password(self, password):

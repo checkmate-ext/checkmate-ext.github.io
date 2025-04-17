@@ -110,6 +110,40 @@ export default class AuthService {
         });
     }
 
+
+    async facebookSignIn(accessToken) {
+        try {
+            // Send the Facebook access token to your backend
+            const response = await fetch(`${this.apiUrl}/auth/facebook`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ facebook_token: accessToken })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Facebook authentication failed');
+            }
+
+            // Store token in class property and localStorage
+            this.token = data.token;
+            localStorage.setItem('token', data.token);
+            
+            // Store user email only, not the entire user object
+            if (data.user && data.user.email) {
+                localStorage.setItem('userEmail', data.user.email);
+            }
+
+            return { success: true, user: data.user };
+        } catch (error) {
+            console.error('Facebook sign-in error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
     async register(name, email, password) {
         try {
             // Make POST request to register endpoint

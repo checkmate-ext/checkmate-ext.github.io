@@ -15,7 +15,7 @@ function navigateTo(page) {
     // If navigating to a protected page, check for token first
     if (protectedPages.includes(page)) {
         const token = localStorage.getItem('token');
-        if (!token) {
+        if (!token || !isTokenValid()) {
             // If no valid token, go to sign-in
             window.location.href = 'FirstPage.html';
             return;
