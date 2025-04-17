@@ -34,10 +34,10 @@ export default class AuthService {
         }
     }
 
-    // Method to handle Google Sign-In
+    // auth-service.js - Corrected Google Auth Method
     async googleSignIn() {
         return new Promise((resolve, reject) => {
-            // Use chrome.identity.getAuthToken to get an OAuth token
+            // Use Chrome's identity API to get an access token
             chrome.identity.getAuthToken({ interactive: true }, async (token) => {
                 if (chrome.runtime.lastError) {
                     reject(new Error(chrome.runtime.lastError.message));
@@ -46,9 +46,10 @@ export default class AuthService {
 
                 try {
                     // Get user info from Google with the token
-                    const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
+                    const userInfoResponse = await fetch(
+                        'https://www.googleapis.com/oauth2/v3/userinfo',
+                        { headers: { Authorization: `Bearer ${token}` }}
+                    );
 
                     if (!userInfoResponse.ok) {
                         throw new Error('Failed to get user info from Google');
@@ -56,8 +57,8 @@ export default class AuthService {
 
                     const userInfo = await userInfoResponse.json();
 
-                    // Now send the user info to your backend instead of the raw token
-                    const response = await fetch(`${this.apiUrl}/auth/google`, {
+                    // Send the user info and access token to your backend
+                    const response = await fetch(`${this.apiUrl}/auth/google_userinfo`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -65,7 +66,9 @@ export default class AuthService {
                         body: JSON.stringify({
                             google_id: userInfo.sub,
                             email: userInfo.email,
-                            name: userInfo.name
+                            name: userInfo.name,
+                            // Include the access token for verification
+                            access_token: token
                         })
                     });
 

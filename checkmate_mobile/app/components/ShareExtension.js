@@ -18,8 +18,15 @@ const ShareExtension = ({ url, title, compact = false }) => {
             text: '#E8DCC4',
         },
     };
-
     const handleShare = async () => {
+        const deepLink = generateShareUrl(url)   // now an exp://… link
+        await Share.share({
+            message: `CheckMate analysis:\n${title}\n${url}\n\nOpen in app: ${deepLink}`,
+            url: Platform.OS === 'ios' ? deepLink : url
+        })
+    }
+
+ /*   const handleShare = async () => {
         // Haptic feedback
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
@@ -47,7 +54,7 @@ const ShareExtension = ({ url, title, compact = false }) => {
         } catch (error) {
             console.error('Error sharing article:', error);
         }
-    };
+    };*/
 
     if (compact) {
         return (

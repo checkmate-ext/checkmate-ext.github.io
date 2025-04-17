@@ -1,10 +1,12 @@
 // app/context/DeepLinkContext.js
 import React, { createContext, useContext, useEffect } from 'react';
-import { Linking, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import { router } from 'expo-router';
 import axios from 'axios';
 import { API_URL } from '../constants/Config';
+import * as Linking from 'expo-linking'
 
+const prefix = Linking.createURL('/')  // e.g. exp://192.168.1.x:19000/
 // Create context
 const DeepLinkContext = createContext({});
 
@@ -49,7 +51,7 @@ export function DeepLinkProvider({ children }) {
     }, []);
 
     // Function to create share URL
-    const generateShareUrl = (articleUrl) => {
+  /*  const generateShareUrl = (articleUrl) => {
         if (!articleUrl) return null;
 
         if (Platform.OS === 'ios') {
@@ -57,7 +59,13 @@ export function DeepLinkProvider({ children }) {
         } else {
             return `checkmate://${encodeURIComponent(articleUrl)}`;
         }
-    };
+    };*/
+
+    const generateShareUrl = (articleUrl) =>
+        Linking.createURL('new-search', {
+            queryParams: { sharedUrl: encodeURIComponent(articleUrl) }
+        })
+
 
     return (
         <DeepLinkContext.Provider value={{ generateShareUrl }}>

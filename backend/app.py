@@ -1,3 +1,4 @@
+import requests
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, current_app
 from flask_mail import Mail, Message
@@ -652,38 +653,60 @@ def update_user_plan(current_user):
         return jsonify({'error': 'Failed to update plan'}), 500
 
 
-@app.route('/auth/google', methods=['POST'])
-def google_auth():
+@app.route('/auth/google_userinfo', methods=['POST'])
+def google_userinfo_auth():
     """
-    Endpoint for Google Sign-In authentication.
-    Receives Google user info from the frontend and either creates a new user
-    or logs in an existing user based on the Google account email.
+    Endpoint for Google Sign-In authentication using userinfo approach.
+    Receives Google user info and access token from the frontend,
+    verifies the token against Google's API, and authenticates the user.
     """
     try:
         data = request.json
         google_id = data.get('google_id')
         email = data.get('email')
         name = data.get('name', '')
+        access_token = data.get('access_token')
 
-        if not google_id or not email:
-            return jsonify({'error': 'Missing required user information'}), 400
+        if not google_id or not email or not access_token:
+            return jsonify({'error': 'Missing required information'}), 400
+
+        # Verify the token with Google by validating it against the tokeninfo endpoint
+        try:
+            tokeninfo_url = f"https://www.googleapis.com/oauth2/v3/tokeninfo?access_token={access_token}"
+            response = requests.get(tokeninfo_url)
+
+            if response.status_code != 200:
+                return jsonify({'error': 'Invalid access token'}), 401
+
+            token_info = response.json()
+
+            # Verify the audience matches your client ID
+            if token_info.get('aud') != app.config['GOOGLE_CLIENT_ID']:
+                return jsonify({'error': 'Token not intended for this application'}), 401
+
+            # Verify that the token's user ID matches the one sent
+            if token_info.get('sub') != google_id:
+                return jsonify({'error': 'User ID mismatch'}), 401
+
+        except Exception as e:
+            return jsonify({'error': 'Failed to verify token', 'message': str(e)}), 401
 
         # Find user by Google ID or email
         user = User.query.filter_by(google_id=google_id).first()
 
         if not user:
-            # Check if a user with this email exists
             user = User.query.filter_by(email=email).first()
-
             if user:
                 # Update existing user with Google ID
                 user.google_id = google_id
+                user.is_verified = True
             else:
                 # Create new user
                 user = User(
                     email=email,
                     google_id=google_id,
-                    subscription_plan="Free"
+                    subscription_plan="Free",
+                    is_verified=True
                 )
                 # Set a random password for Google users
                 random_password = os.urandom(24).hex()
@@ -693,7 +716,7 @@ def google_auth():
 
             db.session.commit()
 
-        # Generate JWT token
+        # Generate JWT token for your app
         token = jwt.encode({
             'user_id': user.id,
             'exp': datetime.utcnow() + timedelta(hours=1)
@@ -716,7 +739,6 @@ def google_auth():
             'error': 'Authentication failed',
             'message': str(e)
         }), 500
-
 
 @app.route('/user/update-password', methods=['POST'])
 @token_required
