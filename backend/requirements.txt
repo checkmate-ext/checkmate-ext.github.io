@@ -29,3 +29,4 @@ setuptools==69.0.3
 google-genai
 
 itsdangerous
+iyzipay

@@ -348,6 +348,40 @@
                 padding: 8px 12px;
             }
         }
+        #payment-form {
+            display: none;
+            padding: 20px;
+            background: #fafafa;
+            border-top: 1px solid #ddd;
+            position: relative;
+            z-index: 20;
+        }
+        #payment-form label {
+            font-size: 0.9rem;
+            margin-top: 10px;
+            display: block;
+        }
+        #payment-form input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #submit-payment {
+            margin-top: 15px;
+            width: 100%;
+            padding: 10px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            display: block;
+            margin-top: 15px;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -375,6 +409,31 @@
             <!-- Plan cards will be inserted here dynamically -->
         </div>
 
+        <!-- PAYMENT FORM (hidden by default) -->
+        <div id="payment-form">
+            <label for="card-number">Card Number</label>
+            <input id="card-number" type="text" placeholder="•••• •••• •••• ••••" />
+
+            <div style="display:flex; gap:8px;">
+                <div style="flex:1;">
+                    <label for="card-month">Expiry Month</label>
+                    <input id="card-month" type="text" placeholder="MM" />
+                </div>
+                <div style="flex:1;">
+                    <label for="card-year">Expiry Year</label>
+                    <input id="card-year" type="text" placeholder="YYYY" />
+                </div>
+            </div>
+
+            <label for="card-cvc">CVC</label>
+            <input id="card-cvc" type="text" placeholder="CVC" />
+
+            <label for="card-holder">Cardholder Name</label>
+            <input id="card-holder" type="text" placeholder="Name on card" />
+
+            <button id="submit-payment">Pay</button>
+        </div>
+
         <!-- Bottom Icons -->
         <div class="bottom-icons">
             <img src="../images/settings-icon.png" alt="Settings">
@@ -384,6 +443,7 @@
             </button>
         </div>
     </div>
+    <script src="https://sandbox-api.iyzipay.com/iyzipay.js"></script>
     <script src="../navigation/navigate.js"></script>
     <script src="../scripts/pricing.js"></script>
     <script type="module" src="../scripts/logout-script.js"></script>

@@ -1,4 +1,5 @@
 import requests
+import iyzipay
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, current_app
 from flask_mail import Mail, Message
@@ -14,11 +15,16 @@ from ArticleAnalyzer import ArticleAnalyzer, validate_article_data, ArticleExtra
 import os
 import random
 import jwt
+import json
 from datetime import datetime, timedelta
 from functools import wraps
 from website_checker import check_website_score
 from email_verification.TOTPVerification import TOTPVerification
 
+PLAN_PRICES = {
+    'premium': '49.99',
+    'enterprise': '199.99'
+}
 
 def create_app():
     """
@@ -36,6 +42,10 @@ def create_app():
     app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
     app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
+
+    # Load İyzico credentials from .env
+    app.config['IYZICO_API_KEY'] = os.getenv('IYZICO_API_KEY')
+    app.config['IYZICO_SECRET_KEY'] = os.getenv('IYZICO_SECRET_KEY')
 
     # Initialize Flask-Mail
     mail = Mail(app)
@@ -95,6 +105,13 @@ def create_app():
 app = create_app()
 verifier = TOTPVerification(app.config['EMAIL_VERIFICATION_SECRET_KEY'])
 
+# helper to build options
+def iyzi_options():
+    return {
+        'api_key':    current_app.config['IYZICO_API_KEY'],
+        'secret_key': current_app.config['IYZICO_SECRET_KEY'],
+        'base_url':   'sandbox-api.iyzipay.com'
+    }
 
 def token_required(f):
     """
@@ -344,7 +361,7 @@ def register_user():
         new_user.set_password(password)
         db.session.add(new_user)
         db.session.commit()
-        form_link = "https://docs.google.com/forms/d/e/13xinckAbE8UdKVr_ILxrPqueQfMRy85MaCuJUU-pXv4/viewform?usp=sharing"
+        form_link = "https://forms.gle/8RzCPFMX5YaxuWW58"
         send_registration_email(email, form_link)
         token = generate_confirmation_token(email)
         send_confirmation_email(email, token)
@@ -628,7 +645,6 @@ def verify_email():
         print(f"Error in email verification: {str(e)}")
         return jsonify({"error": "Verification failed", "message": str(e)}), 500
 
-
 @app.route('/user/update-plan', methods=['POST'])
 @token_required
 def update_user_plan(current_user):
@@ -652,6 +668,83 @@ def update_user_plan(current_user):
         print(f"Error updating plan: {str(e)}")  # Add logging
         return jsonify({'error': 'Failed to update plan'}), 500
 
+@app.route('/user/subscribe', methods=['POST'])
+@token_required
+def subscribe_user(current_user):
+    data = request.json
+    plan = data.get('plan')
+    payment_token = data.get('paymentToken')
+
+    if plan not in PLAN_PRICES or not payment_token:
+        return jsonify({'error': 'Plan and valid paymentToken required'}), 400
+
+    price = PLAN_PRICES[plan]
+
+    # build the payment request
+    payment_request = {
+        'locale': 'tr',
+        'conversationId': str(current_user.id),
+        'price': price,
+        'paidPrice': price,
+        'installment': '1',
+        'paymentChannel': 'WEB',
+        'paymentGroup': 'PRODUCT',
+        'paymentCard': {
+            'cardToken': payment_token,
+            'cardUserKey': current_user.iyzico_customer_id or ''
+        },
+        'buyer': {
+            'id': str(current_user.id),
+            'email': current_user.email,
+            'name': current_user.email.split('@')[0],
+            'surname': '',
+            'gsmNumber': '',
+            'identityNumber': '',
+            'registrationAddress': '',
+            'ip': request.remote_addr,
+            'city': '',
+            'country': 'Turkey',
+            'zipCode': ''
+        },
+        'basketItems': [{
+            'id': f"PLAN_{plan}_{current_user.id}",
+            'price': price,
+            'name': f'{plan} Subscription',
+            'category1': 'Subscription',
+            'itemType': 'VIRTUAL'
+        }],
+        'registerCard': '1'   # <-- return cardUserKey
+    }
+
+    # pass your sandbox credentials here
+    options = {
+        'api_key':    current_app.config['IYZICO_API_KEY'],
+        'secret_key': current_app.config['IYZICO_SECRET_KEY'],
+        'base_url':   'https://sandbox-api.iyzipay.com'
+    }
+
+    # execute the payment
+    payment_resp = iyzipay.Payment().create(payment_request, options).read()
+    if payment_resp.get('status') != 'success':
+        return jsonify({
+            'error': 'Payment failed',
+            'message': payment_resp.get('errorMessage', 'Card was declined')
+        }), 402
+
+    # extract the new cardUserKey (for saving on the user record)
+    txn = (payment_resp.get('itemTransactions') or [{}])[0]
+    if txn.get('cardUserKey'):
+        current_user.iyzico_customer_id = txn['cardUserKey']
+        db.session.commit()
+
+    # finally, upgrade their plan
+    current_user.subscription_plan = plan
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Subscription successful',
+        'plan': plan
+    }), 200
 
 @app.route('/auth/google_userinfo', methods=['POST'])
 def google_userinfo_auth():

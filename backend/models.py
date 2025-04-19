@@ -17,6 +17,7 @@ class User(db.Model):
     google_id = db.Column(db.String(128), unique=True, nullable=True)
     facebook_id = db.Column(db.String(128), nullable=True, unique=True)
     is_verified = db.Column(db.Boolean, default=False)
+    iyzico_customer_id = db.Column(db.String(128), nullable=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
