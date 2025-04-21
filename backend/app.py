@@ -533,13 +533,24 @@ def get_article_data(current_user, article_id):
                 'similarity_score': sim_article.similarity_score
             } for sim_article in similar_articles]
 
+            # Create a response with all needed data, matching the structure from scrap_and_search
             return jsonify({
                 'reliability_score': article.reliability_score,
+                'message': f"Results for {article.url}",
                 'article': article_data,
                 'similar_articles': similar_articles_data,
-                'images_data': [],
+                'images_data': [],  # No image data needed as per your request
                 'website_credibility': website_credibility['credibility_score'],
+                'article_id': article.id,
+                'objectivity_score': article.objectivity_score,  # Include objectivity score
+                'bias_prediction': article.bias_prediction,      # Include bias prediction
+                'bias_probabilities': article.bias_probabilities # Include bias probabilities
             })
+        else:
+            return jsonify({
+                'error': 'Article not found',
+                'message': f'Article with ID {article_id} does not exist'
+            }), 404
 
     except Exception as e:
         print(f"Error retrieving article data: {str(e)}")
@@ -547,7 +558,6 @@ def get_article_data(current_user, article_id):
             'error': 'Failed to retrieve article data',
             'message': str(e)
         }), 500
-
 
 def generate_verification_code():
     return str(random.randint(100000, 999999))
