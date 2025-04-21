@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Set the reliability score and color
     if (data.reliability_score !== undefined) {
-        reliabilityScoreBox.textContent = data.reliability_score;
+        reliabilityScoreBox.textContent = Math.round(data.reliability_score);
 
         if (data.reliability_score > 75) {
             reliabilityScoreBox.classList.add('green');
@@ -65,7 +65,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Set the objectivity score with color-based class
     if (objectivityScoreBox) {
         if (data.objectivity_score !== undefined && data.objectivity_score >= 0) {
-            const score = Math.round(data.objectivity_score * 100);
+            // Handle objectivity score that might be in 0-1 range or 0-100 range
+            const score = data.objectivity_score <= 1 
+                ? Math.round(data.objectivity_score * 100) 
+                : Math.round(data.objectivity_score);
+                
             objectivityScoreBox.textContent = score;
             
             // Add color class based on score
@@ -93,15 +97,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         tooltip.appendChild(tooltipText);
     }
 
-    // Set the bias score with color-based class
+    // Set the bias score with full text (not abbreviated)
     if (biasScoreBox) {
         if (data.bias_prediction) {
-            biasScoreBox.textContent = data.bias_prediction;
+            // Use full bias texts with line breaks for multi-word values
+            let biasText = data.bias_prediction;
+            
+            biasScoreBox.textContent = biasText;
+            
+            // Adjust font size based on length
+            if (biasText.length > 6) {
+                biasScoreBox.style.fontSize = '16px';
+            }
             
             // Default color class based on political bias
-            if (data.bias_prediction === "Center") {
+            if (biasText === "Center") {
                 biasScoreBox.classList.add('green');
-            } else if (data.bias_prediction === "Left" || data.bias_prediction === "Right") {
+            } else if (biasText === "Left" || biasText === "Right") {
                 biasScoreBox.classList.add('neutral');
             } else {
                 biasScoreBox.classList.add('red'); // For extreme bias
@@ -118,11 +130,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const tooltipText = document.createElement('span');
         tooltipText.className = 'tooltiptext';
-        tooltipText.textContent = 'Bias score indicates the political leaning of the article';
+        tooltipText.textContent = 'Political bias indicates the political leaning of the article';
         tooltip.appendChild(tooltipText);
     }
 
-    // Display similar articles with similarity scores (fixed theme color)
+    // Display similar articles with similarity scores
     if (data.similar_articles && data.similar_articles.length > 0) {
         data.similar_articles.forEach(article => {
             const articleElement = document.createElement('div');
