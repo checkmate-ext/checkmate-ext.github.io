@@ -64,8 +64,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Set the objectivity score with fixed theme color
-    if (objectivityScoreBox && data.objectivity_score !== undefined) {
-        objectivityScoreBox.textContent = objectivityScore;
+    if (objectivityScoreBox) {
+        if (data.objectivity_score !== undefined && data.objectivity_score >= 0) {
+            // Use the actual value from the data object, rounded to whole number
+            objectivityScoreBox.textContent = Math.round(data.objectivity_score * 100) + '%';
+        }
+        else {
+            objectivityScoreBox.textContent = 'N/A';
+        }
         
         // Use a single fixed class instead of color-based classes
         objectivityScoreBox.classList.add('theme-colored');
@@ -82,9 +88,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Set the bias score with fixed theme color
-    if (biasScoreBox && data.bias_score !== undefined) {
-        const biasScore = data.bias_prediction >= 0 ? data.bias_prediction : Math.floor(Math.random() * 100);
-        biasScoreBox.textContent = biasScore;
+    if (biasScoreBox) {
+        if (data.bias_prediction) {
+            biasScoreBox.textContent = data.bias_prediction;
+        } else {
+            biasScoreBox.textContent = 'N/A';
+        }
         
         // Use a single fixed class instead of color-based classes
         biasScoreBox.classList.add('theme-colored');
@@ -96,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const tooltipText = document.createElement('span');
         tooltipText.className = 'tooltiptext';
-        tooltipText.textContent = 'Bias score indicates the degree of political neutrality in the article';
+        tooltipText.textContent = 'Bias score indicates the political leaning of the article';
         tooltip.appendChild(tooltipText);
     }
 
@@ -202,4 +211,3 @@ document.addEventListener('DOMContentLoaded', async () => {
         detailsList.innerHTML = '<p>No image analysis data found.</p>';
     }
 });
-

@@ -28,6 +28,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Clear any mock history items
       historyList.innerHTML = '';
 
+      // Create a variable to track if any item is currently loading
+      let isAnyItemLoading = false;
+
       if (result.data && result.data.length > 0) {
         result.data.slice().reverse().forEach(search => {
           // Format date
@@ -51,7 +54,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           // Create history item container
           const item = document.createElement('div');
           item.classList.add('history-item');
+          
           item.addEventListener('click', async () => {
+            // Prevent any action if any item is already loading
+            if (isAnyItemLoading) return;
+            
             const articleId = search.id;
             if (!articleId) {
               alert('Article ID not found.');
@@ -59,6 +66,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           
             try {
+              // Set global loading state
+              isAnyItemLoading = true;
+              
+              // Add loading indicator to the clicked item
+              const loadingIndicator = document.createElement('div');
+              loadingIndicator.className = 'loading-spinner';
+              item.appendChild(loadingIndicator);
+              
+              // Add loading class to the clicked item
+              item.classList.add('loading');
+              
+              // Make all history items non-clickable by adding loading-disabled class
+              document.querySelectorAll('.history-item').forEach(historyItem => {
+                if (historyItem !== item) {
+                  historyItem.classList.add('loading-disabled');
+                }
+              });
+              
               const response = await fetch(`http://localhost:5000/article/${articleId}/`, {
                 method: 'GET',
                 headers: {
@@ -77,6 +102,21 @@ document.addEventListener('DOMContentLoaded', async () => {
               
             } catch (error) {
               console.error('Error fetching article data:', error);
+              
+              // Reset loading states
+              isAnyItemLoading = false;
+              
+              // Remove loading indicator from clicked item
+              const loadingIndicator = item.querySelector('.loading-spinner');
+              if (loadingIndicator) {
+                loadingIndicator.remove();
+              }
+              
+              // Make all items clickable again
+              document.querySelectorAll('.history-item').forEach(historyItem => {
+                historyItem.classList.remove('loading', 'loading-disabled');
+              });
+              
               alert('Failed to load article details.');
             }
           });
