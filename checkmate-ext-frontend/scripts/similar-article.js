@@ -100,15 +100,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Set the bias score with full text (not abbreviated)
     if (biasScoreBox) {
         if (data.bias_prediction) {
-            // Use full bias texts with line breaks for multi-word values
+            // Use bias text but ensure it fits within the box
             let biasText = data.bias_prediction;
             
-            biasScoreBox.textContent = biasText;
-            
-            // Adjust font size based on length
+            // Adjust font size based on text length
             if (biasText.length > 6) {
-                biasScoreBox.style.fontSize = '16px';
+                biasScoreBox.style.fontSize = '11px';
+            } else if (biasText.length > 4) {
+                biasScoreBox.style.fontSize = '12px';
             }
+            
+            biasScoreBox.textContent = biasText;
             
             // Default color class based on political bias
             if (biasText === "Center") {
