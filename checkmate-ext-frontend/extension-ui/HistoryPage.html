@@ -171,6 +171,36 @@
             opacity: 1;
             transform: scale(1.1) rotate(5deg);
         }
+
+        
+        .history-item.loading {
+            pointer-events: none;
+            opacity: 0.7;
+            position: relative;
+        }
+        
+        .history-item.loading-disabled {
+            pointer-events: none;
+            opacity: 0.4;
+        }
+        
+        .history-item .loading-spinner {
+            position: absolute;
+            top: calc(50% - 12px);
+            right: 12px;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(60, 179, 113, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+            z-index: 10;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
     </style>
 </head>
 <body>

@@ -9,43 +9,37 @@ from typing import Optional, List, Dict
 from urllib.parse import urljoin, urlparse
 import re
 
-def check_similarity(text1, text2):
+def check_similarity(text1: str, text2: str) -> float:
     import os
     from google import genai
     import numpy as np
 
-    # Get API key from environment variables
+    # 1) Grab your key (now you know it’s valid)
     api_key = os.getenv("GENAI_API_KEY")
-
     if not api_key:
-        print("Warning: GENAI_API_KEY not found in environment variables")
-        return 0.0
+        raise RuntimeError("GENAI_API_KEY is not set")
 
     client = genai.Client(api_key=api_key)
 
-    result1 = client.models.embed_content(
+    # 2) Embed both texts
+    resp1 = client.models.embed_content(
         model="text-embedding-004",
         contents=text1,
     )
-
-    result2 = client.models.embed_content(
+    resp2 = client.models.embed_content(
         model="text-embedding-004",
         contents=text2,
     )
 
-    embedding1 = np.array(result1.embeddings[0].values)
-    embedding2 = np.array(result2.embeddings[0].values)
+    v1 = np.array(resp1.embeddings[0].values)
+    v2 = np.array(resp2.embeddings[0].values)
 
-    def cosine_similarity(vec1, vec2):
-        dot_product = np.dot(vec1, vec2)
-        norm_vec1 = np.linalg.norm(vec1)
-        norm_vec2 = np.linalg.norm(vec2)
-        return dot_product / (norm_vec1 * norm_vec2)
-
-    similarity = cosine_similarity(embedding1, embedding2)
-    print(f"Cosine Similarity: {similarity}")
-    return float(similarity)
-
+    # 3) Compute cosine similarity
+    dot = np.dot(v1, v2)
+    norm = np.linalg.norm(v1) * np.linalg.norm(v2)
+    if norm == 0:
+        return 0.0
+    return float(dot / norm)
 
 def normalize_url(url: str, base_url: str) -> Optional[str]:
     """Normalize relative URLs to absolute URLs."""
@@ -549,20 +543,39 @@ def _extract_article_hybrid(url, main_article=None):
             clean_content = ' '.join(clean_content.split())
             print(clean_content)
             try:
-                print("before request :DDDDDDD")
                 response = requests.post(
-                    "http://34.224.157.120:8000/subjectivity",
+                    "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",
                     headers={"Content-Type": "application/json"},
                     json={"text": clean_content},
-                    timeout=15,
+                    timeout= 120,
                 )
                 response.raise_for_status()
-                print("after request:DDDDDD")
                 article_data['objectivity_score'] = response.json().get('objectivity_prob', -1)
                 print('object: is', article_data['objectivity_score'])
             except (requests.RequestException, ValueError, KeyError) as e:
                 print(f"Error getting objectivity score from API: {e}")
                 article_data['objectivity_score'] = -1
+
+            # Bias prediction and probabilities request for the first extraction branch
+            try:
+                print("before bias request")
+                bias_response = requests.post(
+                    "https://checkmate-api-1029076451566.us-central1.run.app/political",
+                    headers={"Content-Type": "application/json"},
+                    json={"text": clean_content},
+                    timeout= 120,
+                )
+                bias_response.raise_for_status()
+                bias_json = bias_response.json()
+                article_data['bias_prediction'] = bias_json.get('prediction', 'Unknown')
+                article_data['bias_probabilities'] = bias_json.get('probabilities', {})
+                print('bias_prediction is', article_data['bias_prediction'])
+                print('bias_probabilities are', article_data['bias_probabilities'])
+            except (requests.RequestException, ValueError, KeyError) as e:
+                print(f"Error getting bias data from API: {e}")
+                article_data['bias_prediction'] = 'Unknown'
+                article_data['bias_probabilities'] = {}
+
         else:
             main_clean_content = main_article['content'].replace('\n', ' ').replace('\r', ' ')
             main_clean_content = ' '.join(main_clean_content.split())
@@ -608,15 +621,38 @@ def _extract_article_hybrid(url, main_article=None):
             clean_content = ' '.join(clean_content.split())
             try:
                 response = requests.post(
-                    "http://52.90.193.31:8000/predict",
+                    "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",
                     headers={"Content-Type": "application/json"},
                     json={"text": clean_content},
+                    timeout= 120,
                 )
                 response.raise_for_status()
-                article_data['objectivity_score'] = response.json().get('score', random.random())
+                article_data['objectivity_score'] = response.json().get('objectivity_prob', -1)
             except (requests.RequestException, ValueError, KeyError) as e:
                 print(f"Error getting objectivity score from API: {e}")
                 article_data['objectivity_score'] = -1
+
+            # After getting the objectivity score, add:
+            print("[DEBUG] Before bias request")
+
+            try:
+                bias_response = requests.post(
+                    "https://checkmate-api-1029076451566.us-central1.run.app/political",
+                    headers={"Content-Type": "application/json"},
+                    json={"text": clean_content},  # ensure clean_content is defined
+                    timeout= 120,
+                )
+                bias_response.raise_for_status()
+                bias_json = bias_response.json()
+                article_data['bias_prediction'] = bias_json.get('prediction', 'Unknown')
+                article_data['bias_probabilities'] = bias_json.get('probabilities', {})
+                print("[DEBUG] Bias request successful, bias_prediction:", article_data['bias_prediction'])
+
+            except (requests.RequestException, ValueError, KeyError) as e:
+                print("[DEBUG] Bias request error:", e)
+                article_data['bias_prediction'] = 'Unknown'
+                article_data['bias_probabilities'] = {}
+
         else:
             main_clean_content = main_article['content'].replace('\n', ' ').replace('\r', ' ')
             main_clean_content = ' '.join(main_clean_content.split())
@@ -642,40 +678,40 @@ class ArticleExtractionError(Exception):
 
 class ArticleAnalyzer:
     def __init__(self, api_key: str, cx: str, vision_api_key: str, article_url: str):
+        print("[DEBUG] ArticleAnalyzer: Initializing for URL:", article_url)
         self.api_key = api_key
         self.cx = cx
         self.vision_api_key = vision_api_key
 
-        print("testing :D")
         # Extract the main article
         self.article = _extract_article_hybrid(article_url)
-        print("passed the extract hybrid :DDD")
-        # Raise an error if article extraction failed
+        print("[DEBUG] ArticleAnalyzer: Article title used for search:", self.article.get('title', ''))
+
         if self.article is None:
-            raise ArticleExtractionError(f"Failed to extract content from {article_url}")
+            error_msg = f"Failed to extract content from {article_url}"
+            print("[DEBUG] ArticleAnalyzer:", error_msg)
+            raise ArticleExtractionError(error_msg)
 
-        # Validate the article data using our comprehensive validation function
         if not validate_article_data(self.article):
-            raise ArticleExtractionError(f"Failed to extract meaningful content from {article_url}")
+            error_msg = f"Failed to extract meaningful content from {article_url}"
+            print("[DEBUG] ArticleAnalyzer:", error_msg)
+            raise ArticleExtractionError(error_msg)
 
-        print("Main Article:", self.article)
-
+        print("[DEBUG] ArticleAnalyzer: Main article extracted successfully. Title:", self.article.get('title'))
         # Retrieve similar articles (in parallel)
         self.extracted_articles = self.__get_similar_articles()
+        print("[DEBUG] ArticleAnalyzer: Retrieved", len(self.extracted_articles), "similar articles.")
 
-        # Vision API endpoint
-        self.vision_api_url = f"https://vision.googleapis.com/v1/images:annotate?key={self.vision_api_key}"
 
     def __get_similar_articles(self):
-        # 1) Search for similar articles by the main article title
+        print("[DEBUG] ArticleAnalyzer: Starting similar articles retrieval using title:", self.article.get('title', ''))
         similar_articles = self.__search(self.article.get('title', ''))
+        print("[DEBUG] ArticleAnalyzer: Google Custom Search returned", len(similar_articles), "results.")
 
-        # 2) Collect the links
         urls = [item['link'] for item in similar_articles if 'link' in item]
+        print("[DEBUG] ArticleAnalyzer: Extracted", len(urls), "URLs from search results.")
 
-        # 3) Parallel extraction
         extracted_articles = []
-
         with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
             future_to_url = {
                 executor.submit(_extract_article_hybrid, url, self.article): url
@@ -684,16 +720,19 @@ class ArticleAnalyzer:
             for future in concurrent.futures.as_completed(future_to_url):
                 url = future_to_url[future]
                 try:
+                    print(f"[DEBUG] ArticleAnalyzer: Extracting article from URL: {url}")
                     data = future.result()
                     if data:
                         extracted_articles.append(data)
+                        print(f"[DEBUG] ArticleAnalyzer: Extraction successful for {url}")
+                    else:
+                        print(f"[DEBUG] ArticleAnalyzer: No data extracted for {url}")
                 except Exception as e:
-                    print(f"Error extracting {url}: {e}")
-
+                    print(f"[DEBUG] ArticleAnalyzer: Error extracting {url}: {e}")
         return extracted_articles
 
     def __search(self, query: str, num_results: int = 10):
-        """Search Google Custom Search API for the given query."""
+        print("[DEBUG] ArticleAnalyzer: Performing Google Custom Search with query:", query)
         url = "https://www.googleapis.com/customsearch/v1"
         params = {
             "key": self.api_key,
@@ -704,21 +743,37 @@ class ArticleAnalyzer:
         try:
             response = requests.get(url, params=params, timeout=10)
             response.raise_for_status()
-            return response.json().get("items", [])
+            search_response = response.json()
+            print("[DEBUG] ArticleAnalyzer: Raw search response:", search_response)
+            search_results = search_response.get("items", [])
+            print("[DEBUG] ArticleAnalyzer: Search API returned", len(search_results), "items.")
+            return search_results
         except Exception as e:
-            print(f"Error during search: {e}")
+            print("[DEBUG] ArticleAnalyzer: Error during search:", e)
             return []
 
+
     def get_similar(self):
+        print("[DEBUG] ArticleAnalyzer: Returning", len(self.extracted_articles), "similar articles.")
         return self.extracted_articles
 
     def get_images_data(self):
+        """
+        Analyze and return images only from the main article.
+        Similar articles remain available (stored in self.extracted_articles)
+        but will not trigger additional Vision API calls.
+        """
         images_data = []
-        # If the main article lacks an 'images' field, handle gracefully
-        for image in self.article.get('images', []):
-            image_url = image.get('src')
-            if image_url:
-                images_data.append(self.__analyze_web_detection(image_url))
+        main_article_images = self.article.get('images', [])
+        for image in main_article_images:
+            # First, filter out images that don't pass validation
+            if not is_valid_article_image(image):
+                continue
+
+            # Analyze the image using Vision API
+            analyzed = self.__analyze_web_detection(image)
+            if analyzed:
+                images_data.append(analyzed)
         return images_data
 
     def __analyze_web_detection(self, image_url: str):
