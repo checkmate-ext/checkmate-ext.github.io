@@ -1,0 +1,15 @@
+<!-- cf-callback.html -->
+<!DOCTYPE html>
+<html lang="tr">
+<head><meta charset="utf-8"></head>
+<body>
+<script>
+    // 1) grab the token from the querystring
+    const token = new URLSearchParams(window.location.search).get('token');
+    // 2) send it back to the opener (your extension popup)
+    window.opener.postMessage({ token }, '*');
+    // 3) close this window
+    window.close();
+</script>
+</body>
+</html>
