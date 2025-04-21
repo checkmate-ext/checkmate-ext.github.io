@@ -10,14 +10,17 @@
     "identity"
   ],
   "host_permissions": [
-    "https://*.facebook.com/"
+    "https://*.facebook.com/",
+    "http://localhost:5000/*",
+    "http://127.0.0.1:5000/*"
   ],
   "web_accessible_resources": [{
     "resources": [
       "/extension-ui/pages/EmailVerification.html",
       "images/*",
       "scripts/*",
-      "navigation/*"
+      "navigation/*",
+      "pages/cf-callback.html"
     ],
     "matches": ["<all_urls>"]
   }],

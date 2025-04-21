@@ -1,222 +1,147 @@
-/* pricing.js - handles plan display, upgrades, downgrades, and payments */
+import paymentService from './payment-service.js';
 
-// When the DOM is ready, set up plan message, cards, and button handlers
 document.addEventListener('DOMContentLoaded', () => {
-  const currentPlan = localStorage.getItem('userPlan') || 'free';
-  const planMessage = document.getElementById('planMessage');
-  const planCardsContainer = document.getElementById('planCardsContainer');
-
-  if (!planCardsContainer) return;
-
-  // Dynamically create the plan cards
-  createPlanCards(currentPlan, planCardsContainer);
-
-  // Update the header message based on the active plan
-  if (planMessage) {
-    if (currentPlan === 'free') {
-      planMessage.innerHTML = 'You are on the <span style="font-weight: 600;">Free</span> plan';
-    } else if (currentPlan === 'premium') {
-      planMessage.innerHTML = 'You are on the <span style="color:#7B6225; font-weight:700;">Premium</span> plan';
-    } else if (currentPlan === 'enterprise') {
-      planMessage.innerHTML = 'You are on the <span style="color:#0d47a1; font-weight:700;">Enterprise</span> plan';
-    } else {
-      planMessage.textContent = `Unknown plan: ${currentPlan}`;
+  // 1) Listen for the CF callback token
+  chrome.runtime.onMessage.addListener(async (message) => {
+    if (message.type !== 'CF_TOKEN') return;
+    const plan = localStorage.getItem('cfPlan');
+    try {
+      const result = await paymentService.queryCheckout(message.token, plan);
+      if (result.paymentStatus === 'SUCCESS') {
+        chrome.storage.sync.set({ userPlan: plan }, () => renderPricingUI(plan));
+        alert('Subscription successful!');
+      } else {
+        alert('Payment failed: ' + result.errorMessage);
+      }
+    } catch (err) {
+      console.error('CF query error:', err);
+      alert('Could not finalize payment.');
     }
-  }
+  });
 
-  // Set up click handlers for all plan action buttons
-  wireUpButtons();
+  // 2) Load the user's current plan
+  loadUserPlan();
 });
 
-// Creates the plan cards inside the given container
-function createPlanCards(currentPlan, container) {
-  container.innerHTML = '';
-  const plans = [
-    {
-      name: 'Free',
-      price: '$0',
-      priceClass: 'free-price',
-      features: [
-        '5 articles per day',
-        'Basic reliability scores',
-        'Limited history retention (7 days)',
-        'Standard support'
-      ],
-      color: '#3cb371',
-      textColor: '#333',
-      featureTextColor: '#2e8b57',
-      active: currentPlan === 'free'
-    },
-    {
-      name: 'Premium',
-      price: '$5/month',
-      priceClass: 'premium-price',
-      features: [
-        '20 articles per day (4x more than Free)',
-        'Enhanced reliability analysis with detailed metrics',
-        'Extended history retention (30 days)',
-        'Priority email support with 24hr response time',
-        'Exclusive content insights and source tracking'
-      ],
-      color: '#ffcc00',
-      textColor: '#000000',
-      featureTextColor: '#000000',
-      active: currentPlan === 'premium'
-    },
-    {
-      name: 'Enterprise',
-      price: '$10/month',
-      priceClass: 'enterprise-price',
-      features: [
-        'Unlimited articles per day',
-        'Advanced reliability metrics with source verification',
-        'Complete history retention (unlimited)',
-        '24/7 dedicated support with phone assistance',
-        'Source network mapping with trust scores',
-        'Team collaboration features with shared folders'
-      ],
-      color: '#1a73e8',
-      textColor: '#000000',
-      featureTextColor: '#000000',
-      active: currentPlan === 'enterprise'
-    }
-  ];
+async function loadUserPlan() {
+  try {
+    const info = await paymentService.getCurrentSubscription();
+    renderPricingUI(info.success ? info.plan : await getStoredPlan());
+  } catch {
+    renderPricingUI(await getStoredPlan());
+  }
+}
 
-  plans.forEach(plan => {
-    const card = document.createElement('div');
-    card.className = 'plan-card';
-    card.style.opacity = plan.active ? '1' : '0.85';
-    card.style.transform = plan.active ? 'scale(1.03)' : 'scale(1)';
-    card.style.marginTop = plan.active ? '15px' : '5px';
+function getStoredPlan() {
+  return new Promise(resolve =>
+      chrome.storage.sync.get(['userPlan'], res => resolve(res.userPlan || 'free'))
+  );
+}
 
-    // Styling for special plans
-    if (plan.name === 'Premium') {
-      card.style.background = 'linear-gradient(145deg, #f9f1c5 0%, #ffcc00 15%)';
-      card.style.boxShadow = plan.active ? '0 8px 20px rgba(255, 204, 0, 0.3)' : '0 4px 12px rgba(0,0,0,0.1)';
-      card.style.border = '1px solid rgba(255, 204, 0, 0.5)';
-    } else if (plan.name === 'Enterprise') {
-      card.style.background = 'linear-gradient(145deg, #e6f0ff 0%, #1a73e8 15%)';
-      card.style.boxShadow = plan.active ? '0 8px 20px rgba(26, 115, 232, 0.3)' : '0 4px 12px rgba(0,0,0,0.1)';
-      card.style.border = '1px solid rgba(26, 115, 232, 0.5)';
-    } else {
-      card.style.background = 'white';
-      card.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-      card.style.border = '1px solid #eee';
-    }
+function renderPricingUI(currentPlan) {
+  const planCardsContainer = document.getElementById('planCardsContainer');
+  const planMessage = document.getElementById('planMessage');
+  planMessage.textContent =
+      currentPlan === 'free'
+          ? 'Upgrade your plan to access premium features'
+          : `You are currently on the ${currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} plan`;
 
-    const badge = plan.active ? `<div class="plan-badge">CURRENT</div>` : '';
-    const featuresList = plan.features.map(f =>
-        `<li><i class="fas fa-check" style="color:${plan.color}"></i><span style="color:${plan.featureTextColor}">${f}</span></li>`
-    ).join('');
+  planCardsContainer.innerHTML = '';
+  if (currentPlan !== 'free')
+    addPlanCard('free', 'Free', '$0', ['Basic AI Checks', '3 checks/day', 'Standard support'], ['premium','enterprise'].includes(currentPlan) ? 'Downgrade' : 'Current Plan');
+  if (currentPlan !== 'premium')
+    addPlanCard('premium', 'Premium', '$9.99/mo', ['Advanced AI Checks', 'Unlimited checks', 'Priority support'], 'Upgrade');
+  else
+    addPlanCard('premium', 'Premium', '$9.99/mo', ['Advanced AI Checks', 'Unlimited checks', 'Priority support'], 'Current Plan', true);
+  if (currentPlan !== 'enterprise')
+    addPlanCard('enterprise', 'Enterprise', '$29.99/mo', ['All Premium features', 'Team features'], 'Upgrade');
+  else
+    addPlanCard('enterprise', 'Enterprise', '$29.99/mo', ['All Premium features', 'Team features'], 'Current Plan', true);
 
-    let actionButtons = '';
-    if (plan.name === 'Free') {
-      if (currentPlan !== 'free') actionButtons = `<button class="card-btn cancel-btn" data-action="downgrade-to-free">SWITCH TO FREE</button>`;
-    } else if (plan.name === 'Premium') {
-      if (currentPlan === 'free') actionButtons = `<button class="card-btn premium-bg" data-action="upgrade-to-premium">UPGRADE TO PREMIUM</button>`;
-      if (currentPlan === 'premium') actionButtons = `<button class="card-btn cancel-btn" data-action="cancel-premium">CANCEL PREMIUM</button>`;
-      if (currentPlan === 'enterprise') actionButtons = `<button class="card-btn downgrade-btn" data-action="downgrade-to-premium">DOWNGRADE TO PREMIUM</button>`;
-    } else if (plan.name === 'Enterprise') {
-      if (currentPlan !== 'enterprise') actionButtons = `<button class="card-btn enterprise-bg" data-action="upgrade-to-enterprise">UPGRADE TO ENTERPRISE</button>`;
-      else actionButtons = `<button class="card-btn cancel-btn" data-action="cancel-enterprise">CANCEL ENTERPRISE</button>`;
-    }
+  document.querySelectorAll('.card-btn').forEach(btn => btn.addEventListener('click', handlePlanSelection));
+}
 
-    card.innerHTML = `
-      ${badge}
-      <div class="plan-header">
-        <h3 class="plan-name" style="color:${plan.textColor}">${plan.name}</h3>
-        <div class="plan-price ${plan.priceClass}">${plan.price}</div>
-      </div>
-      <div class="plan-features"><ul>${featuresList}</ul></div>
-      ${actionButtons}
-    `;
+function addPlanCard(planId, name, price, features, buttonText, isCurrentPlan = false) {
+  const card = document.createElement('div');
+  card.className = 'plan-card';
+  card.dataset.plan = planId;
 
-    container.appendChild(card);
+  if (isCurrentPlan) {
+    const badge = document.createElement('div');
+    badge.className = 'plan-badge';
+    badge.textContent = 'CURRENT PLAN';
+    card.appendChild(badge);
+  }
+
+  const header = document.createElement('div');
+  header.className = 'plan-header';
+  const nameDiv = document.createElement('div');
+  nameDiv.className = 'plan-name';
+  nameDiv.textContent = name;
+  const priceDiv = document.createElement('div');
+  priceDiv.className = `plan-price ${planId}-price`;
+  priceDiv.textContent = price;
+  header.append(nameDiv, priceDiv);
+  card.append(header);
+
+  const ul = document.createElement('ul');
+  ul.className = 'plan-features';
+  features.forEach(f => {
+    const li = document.createElement('li');
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-check';
+    icon.style.color = planId === 'premium' ? '#ffcc00' : planId === 'enterprise' ? '#1a73e8' : '#3cb371';
+    li.append(icon, document.createTextNode(' ' + f));
+    ul.append(li);
+  });
+  card.append(ul);
+
+  if (!isCurrentPlan) {
+    const btn = document.createElement('button');
+    btn.className = `card-btn ${planId}-bg`;
+    btn.textContent = buttonText;
+    btn.dataset.plan = planId;
+    card.append(btn);
+  }
+
+  document.getElementById('planCardsContainer').append(card);
+}
+
+async function handlePlanSelection(e) {
+  const plan = e.target.dataset.plan;
+  if (e.target.textContent === 'Current Plan') return;
+  if (e.target.textContent.includes('Downgrade')) {
+    if (confirm(`Downgrade to ${plan}?`)) return changePlan(plan);
+    else return;
+  }
+  if (plan === 'free') return changePlan(plan);
+
+  // Paid flow → initialize CF
+  const amount = plan === 'premium' ? '9.99' : '29.99';
+  const callbackUrl = chrome.runtime.getURL('cf-callback.html');
+  const { paymentPageUrl, token } = await paymentService.initializeCheckout(plan, amount, callbackUrl);
+
+  // Store for later query
+  localStorage.setItem('cfToken', token);
+  localStorage.setItem('cfPlan', plan);
+
+  // Open the Iyzico checkout page in a new popup window
+  chrome.windows.create({
+    url: paymentPageUrl,
+    type: 'popup',
+    width: 450,
+    height: 700
   });
 }
 
-// Hooks up all card action buttons
-function wireUpButtons() {
-  const buttons = document.querySelectorAll('.card-btn');
-  const form = document.getElementById('payment-form');
-  const submitBtn = document.getElementById('submit-payment');
-
-  buttons.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const action = e.target.dataset.action;
-      form.style.display = 'none';
-      submitBtn.onclick = null;
-
-      switch (action) {
-        case 'upgrade-to-premium':
-        case 'upgrade-to-enterprise':
-          form.style.display = 'block';
-          submitBtn.onclick = async () => {
-            try {
-              const cardInfo = {
-                cardNumber:     document.getElementById('card-number').value,
-                expireMonth:    document.getElementById('card-month').value,
-                expireYear:     document.getElementById('card-year').value,
-                cvc:            document.getElementById('card-cvc').value,
-                cardHolderName: document.getElementById('card-holder').value
-              };
-              const { token, error } = await iyzipay.createCardToken(cardInfo);
-              if (error) throw new Error(error.message);
-
-              const newPlan = action === 'upgrade-to-premium' ? 'premium' : 'enterprise';
-              const res = await fetch('http://localhost:5000/user/subscribe', {
-                method: 'POST',
-                headers: {
-                  'Content-Type':'application/json',
-                  'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({ plan: newPlan, paymentToken: token })
-              });
-              const data = await res.json();
-              if (!res.ok) throw new Error(data.message || data.error);
-
-              localStorage.setItem('userPlan', newPlan);
-              alert(`Successfully upgraded to ${newPlan.charAt(0).toUpperCase()+newPlan.slice(1)}!`);
-              window.location.reload();
-            } catch (err) {
-              alert('Payment error: ' + err.message);
-            }
-          };
-          break;
-
-        case 'cancel-premium':
-          if (confirm('Cancel Premium subscription?')) updateFree();
-          break;
-        case 'cancel-enterprise':
-          if (confirm('Cancel Enterprise subscription?')) updateFree();
-          break;
-        case 'downgrade-to-premium':
-          if (confirm('Downgrade to Premium?')) doUpdate('premium', 'Downgraded to Premium.');
-          break;
-        case 'downgrade-to-free':
-          if (confirm('Switch to Free plan?')) updateFree();
-          break;
-      }
-    });
-  });
-
-  async function updateFree() {
-    await doUpdate('free', 'Switched to Free plan.');
-  }
-  async function doUpdate(plan, msg) {
-    const token = localStorage.getItem('token');
-    const res = await fetch('http://localhost:5000/user/update-plan', {
-      method: 'POST',
-      headers: {
-        'Content-Type':'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ plan })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Update failed');
-    localStorage.setItem('userPlan', plan);
-    alert(msg);
-    window.location.reload();
+async function changePlan(plan) {
+  const res = plan === 'free'
+      ? await paymentService.updatePlan(plan)
+      : { success: false };
+  if (res.success) {
+    chrome.storage.sync.set({ userPlan: plan }, () => renderPricingUI(plan));
+    alert(plan === 'free' ? 'Downgraded to Free' : 'Plan updated');
+  } else {
+    alert('Failed to update plan');
   }
 }

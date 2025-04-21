@@ -10,6 +10,10 @@ from sqlalchemy import func
 from itsdangerous import URLSafeTimedSerializer
 from flask import url_for
 
+import hmac
+import hashlib
+import base64
+import string
 from models import db, User, ArticleSearch, SimilarArticle, ArticleRequest
 from ArticleAnalyzer import ArticleAnalyzer, validate_article_data, ArticleExtractionError
 import os
@@ -25,6 +29,7 @@ PLAN_PRICES = {
     'premium': '49.99',
     'enterprise': '199.99'
 }
+
 
 def create_app():
     """
@@ -105,13 +110,15 @@ def create_app():
 app = create_app()
 verifier = TOTPVerification(app.config['EMAIL_VERIFICATION_SECRET_KEY'])
 
+
 # helper to build options
 def iyzi_options():
     return {
-        'api_key':    current_app.config['IYZICO_API_KEY'],
+        'api_key': current_app.config['IYZICO_API_KEY'],
         'secret_key': current_app.config['IYZICO_SECRET_KEY'],
-        'base_url':   'sandbox-api.iyzipay.com'
+        'base_url': 'sandbox-api.iyzipay.com'
     }
+
 
 def token_required(f):
     """
@@ -294,6 +301,7 @@ def generate_confirmation_token(email):
     serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     return serializer.dumps(email, salt='email-confirm-salt')
 
+
 def confirm_token(token, expiration=3600):
     serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     try:
@@ -302,6 +310,7 @@ def confirm_token(token, expiration=3600):
         print(f"[DEBUG] Token verification error: {e}")
         return False
     return email
+
 
 # --- Email sending functions ---
 def send_registration_email(user_email, form_link):
@@ -318,6 +327,7 @@ def send_registration_email(user_email, form_link):
         print(f"Registration email sent to {user_email}")
     except Exception as e:
         print(f"Error sending registration email to {user_email}: {e}")
+
 
 def send_confirmation_email(user_email, token):
     confirm_url = url_for('confirm_email', token=token, _external=True)
@@ -336,6 +346,7 @@ def send_confirmation_email(user_email, token):
         print(f"[DEBUG] Confirmation email sent to {user_email}")
     except Exception as e:
         print(f"[DEBUG] Error sending confirmation email to {user_email}: {e}")
+
 
 @app.route('/user/register', methods=['POST'])
 def register_user():
@@ -377,6 +388,7 @@ def register_user():
             'message': str(e)
         }), 500
 
+
 @app.route('/user/confirm-email')
 def confirm_email():
     token = request.args.get('token')
@@ -391,6 +403,7 @@ def confirm_email():
     user.is_verified = True
     db.session.commit()
     return "Your email has been confirmed. Thank you!"
+
 
 @app.route('/user/login', methods=['POST'])
 def login_user():
@@ -473,6 +486,7 @@ def login_user():
             'error': 'Login failed',
             'message': str(e)
         }), 500
+
 
 @app.route('/user/searches', methods=['GET'])
 @token_required
@@ -655,6 +669,7 @@ def verify_email():
         print(f"Error in email verification: {str(e)}")
         return jsonify({"error": "Verification failed", "message": str(e)}), 500
 
+
 @app.route('/user/update-plan', methods=['POST'])
 @token_required
 def update_user_plan(current_user):
@@ -678,30 +693,40 @@ def update_user_plan(current_user):
         print(f"Error updating plan: {str(e)}")  # Add logging
         return jsonify({'error': 'Failed to update plan'}), 500
 
+
 @app.route('/user/subscribe', methods=['POST'])
 @token_required
 def subscribe_user(current_user):
     data = request.json
     plan = data.get('plan')
     payment_token = data.get('paymentToken')
+    card_user_key = data.get('cardUserKey') or current_user.iyzico_customer_id
 
     if plan not in PLAN_PRICES or not payment_token:
         return jsonify({'error': 'Plan and valid paymentToken required'}), 400
 
     price = PLAN_PRICES[plan]
+    options = {
+        'api_key': current_app.config['IYZICO_API_KEY'],
+        'secret_key': current_app.config['IYZICO_SECRET_KEY'],
+        'base_url': 'https://sandbox-api.iyzipay.com'
+    }
 
-    # build the payment request
+    # Updated to include currency, basketId, registerCard
     payment_request = {
         'locale': 'tr',
         'conversationId': str(current_user.id),
         'price': price,
         'paidPrice': price,
+        'currency': 'TRY',
         'installment': '1',
         'paymentChannel': 'WEB',
+        'basketId': f"PLAN_{plan}_{current_user.id}",
         'paymentGroup': 'PRODUCT',
         'paymentCard': {
+            'cardUserKey': card_user_key or '',
             'cardToken': payment_token,
-            'cardUserKey': current_user.iyzico_customer_id or ''
+            'registerCard': '1'
         },
         'buyer': {
             'id': str(current_user.id),
@@ -722,32 +747,26 @@ def subscribe_user(current_user):
             'name': f'{plan} Subscription',
             'category1': 'Subscription',
             'itemType': 'VIRTUAL'
-        }],
-        'registerCard': '1'   # <-- return cardUserKey
+        }]
     }
 
-    # pass your sandbox credentials here
-    options = {
-        'api_key':    current_app.config['IYZICO_API_KEY'],
-        'secret_key': current_app.config['IYZICO_SECRET_KEY'],
-        'base_url':   'https://sandbox-api.iyzipay.com'
-    }
+    # execute the payment and parse JSON
+    raw_resp = iyzipay.Payment().create(payment_request, options).read()
+    payment_resp = json.loads(raw_resp)
 
-    # execute the payment
-    payment_resp = iyzipay.Payment().create(payment_request, options).read()
     if payment_resp.get('status') != 'success':
         return jsonify({
             'error': 'Payment failed',
             'message': payment_resp.get('errorMessage', 'Card was declined')
         }), 402
 
-    # extract the new cardUserKey (for saving on the user record)
+    # save new cardUserKey if returned
     txn = (payment_resp.get('itemTransactions') or [{}])[0]
     if txn.get('cardUserKey'):
         current_user.iyzico_customer_id = txn['cardUserKey']
         db.session.commit()
 
-    # finally, upgrade their plan
+    # finally upgrade plan
     current_user.subscription_plan = plan
     db.session.commit()
 
@@ -755,6 +774,139 @@ def subscribe_user(current_user):
         'message': 'Subscription successful',
         'plan': plan
     }), 200
+
+
+def generate_iyzico_v2_headers(uri: str, body: str, api_key: str, secret_key: str):
+    """
+    Implements iyzico’s HMACSHA256 identity auth:
+     1. encryptedData = HMACSHA256(randomKey + uri + requestBody, secretKey)
+     2. base64Encoded = Base64("apiKey:"+apiKey+"&randomKey:"+randomKey+"&signature:"+encryptedData)
+     3. Authorization = "IYZWSv2 " + base64Encoded
+     4. x-iyzi-rnd = randomKey
+    :contentReference[oaicite:0]{index=0}
+    """
+    # 1) randomKey (x-iyzi-rnd)
+    random_key = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+    # 2) encryptedData: HMACSHA256(randomKey + uri + body, secretKey)
+    mac = hmac.new(
+        secret_key.encode('utf-8'),
+        msg=(random_key + uri + body).encode('utf-8'),
+        digestmod=hashlib.sha256
+    ).hexdigest()
+    # 3) build and base64-encode the authorization string
+    plain = f"apiKey:{api_key}&randomKey:{random_key}&signature:{mac}"
+    b64 = base64.b64encode(plain.encode('utf-8')).decode('utf-8')
+    # 4) return both headers
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': f"IYZWSv2 {b64}",
+        'x-iyzi-rnd': random_key
+    }
+
+
+@app.route('/cf/initialize', methods=['POST'])
+@token_required
+def cf_initialize(current_user):
+    data = request.json or {}
+    payload = {
+        "locale": "tr",
+        "conversationId": str(current_user.id),
+        "price": data.get("price"),
+        "paidPrice": data.get("price"),
+        "currency": "TRY",
+        "basketId": f"PLAN_{data.get('plan')}_{current_user.id}",
+        "paymentGroup": "PRODUCT",
+        "callbackUrl": data.get("callbackUrl"),
+        "buyer": {
+            "id": str(current_user.id),
+            "name": current_user.email.split('@')[0],
+            "surname": current_user.email.split('@')[0],
+            "email": current_user.email,
+            "identityNumber": "123123",
+            "registrationAddress": "123123",
+            "city": "123",
+            "country": "Turkey",
+            "zipCode": "123",
+            "ip": request.remote_addr
+        },
+        # <<< ADD THESE TWO SECTIONS >>>
+        "shippingAddress": {
+            "contactName": current_user.email.split('@')[0],
+            "city": "1234",
+            "country": "Turkey",
+            "address": "12412",
+            "zipCode": "12412"
+        },
+        "billingAddress": {
+            "contactName": current_user.email.split('@')[0],
+            "city": "124",
+            "country": "Turkey",
+            "address": "124",
+            "zipCode": "124"
+        },
+        # <<< END ADDITIONS >>>
+        "basketItems": [{
+            "id": f"PLAN_{data.get('plan')}_{current_user.id}",
+            "price": data.get("price"),
+            "name": f"{data.get('plan').title()} Subscription",
+            "category1": "Subscription",
+            "itemType": "VIRTUAL"
+        }]
+    }
+
+    # 1) Serialize body JSON with no spaces
+    body_json = json.dumps(payload, separators=(',', ':'))
+    # 2) Build headers per iyzico HMACSHA256 spec
+    uri = "/payment/iyzipos/checkoutform/initialize/auth/ecom"
+    api_key = current_app.config['IYZICO_API_KEY']
+    secret = current_app.config['IYZICO_SECRET_KEY']
+    headers = generate_iyzico_v2_headers(uri, body_json, api_key, secret)
+    # 3) POST to sandbox endpoint
+    url = f"https://sandbox-api.iyzipay.com{uri}"
+    resp = requests.post(url, data=body_json, headers=headers)
+    result = resp.json()
+    print(result)
+
+    if result.get("status") != "success":
+        return jsonify({"error": result.get("errorMessage")}), 400
+
+    return jsonify({
+        "checkoutFormContent": result["checkoutFormContent"],
+        "paymentPageUrl": result["paymentPageUrl"],
+        "token": result["token"]
+    }), 200
+
+
+# ─── Query CheckoutForm Result ───
+@app.route('/cf/query', methods=['POST'])
+@token_required
+def cf_query(current_user):
+    data = request.json or {}
+    payload = {
+        "locale": "tr",
+        "conversationId": str(current_user.id),
+        "token": data.get("token")
+    }
+    print("token is: ", data.get("token"))
+    body_json = json.dumps(payload, separators=(',', ':'))
+    uri = "/payment/iyzipos/checkoutform/auth/ecom/detail"
+    api_key = current_app.config['IYZICO_API_KEY']
+    secret = current_app.config['IYZICO_SECRET_KEY']
+    headers = generate_iyzico_v2_headers(uri, body_json, api_key, secret)
+
+    url = f"https://sandbox-api.iyzipay.com{uri}"
+    resp = requests.post(url, data=body_json, headers=headers)
+    result = resp.json()
+    print(result)
+    if result.get("status") != "success":
+        return jsonify({"error": result.get("errorMessage")}), 400
+
+    if result.get("paymentStatus") == "SUCCESS":
+        current_user.subscription_plan = data.get("plan")
+        db.session.commit()
+
+    return jsonify(result), 200
+
 
 @app.route('/auth/google_userinfo', methods=['POST'])
 def google_userinfo_auth():
@@ -804,7 +956,7 @@ def google_userinfo_auth():
                 user.google_id = google_id
                 user.is_verified = True
             else:
-                # Create new user
+                # create new user
                 user = User(
                     email=email,
                     google_id=google_id,
@@ -856,36 +1008,37 @@ def facebook_auth():
         # Step 1: Verify the token with Facebook Graph API
         app_id = os.getenv('FACEBOOK_APP_ID')
         app_secret = os.getenv('FACEBOOK_APP_SECRET')
-        
+
         # First, get app token for verification
         app_token_url = f"https://graph.facebook.com/oauth/access_token?client_id={app_id}&client_secret={app_secret}&grant_type=client_credentials"
         app_token_response = requests.get(app_token_url)
-        
+
         if not app_token_response.ok:
             return jsonify({'error': 'Failed to obtain app token for verification'}), 500
-            
+
         app_token = app_token_response.json().get('access_token')
-        
+
         # Verify the user token
         token_verification_url = f"https://graph.facebook.com/debug_token?input_token={facebook_token}&access_token={app_token}"
         verification_response = requests.get(token_verification_url)
-        
+
         if not verification_response.ok:
             return jsonify({'error': 'Failed to verify token with Facebook'}), 401
-            
+
         verification_data = verification_response.json().get('data', {})
-        
+
         # Check if token is valid
         if not verification_data.get('is_valid'):
             return jsonify({'error': 'Invalid Facebook token'}), 401
 
+        print('huhauhaha')
         # Step 2: Get user data from Facebook
         user_data_url = f"https://graph.facebook.com/me?fields=id,name,email&access_token={facebook_token}"
         user_response = requests.get(user_data_url)
-        
+
         if not user_response.ok:
             return jsonify({'error': 'Failed to get user data from Facebook'}), 500
-            
+
         fb_user_data = user_response.json()
         facebook_id = fb_user_data.get('id')
         email = fb_user_data.get('email')
@@ -913,7 +1066,7 @@ def facebook_auth():
                     is_verified=True,  # Facebook users are considered verified
                     subscription_plan="Free"
                 )
-                
+
                 # Set a random password for Facebook users
                 random_password = os.urandom(24).hex()
                 user.set_password(random_password)
@@ -947,6 +1100,7 @@ def facebook_auth():
             'error': 'Authentication failed',
             'message': str(e)
         }), 500
+
 
 @app.route('/user/update-password', methods=['POST'])
 @token_required

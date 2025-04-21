@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
         facebookButton.disabled = true; // Disable button during login attempt
     
         chrome.identity.launchWebAuthFlow({
-            url: "https://www.facebook.com/v19.0/dialog/oauth?client_id=505389282507431&redirect_uri=https://cagdnalgeabaefilkiopdkmjlifcpnac.chromiumapp.org/facebook-callback&response_type=token&scope=email,public_profile",
+            url: "https://www.facebook.com/v19.0/dialog/oauth?client_id=505389282507431&redirect_uri=https://kmgjckbbdjcmoeflecnlmndlgdjfkdfl.chromiumapp.org/facebook-callback&response_type=token&scope=email,public_profile",
             interactive: true
         }, async function(redirectUrl) {
             if (chrome.runtime.lastError || !redirectUrl) {
