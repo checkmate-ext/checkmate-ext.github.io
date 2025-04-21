@@ -10,16 +10,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const reliabilityScoreBox = document.getElementById('reliabilityScore');
     const objectivityScoreBox = document.getElementById('objectivityScore');
     const biasScoreBox = document.getElementById('biasScore');
-    const detailsList = document.getElementById('detailsList');
     const similarArticlesList = document.getElementById('similarArticlesList');
 
     function fetchWebsiteScore() {
         try {
             const credibilityResult = document.getElementById('credibilityResult');
+            credibilityResult.classList.remove('green', 'neutral', 'red');
 
             if (data.website_credibility !== null) {
                 let label = "";
-                credibilityResult.classList.remove('green', 'neutral', 'red');
 
                 if (data.website_credibility === 0) {
                     label = "Credible";
@@ -63,18 +62,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         reliabilityScoreBox.classList.add('red');
     }
 
-    // Set the objectivity score with fixed theme color
+    // Set the objectivity score with color-based class
     if (objectivityScoreBox) {
         if (data.objectivity_score !== undefined && data.objectivity_score >= 0) {
-            // Use the actual value from the data object, rounded to whole number
-            objectivityScoreBox.textContent = Math.round(data.objectivity_score * 100) + '%';
+            const score = Math.round(data.objectivity_score * 100);
+            objectivityScoreBox.textContent = score;
+            
+            // Add color class based on score
+            if (score > 75) {
+                objectivityScoreBox.classList.add('green');
+            } else if (score >= 50) {
+                objectivityScoreBox.classList.add('neutral');
+            } else {
+                objectivityScoreBox.classList.add('red');
+            }
         }
         else {
             objectivityScoreBox.textContent = 'N/A';
+            objectivityScoreBox.classList.add('red');
         }
-        
-        // Use a single fixed class instead of color-based classes
-        objectivityScoreBox.classList.add('theme-colored');
 
         // Add tooltips to explain the scores
         const tooltip = document.createElement('div');
@@ -87,16 +93,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         tooltip.appendChild(tooltipText);
     }
 
-    // Set the bias score with fixed theme color
+    // Set the bias score with color-based class
     if (biasScoreBox) {
         if (data.bias_prediction) {
             biasScoreBox.textContent = data.bias_prediction;
+            
+            // Default color class based on political bias
+            if (data.bias_prediction === "Center") {
+                biasScoreBox.classList.add('green');
+            } else if (data.bias_prediction === "Left" || data.bias_prediction === "Right") {
+                biasScoreBox.classList.add('neutral');
+            } else {
+                biasScoreBox.classList.add('red'); // For extreme bias
+            }
         } else {
             biasScoreBox.textContent = 'N/A';
+            biasScoreBox.classList.add('red');
         }
-        
-        // Use a single fixed class instead of color-based classes
-        biasScoreBox.classList.add('theme-colored');
 
         // Add tooltips to explain the scores
         const tooltip = document.createElement('div');
@@ -142,72 +155,4 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Navigate to report page
         navigateTo('report.html');
     });
-
-    // Process Images Data
-    if (data.images_data && data.images_data.length > 0) {
-        data.images_data.forEach((imageData, index) => {
-            const section = document.createElement('div');
-            section.innerHTML = `<h3>Image Analysis ${index + 1}</h3>`;
-
-            // Entities
-            if (imageData.entities && imageData.entities.length > 0) {
-                const entitiesList = document.createElement('ul');
-                entitiesList.innerHTML = '<h4>Entities:</h4>';
-                imageData.entities.forEach(entity => {
-                    const entityItem = document.createElement('li');
-                    entityItem.textContent = `${entity.description} (Score: ${entity.score.toFixed(2)})`;
-                    entitiesList.appendChild(entityItem);
-                });
-                section.appendChild(entitiesList);
-            } else {
-                section.innerHTML += '<p>No entities found.</p>';
-            }
-
-            // Pages with Matching Images
-            if (imageData.pages_with_matching_images && imageData.pages_with_matching_images.length > 0) {
-                const pagesList = document.createElement('ul');
-                pagesList.innerHTML = '<h4>Pages with Matching Images:</h4>';
-                imageData.pages_with_matching_images.forEach(page => {
-                    const pageItem = document.createElement('li');
-                    pageItem.innerHTML = `<a href="${page.url}" target="_blank">${page.url}</a>`;
-                    pagesList.appendChild(pageItem);
-                });
-                section.appendChild(pagesList);
-            } else {
-                section.innerHTML += '<p>No pages with matching images found.</p>';
-            }
-
-            // Full Matching Images
-            if (imageData.full_matching_images && imageData.full_matching_images.length > 0) {
-                const fullImagesList = document.createElement('ul');
-                fullImagesList.innerHTML = '<h4>Full Matching Images:</h4>';
-                imageData.full_matching_images.forEach(image => {
-                    const imageItem = document.createElement('li');
-                    imageItem.innerHTML = `<a href="${image.url}" target="_blank">${image.url}</a>`;
-                    fullImagesList.appendChild(imageItem);
-                });
-                section.appendChild(fullImagesList);
-            } else {
-                section.innerHTML += '<p>No full matching images found.</p>';
-            }
-
-            // Partial Matching Images
-            if (imageData.partial_matching_images && imageData.partial_matching_images.length > 0) {
-                const partialImagesList = document.createElement('ul');
-                partialImagesList.innerHTML = '<h4>Partial Matching Images:</h4>';
-                imageData.partial_matching_images.forEach(image => {
-                    const imageItem = document.createElement('li');
-                    imageItem.innerHTML = `<a href="${image.url}" target="_blank">${image.url}</a>`;
-                    partialImagesList.appendChild(imageItem);
-                });
-                section.appendChild(partialImagesList);
-            } else {
-                section.innerHTML += '<p>No partial matching images found.</p>';
-            }
-
-            detailsList.appendChild(section);
-        });
-    } else {
-        detailsList.innerHTML = '<p>No image analysis data found.</p>';
-    }
 });
