@@ -32,7 +32,6 @@ def check_website_score(url):
     domain = get_domain_from_url(url)
 
     try:
-        # ✅ Wrap raw SQL with `text()`
         query = text("SELECT credibility_score FROM trusted_websites WHERE website_name = :domain")
         website = db.session.execute(query, {"domain": domain}).fetchone()
 
