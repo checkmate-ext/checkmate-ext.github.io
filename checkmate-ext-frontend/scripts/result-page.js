@@ -32,12 +32,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const scoreBox = document.getElementById('resultPageReliabilityScore');
-    if (data.reliability_score !== undefined) {
-        scoreBox.textContent = data.reliability_score;
+    if (data.reliability_score !== undefined && data.reliability_score !== null) {
+        const raw = data.reliability_score;
+        const pct = raw <= 1 ? Math.round(raw * 100) : Math.round(raw);
+        scoreBox.textContent = pct + '%';
 
-        if (data.reliability_score > 75) {
+        if (pct > 75) {
             scoreBox.classList.add('green');
-        } else if (data.reliability_score >= 50) {
+        } else if (pct >= 50) {
             scoreBox.classList.add('neutral');
         } else {
             scoreBox.classList.add('red');

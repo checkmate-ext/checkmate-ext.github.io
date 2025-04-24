@@ -46,13 +46,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     fetchWebsiteScore();
 
-    // Set the reliability score and color
-    if (data.reliability_score !== undefined) {
-        reliabilityScoreBox.textContent = Math.round(data.reliability_score);
+    if (data.reliability_score !== undefined && data.reliability_score !== null) {
+        const raw = data.reliability_score;
+        const pct = raw <= 1 ? Math.round(raw * 100) : Math.round(raw);
+        reliabilityScoreBox.textContent = pct + '%';
 
-        if (data.reliability_score > 75) {
+        if (pct > 75) {
             reliabilityScoreBox.classList.add('green');
-        } else if (data.reliability_score >= 50) {
+        } else if (pct >= 50) {
             reliabilityScoreBox.classList.add('neutral');
         } else {
             reliabilityScoreBox.classList.add('red');

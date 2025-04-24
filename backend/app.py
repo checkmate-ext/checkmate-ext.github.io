@@ -169,6 +169,9 @@ def scrap_and_search(current_user):
         print(f"[DEBUG] scrap_and_search: Processing URL: {url}")
 
         website_credibility = check_website_score(url)
+        cred_score = website_credibility.get('credibility_score')
+        if cred_score is None:
+            cred_score = 1
         print("[DEBUG] scrap_and_search: Website credibility score:", website_credibility['credibility_score'])
 
         past_article = ArticleSearch.query.filter_by(url=url).first()
@@ -203,9 +206,9 @@ def scrap_and_search(current_user):
                 'article': article_data,
                 'similar_articles': similar_articles_data,
                 'images_data': [],
-                'website_credibility': website_credibility['credibility_score'],
+                'website_credibility': cred_score,
                 'article_id': past_article.id,
-                'objectivity_score': past_article.objectivity_score,  # Fixed: Use dot notation
+                'objectivity_score': past_article.objectivity_score,
                 'bias_prediction': past_article.bias_prediction,
                 'bias_probabilities': past_article.bias_probabilities
             })
@@ -227,27 +230,22 @@ def scrap_and_search(current_user):
             similar_articles = google_search.get_similar()
             article = google_search.article
             print("[DEBUG] scrap_and_search: Article extracted successfully.")
-            images_data = []  # or google_search.get_images_data() if using image API
+            images_data = []
         except Exception as e:
             print("[DEBUG] scrap_and_search: Exception during article extraction:", e)
             return jsonify({'error': str(e)}), 400
-
-        reliability_score = random.randint(30, 95)
-        credibility_score = random.randint(30, 95)
 
         print("article : ", article)
 
         new_search = ArticleSearch(
             url=article['url'],
             title=article['title'],
-            reliability_score=reliability_score,
-            credibility_score=credibility_score,
+            reliability_score=article.get('reliability_score', -1),
+            credibility_score=cred_score,
             objectivity_score=article.get('objectivity_score', -1),  # Fixed: Use get() with default
             bias_prediction=article.get('bias_prediction', -1),
             bias_probabilities=article.get('bias_probabilities', -1)
         )
-
-        print("before adding new_search :D")
 
         db.session.add(new_search)
         db.session.flush()
@@ -256,7 +254,6 @@ def scrap_and_search(current_user):
             user_id=current_user.id,
             article_id=new_search.id
         )
-        print("before adding new request:DDDD:D:D:D :D")
 
         db.session.add(article_request)
 
@@ -278,12 +275,12 @@ def scrap_and_search(current_user):
         print(similar_articles)
         print("[DEBUG] scrap_and_search: Database commit successful. Similar articles count:", len(similar_articles))
         return jsonify({
-            'reliability_score': reliability_score,
+            'reliability_score': article['reliability_score'],
             'message': f"Results for {url}",
             'article': article,
             'similar_articles': similar_articles,
             'images_data': images_data,
-            'website_credibility': website_credibility['credibility_score'],
+            'website_credibility': cred_score,
             'article_id': new_search.id,
             'objectivity_score': article['objectivity_score'],
             'bias_prediction': article['bias_prediction'],
@@ -547,18 +544,17 @@ def get_article_data(current_user, article_id):
                 'similarity_score': sim_article.similarity_score
             } for sim_article in similar_articles]
 
-            # Create a response with all needed data, matching the structure from scrap_and_search
             return jsonify({
                 'reliability_score': article.reliability_score,
                 'message': f"Results for {article.url}",
                 'article': article_data,
                 'similar_articles': similar_articles_data,
-                'images_data': [],  # No image data needed as per your request
+                'images_data': [],
                 'website_credibility': website_credibility['credibility_score'],
                 'article_id': article.id,
-                'objectivity_score': article.objectivity_score,  # Include objectivity score
-                'bias_prediction': article.bias_prediction,      # Include bias prediction
-                'bias_probabilities': article.bias_probabilities # Include bias probabilities
+                'objectivity_score': article.objectivity_score,
+                'bias_prediction': article.bias_prediction,
+                'bias_probabilities': article.bias_probabilities
             })
         else:
             return jsonify({
