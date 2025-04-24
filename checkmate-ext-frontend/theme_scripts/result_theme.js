@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Theme settings remain the same
+    // Theme settings
     const themes = {
         light: {
             bgColor: '#f4f4f4',
@@ -9,14 +9,17 @@ document.addEventListener('DOMContentLoaded', function() {
             primaryColor: '#3cb371',
             secondaryColor: '#2e8b57',
             boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-            detailsBoxBg: '#ffffff',
-            detailsBoxBorder: '#ddd',
-            detailsTextColor: '#333333',
-            listItemBg: '#ffffff',
-            listItemBorder: '#eee',
-            linkColor: '#1a73e8',
-            borderColor: 'rgba(0,0,0,0.1)',
-            reportBtnBg: '#f1c40f',  // Original warning color
+            cardBg: '#ffffff',
+            cardBorder: '#eee',
+            cardBoxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+            metricItemBg: '#f9f9f9',
+            sourceInfoBg: 'rgba(241, 196, 15, 0.1)',
+            sourceInfoBorder: '#f1c40f',
+            similarArticleBg: '#f9f9f9',
+            similarArticleBorder: '#3cb371',
+            similarArticleHoverBg: '#f2f2f2',
+            linkColor: '#2e8b57',
+            reportBtnBg: '#f1c40f',
             reportBtnColor: '#333333',
             headerIconOpacity: '0.7',
             scrollbarThumb: '#ccc',
@@ -30,14 +33,17 @@ document.addEventListener('DOMContentLoaded', function() {
             primaryColor: '#4eca89',
             secondaryColor: '#3da06b',
             boxShadow: '0 10px 25px rgba(0,0,0,0.4)',
-            detailsBoxBg: '#333333',
-            detailsBoxBorder: '#444444',
-            detailsTextColor: '#e0e0e0',
-            listItemBg: '#3a3a3a',
-            listItemBorder: '#555555',
-            linkColor: '#4dabf7',
-            borderColor: 'rgba(255,255,255,0.1)',
-            reportBtnBg: '#f1c40f',  // Keep the original warning color
+            cardBg: '#333333',
+            cardBorder: '#444444',
+            cardBoxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            metricItemBg: '#3a3a3a',
+            sourceInfoBg: 'rgba(241, 196, 15, 0.15)',
+            sourceInfoBorder: '#d4ac0d',
+            similarArticleBg: '#3a3a3a',
+            similarArticleBorder: '#4eca89',
+            similarArticleHoverBg: '#444444',
+            linkColor: '#6cb2ff',
+            reportBtnBg: '#f1c40f', // Keep the warning color even in dark mode
             reportBtnColor: '#333333',
             headerIconOpacity: '0.85',
             scrollbarThumb: '#666',
@@ -88,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Header styling
         const header = document.querySelector('.header');
         if (header) {
-            header.style.background = themeValues.containerBg;
+            header.style.backgroundColor = themeValues.containerBg;
         }
         
         // Header icons
@@ -100,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Logo container (if present)
         const logoContainer = document.querySelector('.logo-container');
         if (logoContainer) {
-            logoContainer.style.background = themeValues.containerBg;
+            logoContainer.style.backgroundColor = themeValues.containerBg;
         }
         
         // Content area
@@ -112,6 +118,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Score section
         const scoreSection = document.querySelector('.score-section');
         if (scoreSection) {
+            scoreSection.style.backgroundColor = themeValues.cardBg;
+            scoreSection.style.boxShadow = themeValues.cardBoxShadow;
             scoreSection.style.color = themeValues.textColor;
         }
         
@@ -120,97 +128,85 @@ document.addEventListener('DOMContentLoaded', function() {
         if (scoreLabel) {
             scoreLabel.style.color = themeValues.secondaryTextColor;
         }
-        
-        // Details section
-        const detailsSection = document.querySelector('.details-section');
-        if (detailsSection) {
-            detailsSection.style.color = themeValues.textColor;
+
+        // Score description
+        const scoreDesc = document.querySelector('.score-desc');
+        if (scoreDesc) {
+            scoreDesc.style.color = themeValues.textColor;
         }
         
-        // Details box (most important fix)
-        const detailsBox = document.querySelector('.details-box');
-        if (detailsBox) {
-            detailsBox.style.backgroundColor = themeValues.detailsBoxBg;
-            detailsBox.style.borderColor = themeValues.detailsBoxBorder;
-            detailsBox.style.color = themeValues.detailsTextColor;
+        // Analysis section
+        const analysisSection = document.querySelector('.analysis-section');
+        if (analysisSection) {
+            analysisSection.style.backgroundColor = themeValues.cardBg;
+            analysisSection.style.boxShadow = themeValues.cardBoxShadow;
+            analysisSection.style.color = themeValues.textColor;
         }
-        
-        // Details list items
-        const detailsList = document.getElementById('detailsList');
-        if (detailsList) {
-            detailsList.style.color = themeValues.detailsTextColor;
-            
-            // Style all headings in the details list
-            detailsList.querySelectorAll('h2, h4').forEach(heading => {
-                heading.style.color = themeValues.detailsTextColor;
-            });
-            
-            // Style all list items
-            detailsList.querySelectorAll('li').forEach(item => {
-                item.style.backgroundColor = themeValues.listItemBg;
-                item.style.borderColor = themeValues.listItemBorder;
-                item.style.color = themeValues.detailsTextColor;
-                // Remove hover transitions if they exist
-                item.style.transition = 'none';
-            });
-            
-            // Style all links
-            detailsList.querySelectorAll('a').forEach(link => {
-                link.style.color = themeValues.linkColor;
-                // Remove underline on hover effect
-                link.style.textDecoration = 'underline';
-                link.style.transition = 'none';
-            });
+
+        // Section headings
+        document.querySelectorAll('.analysis-section h2').forEach(heading => {
+            heading.style.color = themeValues.textColor;
+        });
+
+        // Metric items
+        document.querySelectorAll('.metric-item').forEach(item => {
+            item.style.backgroundColor = themeValues.metricItemBg;
+        });
+
+        // Analysis paragraphs
+        document.querySelectorAll('#analysisDetails p').forEach(p => {
+            p.style.color = themeValues.textColor;
+        });
+
+        // Source info
+        const sourceInfo = document.querySelector('.source-info');
+        if (sourceInfo) {
+            sourceInfo.style.backgroundColor = themeValues.sourceInfoBg;
+            sourceInfo.style.borderLeftColor = themeValues.sourceInfoBorder;
         }
-        
-        // Fix heading colors
-        document.querySelectorAll('.details-box h2').forEach(heading => {
-            heading.style.color = themeValues.detailsTextColor;
+
+        const sourceInfoTitle = document.querySelector('.source-info h3');
+        if (sourceInfoTitle) {
+            sourceInfoTitle.style.color = themeValues.textColor;
+        }
+
+        // Similar articles
+        document.querySelectorAll('.similar-article').forEach(article => {
+            article.style.backgroundColor = themeValues.similarArticleBg;
+            article.style.borderLeftColor = themeValues.primaryColor;
+        });
+
+        document.querySelectorAll('.similar-article h3').forEach(title => {
+            title.style.color = themeValues.textColor;
+        });
+
+        document.querySelectorAll('.similar-article a').forEach(link => {
+            link.style.color = themeValues.linkColor;
+        });
+
+        // Similarity badges
+        document.querySelectorAll('.similarity-badge').forEach(badge => {
+            badge.style.backgroundColor = themeValues.primaryColor;
         });
         
-        // More details button
+        // Action buttons
         const moreDetailsBtn = document.getElementById('moreDetailsBtn');
         if (moreDetailsBtn) {
-            moreDetailsBtn.style.background = themeValues.primaryColor;
-            moreDetailsBtn.style.color = 'white'; // Always white for contrast
-            // Simplify button style - remove transitions
-            moreDetailsBtn.style.transition = 'none';
+            moreDetailsBtn.style.backgroundColor = themeValues.primaryColor;
+            moreDetailsBtn.style.color = '#FFFFFF'; // White text for contrast
         }
         
-        // Report mistake button - revert to original warning color
         const reportMistakeBtn = document.getElementById('reportMistakeBtn');
         if (reportMistakeBtn) {
             reportMistakeBtn.style.backgroundColor = themeValues.reportBtnBg;
             reportMistakeBtn.style.color = themeValues.reportBtnColor;
-            // Simplify button style - remove transitions
-            reportMistakeBtn.style.transition = 'none';
         }
         
-        // Bottom icons
-        const bottomLeftIcon = document.querySelector('.bottom-left-icon');
-        const bottomRightIcon = document.querySelector('.bottom-right-icon');
-        
-        if (bottomLeftIcon) {
-            const img = bottomLeftIcon.querySelector('img');
-            if (img) {
-                img.style.opacity = themeValues.headerIconOpacity;
-                img.style.filter = theme === 'dark' ? 'invert(1)' : 'none';
-            }
-        }
-        
-        if (bottomRightIcon) {
-            const img = bottomRightIcon.querySelector('img');
-            if (img) {
-                img.style.opacity = themeValues.headerIconOpacity;
-                img.style.filter = theme === 'dark' ? 'invert(1)' : 'none';
-            }
-        }
-        
-        // Add dynamic styles for scrollbar
+        // Add dynamic styles for scrollbar and hover effects
         updateDynamicStyles(theme, themeValues);
     }
     
-    // Update dynamic styles - simplified to remove hover effects
+    // Update dynamic styles
     function updateDynamicStyles(theme, themeValues) {
         let styleElement = document.getElementById('theme-dynamic-styles');
         if (!styleElement) {
@@ -238,43 +234,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 background: ${themeValues.scrollbarTrack};
             }
             
-            /* Remove hover effects */
-            #detailsList li {
-                border-left: 0;
-                transition: none;
+            /* Similar article hover */
+            .similar-article:hover {
+                background-color: ${themeValues.similarArticleHoverBg} !important;
+                transform: translateX(3px);
+                box-shadow: ${theme === 'dark' 
+                    ? '0 3px 10px rgba(0,0,0,0.3)' 
+                    : '0 3px 10px rgba(0,0,0,0.1)'};
             }
             
-            /* Override any existing hover styles */
-            #detailsList li:hover {
-                transform: none !important;
-                box-shadow: none !important;
-                border-left: 0 !important;
-                padding-left: 0 !important;
-                background-color: ${themeValues.listItemBg} !important;
+            /* Button hover effects */
+            .primary-button:hover {
+                background-color: ${themeValues.secondaryColor} !important;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px ${theme === 'dark' 
+                    ? 'rgba(78, 202, 137, 0.3)' 
+                    : 'rgba(60, 179, 113, 0.3)'};
             }
             
-            /* Button simplified style */
-            .more-details-button:hover,
-            .report-mistake-button:hover {
-                transform: none !important;
-                box-shadow: none !important;
+            .warning-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(241, 196, 15, 0.3);
             }
             
-            /* Simple link styling without hover effects */
-            #detailsList a {
-                color: ${themeValues.linkColor};
-                text-decoration: underline;
-                transition: none;
-            }
-            
-            #detailsList a:hover {
-                opacity: 1;
-            }
-            
-            /* Ensure no element has distracting hover effects */
-            * {
-                transition-property: color, background-color, border-color;
-                transition-duration: 0.1s;
+            /* Link hover */
+            a:hover {
+                color: ${theme === 'dark' ? '#90ceff' : '#1a5e3b'};
             }
         `;
     }

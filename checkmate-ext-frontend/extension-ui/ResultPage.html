@@ -36,14 +36,13 @@
             display: flex;
             flex-direction: column;
             position: relative;
-            overflow: hidden;
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 20px; /* Reduced padding */
+            padding: 8px 15px;
         }
 
         .header-icons img {
@@ -60,51 +59,57 @@
         .logo-container {
             display: flex;
             justify-content: center;
-            margin: 5px 0; /* Reduced margin to fit content better */
+            margin: 0;
         }
 
         .logo-container img {
-            width: 100px;
+            width: 80px;
         }
 
+        /* Main content area */
         .content {
             display: flex;
-            flex-direction: row;
-            padding: 0 20px;
+            flex-direction: column;
+            padding: 0 15px;
             flex: 1;
+            overflow: hidden;
         }
 
-        /* Left side: Reliability score card */
+        /* Score section styles */
         .score-section {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .main-score {
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
             align-items: center;
-            margin-top: 10px; /* Reduced top margin */
-            margin-right: 10px;
+            flex: 0 0 auto;
+            margin-right: 15px;
         }
 
         .score-box {
-            background-color: var(--score-red);
             color: #fff;
-            font-size: 40px;
+            font-size: 36px;
             font-weight: bold;
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 90px;
-            height: 90px;
+            width: 70px;
+            height: 70px;
             border-radius: 8px;
-            cursor: 'default';
+            cursor: default;
             user-select: none;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-        }
-
-        .score-box:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
         }
 
         .score-box.red {
@@ -137,213 +142,288 @@
             transform: translate(25%, 25%) rotate(45deg);
         }
 
-
         .score-label {
             margin-top: 5px;
             font-size: 14px;
+            font-weight: 600;
             color: var(--text-dark);
             text-align: center;
         }
 
-        .report-mistake-button {
-            margin-top: 10px;
-            background: var(--warning-color);
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            padding: 5px 10px;
-            font-size: 14px;
-            color: #333;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .report-mistake-button::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transform: rotate(45deg);
-            transition: all 0.5s;
-            opacity: 0;
-        }
-
-        .report-mistake-button:hover {
-            box-shadow: 0 5px 15px rgba(241, 196, 15, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .report-mistake-button:hover::before {
-            opacity: 1;
-            transform: translate(25%, 25%) rotate(45deg);
-        }
-
-        /* Right side: Details card */
-        .details-section {
+        .score-desc {
             flex: 1;
-            margin-top: 10px; /* Reduced top margin */
+            font-size: 14px;
+            color: var(--text-dark);
         }
 
-        .details-box {
-            background: #fff;
-            border: 1px solid #ddd;
+        /* Analysis sections */
+        .analysis-section {
+            background-color: white;
             border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 15px;
+            margin-bottom: 15px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .analysis-section h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        .analysis-section p {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        .metrics-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .metric-item {
+            flex: 1;
+            background-color: #f9f9f9;
+            border-radius: 8px;
             padding: 10px;
             display: flex;
             flex-direction: column;
-            /* Add max-height and scroll */
-            max-height: 400px;       /* You can adjust this height as needed */
-            overflow-y: auto;
+            align-items: center;
         }
 
-        /* Custom scrollbar styling to match moredetails page */
-        .details-box::-webkit-scrollbar {
-            width: 6px;
-        }
-        .details-box::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 3px;
-        }
-        .details-box::-webkit-scrollbar-thumb:hover {
-            background: #bbb;
+        .metric-score {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 30px;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            color: white;
         }
 
-        .details-box h2 {
-            font-size: 14px;
+        .metric-score.red {
+            background-color: var(--score-red);
+        }
+
+        .metric-score.neutral {
+            background-color: var(--score-neutral);
+        }
+
+        .metric-score.green {
+            background-color: var(--score-green);
+        }
+
+        .metric-name {
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            color: var(--text-dark);
+        }
+
+        .similar-article {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .similar-article:hover {
+            transform: translateX(3px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .similar-article h3 {
             margin-bottom: 5px;
             font-weight: 600;
+            font-size: 14px;
+            color: var(--text-dark);
         }
 
-        .details-box ul {
-            list-style-type: disc;
-            padding-left: 5px;
-            margin-bottom: 5px;
-        }
-
-        .details-box li {
-            margin-bottom: 5px;
-            font-size: 12px; /* Smaller font to fit content */
+        .similar-article a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-size: 12px;
             word-break: break-all;
         }
 
-        .details-box a {
-            word-break: break-all;
+        .source-info {
+            background-color: rgba(241, 196, 15, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--warning-color);
         }
 
-        .more-details-button {
-            background: var(--primary-color);
-            color: #fff;
+        .source-info h3 {
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-dark);
+        }
+
+        .source-reliability {
+            font-size: 14px;
+            color: var(--text-dark);
+        }
+
+        /* Action buttons section */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .action-button {
+            flex: 1;
             border: none;
             border-radius: 8px;
             font-weight: 600;
+            padding: 8px 10px;
             font-size: 14px;
-            padding: 5px;
             cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            text-align: center;
-            margin-top: 5px;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
         }
 
-        .more-details-button::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transform: rotate(45deg);
-            transition: all 0.5s;
-            opacity: 0;
+        .primary-button {
+            background: var(--primary-color);
+            color: white;
         }
 
-        .more-details-button:hover::before {
-            opacity: 1;
-            transform: translate(25%, 25%) rotate(45deg);
-        }
-
-        .more-details-button:hover {
+        .primary-button:hover {
             background: var(--secondary-color);
-            box-shadow: 0 5px 15px rgba(60, 179, 113, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(60,179,113,0.3);
         }
 
-        /* Bottom icons (if any) */
-        .bottom-left-icon, .bottom-right-icon {
-            position: absolute;
-            bottom: 10px;
+        .warning-button {
+            background: var(--warning-color);
+            color: #333;
         }
 
-        .bottom-left-icon {
-            left: 10px;
+        .warning-button:hover {
+            box-shadow: 0 5px 15px rgba(241,196,15,0.3);
+            transform: translateY(-2px);
         }
 
-        .bottom-right-icon {
-            right: 10px;
+        /* Scrollbar styling */
+        .analysis-section::-webkit-scrollbar {
+            width: 6px;
         }
 
-        .bottom-icon-img {
-            width: 24px;
-            opacity: 0.7;
-            transition: all 0.3s ease;
+        .analysis-section::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
         }
 
-        .bottom-icon-img:hover {
-            opacity: 1;
-            transform: scale(1.1);
+        .analysis-section::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
         }
-
+        
+        .similarity-badge {
+            display: inline-block;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+            margin-top: 5px;
+            background-color: var(--primary-color);
+        }
     </style>
 </head>
 <body>
 <div class="container">
-
     <div class="header">
-        <div class="header-icons" >
+        <div class="header-icons">
             <img src="../images/menu-bar-icon.png" alt="Menu" width="24" id="menuBtn">
+        </div>
+        <div class="logo-container">
+            <img src="../images/CheckMate_Transparent_Logo.png" alt="Checkmate Logo">
         </div>
         <div class="header-icons">
             <img src="../images/user-profile-icon.png" alt="Profile" width="24" id="profileBtn">
         </div>
     </div>
 
-    <div class="logo-container">
-        <img src="../images/CheckMate_Transparent_Logo.png" alt="Checkmate Logo">
-    </div>
-
     <div class="content">
+        <!-- Main Reliability Score -->
         <div class="score-section">
-            <div class="score-box" id="resultPageReliabilityScore">--</div>
-            <div class="score-label">Reliability<br>Score</div>
-            <button class="report-mistake-button" id="reportMistakeBtn">Report Mistake</button>
-        </div>
-        <div class="details-section">
-            <div class="details-box">
-                <h2>Details</h2>
-                <ul id="detailsList"></ul>
+            <div class="main-score">
+                <div class="score-box" id="resultPageReliabilityScore">--</div>
+                <div class="score-label">Reliability</div>
             </div>
-            <button class="more-details-button" id="moreDetailsBtn">More Details</button>
+            <div class="score-desc" id="reliabilityDescription">
+                Analyzing the reliability of this article...
+            </div>
         </div>
-    </div>
 
-    <div class="bottom-left-icon">
-        <img class="bottom-icon-img" src="../images/settings-icon.png" alt="Settings">
-    </div>
-    <div class="bottom-right-icon">
-        <img class="bottom-icon-img" src="../images/exclamation-triangle-icon.png" alt="Warning">
+        <!-- Detail Analysis Section -->
+        <div class="analysis-section">
+            <h2>Analysis Breakdown</h2>
+            
+            <!-- Metrics Row for Objectivity and Bias -->
+            <div class="metrics-row">
+                <div class="metric-item">
+                    <div class="metric-score" id="objectivityScore">--</div>
+                    <div class="metric-name">Objectivity</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-score" id="biasScore">--</div>
+                    <div class="metric-name">Bias</div>
+                </div>
+            </div>
+            
+            <!-- Source Information -->
+            <div class="source-info" id="sourceInfo">
+                <h3>Source Information</h3>
+                <div class="source-reliability" id="sourceReliability">
+                    Analyzing source credibility...
+                </div>
+            </div>
+            
+            <!-- Analysis Summary -->
+            <div id="analysisDetails">
+                <p id="objectivityAnalysis">Objectivity Analysis: Loading...</p>
+                <p id="biasAnalysis">Bias Analysis: Loading...</p>
+            </div>
+            
+            <!-- Similar Articles Section -->
+            <h2>Similar Articles</h2>
+            <div id="similarArticlesList">
+                <p>Searching for similar articles...</p>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="action-button primary-button" id="moreDetailsBtn">
+                <i class="fas fa-info-circle"></i> More Details
+            </button>
+            <button class="action-button warning-button" id="reportMistakeBtn">
+                <i class="fas fa-exclamation-triangle"></i> Report Issue
+            </button>
+        </div>
     </div>
 </div>
 
 <script src="../navigation/navigate.js"></script>
 <script src="../scripts/result-page.js"></script>
 <script src="../theme_scripts/result_theme.js"></script>
-
 </body>
 </html>
