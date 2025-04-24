@@ -16,8 +16,8 @@ function navigateTo(page) {
     if (protectedPages.includes(page)) {
         const token = localStorage.getItem('token');
         if (!token || !isTokenValid()) {
-            // If no valid token, go to sign-in
-            window.location.href = 'FirstPage.html';
+            // If no valid token, go to sign-in instead of FirstPage
+            window.location.href = 'SignInPage.html';
             return;
         }
     }
@@ -30,9 +30,17 @@ function navigateTo(page) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Check if we're on the root or extension page and redirect to SignInPage
+    const currentPath = window.location.pathname;
+    if (currentPath.endsWith('/') || currentPath.endsWith('index.html')) {
+        navigateTo('SignInPage.html');
+        return;
+    }
 
     const currentPage = window.location.pathname.split('/').pop();
-    if (currentPage === 'FirstPage.html') {
+    
+    // If user has valid token and is on SignInPage, navigate to MainMenuPage
+    if (currentPage === 'SignInPage.html') {
         if (isTokenValid()) {
             navigateTo('MainMenuPage.html');
         }
@@ -42,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const editButton = document.getElementById('editBtn');
-    const signInButton = document.getElementById('signInButton');
+    const signUpLink = document.getElementById('signUpLink'); // New selector for Sign Up link
     const signUpButton = document.getElementById('signUpButton');
     const googleSignUpButton = document.getElementById('googleSignUpButton');
     const facebookSignUpButton = document.getElementById('facebookSignUpButton');
@@ -60,27 +68,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const reportButton = document.getElementById('reportBtn');
     const signupBackButton = document.getElementById('signup-back-button');
 
-    if (signInButton) {
-        signInButton.addEventListener('click', () => navigateTo('SignInPage.html'));
+    // Add event listener for new Sign Up link
+    if (signUpLink) {
+        signUpLink.addEventListener('click', (event) => {
+            event.preventDefault();
+            navigateTo('SignUpPage.html');
+        });
     }
+
     if (signUpButton) {
         signUpButton.addEventListener('click', () => navigateTo('SignUpPage.html'));
     }
+    
     if (googleSignUpButton) {
         googleSignUpButton.addEventListener('click', () => navigateTo('GoogleSignUpPage.html'));
     }
+    
     if (facebookSignUpButton) {
         facebookSignUpButton.addEventListener('click', () => navigateTo('FacebookSignUpPage.html'));
     }
+    
     if (backToHomeButton) {
-        backToHomeButton.addEventListener('click', () => navigateTo('FirstPage.html'));
+        backToHomeButton.addEventListener('click', () => navigateTo('SignInPage.html'));
     }
+    
     if (forgotPasswordLink) {
         forgotPasswordLink.addEventListener('click', (event) => {
             event.preventDefault();
             chrome.tabs.create({
                 url: chrome.runtime.getURL('../extension-ui/pages/EmailVerification.html')
-            });});
+            });
+        });
     }
 
     if (confirmButton) {
@@ -130,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (signupBackButton) {
-        signupBackButton.addEventListener('click', () => navigateTo('FirstPage.html'));
+        signupBackButton.addEventListener('click', () => navigateTo('SignInPage.html'));
     }
 });
 
@@ -140,14 +158,13 @@ function isTokenValid() {
     if (!token) return false;
     
     try {
-        // Decode token payload (assumes JWT format: header.payload.signature)
+        // Get the payload part of the JWT token
         const payload = JSON.parse(atob(token.split('.')[1]));
-        // exp is in seconds; convert to milliseconds
-        if (payload.exp * 1000 < Date.now()) {
-            return false;  // token expired
-        }
-        return true; // token is valid
-    } catch (error) {
+        
+        // Check if token has expired
+        const now = Math.floor(Date.now() / 1000);
+        return payload.exp > now;
+    } catch (e) {
         return false;
     }
 }

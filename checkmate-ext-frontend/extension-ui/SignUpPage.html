@@ -126,6 +126,7 @@
             position: relative;
             overflow: hidden;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-top: 10px;
         }
         .button:hover {
             transform: translateY(-2px);
@@ -147,46 +148,6 @@
             opacity: 1;
             transform: translate(25%, 25%) rotate(45deg);
         }
-        .divider {
-            display: flex;
-            align-items: center;
-            margin: 15px 0;
-        }
-        .divider::before,
-        .divider::after {
-            content: "";
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(to right, transparent, #e0e0e0, transparent);
-        }
-        .divider span {
-            padding: 0 10px;
-            color: #718096;
-            font-size: 0.85rem;
-        }
-        .social-button {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            padding: 0.6rem 1rem;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-            margin-bottom: 8px;
-        }
-        .social-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            border-color: var(--primary-color);
-        }
-        .social-button .icon {
-            width: 20px;
-            height: 20px;
-        }
         .password-field {
             position: relative;
         }
@@ -198,6 +159,39 @@
             cursor: pointer;
             color: #718096;
             font-size: 0.9rem;
+        }
+        .signin-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .signin-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .signin-link a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: var(--secondary-color);
+            transition: width 0.3s ease;
+        }
+        
+        .signin-link a:hover {
+            color: var(--secondary-color);
+        }
+        
+        .signin-link a:hover::after {
+            width: 100%;
         }
     </style>
 </head>
@@ -218,23 +212,9 @@
         <!-- Form Section -->
         <form class="form-section" id="signUpForm">
             <div class="field">
-                <label class="label">Name</label>
-                <div class="control">
-                    <input type="text" class="input" placeholder="Enter your name" id="name" required>
-                </div>
-            </div>
-
-            <div class="field">
                 <label class="label">Email</label>
                 <div class="control">
                     <input type="email" class="input" placeholder="Enter your email" id="email" required>
-                </div>
-            </div>
-
-            <div class="field">
-                <label class="label">Phone Number</label>
-                <div class="control">
-                    <input type="tel" class="input" placeholder="Enter your phone number" id="phoneNumber" required>
                 </div>
             </div>
 
@@ -255,21 +235,11 @@
             </div>
 
             <button type="submit" class="button">Sign Up</button>
-
-            <!-- Divider -->
-            <div class="divider">
-                <span>Or</span>
+            
+            <!-- Already have an account link -->
+            <div class="signin-link">
+                Already have an account? <a href="#" id="signInLink">Sign In</a>
             </div>
-
-            <!-- Social Buttons -->
-            <button type="button" class="social-button">
-                <img src="../images/Google.png" alt="Google" class="icon">
-                <span>Sign up with Google</span>
-            </button>
-            <button type="button" class="social-button">
-                <img src="../images/Facebook.png" alt="Facebook" class="icon">
-                <span>Sign up with Facebook</span>
-            </button>
         </form>
     </div>
 </div>

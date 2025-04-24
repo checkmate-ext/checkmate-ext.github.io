@@ -339,7 +339,40 @@
             box-shadow: 0 0 0 2px rgba(255, 56, 96, 0.2);
         }
 
-
+        /* Sign up link styling */
+        .signup-link {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .signup-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .signup-link a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: var(--secondary-color);
+            transition: width 0.3s ease;
+        }
+        
+        .signup-link a:hover {
+            color: var(--secondary-color);
+        }
+        
+        .signup-link a:hover::after {
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -441,6 +474,11 @@
                     >
                         Sign In
                     </button>
+                </div>
+                
+                <!-- Sign Up Link - New Addition -->
+                <div class="signup-link">
+                    Don't have an account? <a href="#" id="signUpLink">Sign Up</a>
                 </div>
             </form>
 
