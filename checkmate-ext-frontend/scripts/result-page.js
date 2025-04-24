@@ -100,14 +100,24 @@ function setObjectivityScore(data) {
     }
 }
 
-// Set the bias information and analysis
 function setBiasInformation(data) {
     const biasScore = document.getElementById('biasScore');
     const biasAnalysis = document.getElementById('biasAnalysis');
     
     if (data.bias_prediction) {
         let biasText = data.bias_prediction;
-        biasScore.textContent = getBiasAbbreviation(biasText);
+        
+        // Use full bias text instead of abbreviation
+        biasScore.textContent = biasText;
+        
+        // Adjust font size based on text length
+        if (biasText.length > 10) { // For very long bias text like "Center-Right"
+            biasScore.style.fontSize = '11px';
+        } else if (biasText.length > 6) { // For medium length bias like "Center"
+            biasScore.style.fontSize = '13px';
+        } else { // For short bias text like "Left"
+            biasScore.style.fontSize = '15px';
+        }
         
         // Add color class based on political bias
         if (biasText === "Center") {
@@ -133,27 +143,7 @@ function setBiasInformation(data) {
     }
 }
 
-// Get abbreviated bias text for display
-function getBiasAbbreviation(biasText) {
-    switch(biasText) {
-        case "Left":
-            return "L";
-        case "Center-Left":
-            return "C-L";
-        case "Center":
-            return "C";
-        case "Center-Right":
-            return "C-R";
-        case "Right":
-            return "R";
-        case "Far-Left":
-            return "F-L";
-        case "Far-Right":
-            return "F-R";
-        default:
-            return biasText.substring(0, 3);
-    }
-}
+
 
 // Set the source information
 function setSourceInformation(data) {

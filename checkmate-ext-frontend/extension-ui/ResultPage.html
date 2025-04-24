@@ -198,7 +198,7 @@
         }
 
         .metric-score {
-            font-size: 18px;
+            font-size: 15px;
             font-weight: bold;
             color: var(--text-dark);
             display: flex;
@@ -209,6 +209,14 @@
             border-radius: 6px;
             margin-bottom: 5px;
             color: white;
+            padding: 0 5px; /* Add some horizontal padding */
+        }
+        
+        /* Make bias score wider */
+        #biasScore {
+            width: 80px; /* Wider to fit full text */
+            height: 30px;
+            text-align: center;
         }
 
         .metric-score.red {
