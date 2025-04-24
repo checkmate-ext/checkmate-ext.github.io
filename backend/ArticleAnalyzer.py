@@ -687,6 +687,7 @@ class ArticleAnalyzer:
             # <-- pick up the right field:
             self.article['reliability_score'] = rel_json.get('reliability', -1)
             print(f"[DEBUG] reliability_score: {self.article['reliability_score']}")
+
         except requests.RequestException as e:
             body = getattr(e.response, 'text', '<no body>')
             print(f"[DEBUG] Error getting reliability score: {e}\nResponse body: {body}")

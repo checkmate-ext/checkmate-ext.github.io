@@ -154,8 +154,6 @@ def token_required(f):
     return decorated
 
 
-# Fix for the objectivity_score retrieval in the scrap_and_search route
-
 @app.route('/scrap_and_search', methods=['POST'])
 @token_required
 def scrap_and_search(current_user):
@@ -206,7 +204,7 @@ def scrap_and_search(current_user):
                 'article': article_data,
                 'similar_articles': similar_articles_data,
                 'images_data': [],
-                'website_credibility': cred_score,
+                'website_credibility': website_credibility['credibility_score'],
                 'article_id': past_article.id,
                 'objectivity_score': past_article.objectivity_score,
                 'bias_prediction': past_article.bias_prediction,
@@ -257,16 +255,19 @@ def scrap_and_search(current_user):
 
         db.session.add(article_request)
 
-        similar_articles_to_insert = [
-            SimilarArticle(
-                main_article_id=new_search.id,
-                title=article['title'],
-                url=article['url'],
-                similarity_score=article.get('similarity_score')
+        similar_articles_to_insert = []
+        for sim in similar_articles:
+            safe_title = (sim.get('title') or '')[:500]
+            safe_url   = (sim.get('url')   or '')[:500]
+            sim_score  = sim.get('similarity_score', 0.0)
+            similar_articles_to_insert.append(
+                SimilarArticle(
+                    main_article_id=new_search.id,
+                    title=safe_title,
+                    url=safe_url,
+                    similarity_score=sim_score
+                )
             )
-            for article in similar_articles
-        ]
-        print("[DEBUG] scrap_and_search: Inserting new article record in the database.")
 
         if similar_articles_to_insert:
             db.session.bulk_save_objects(similar_articles_to_insert)
