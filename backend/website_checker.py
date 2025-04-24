@@ -2,31 +2,31 @@ from sqlalchemy import text
 from models import db  
 from urllib.parse import urlparse
 
+import tldextract
+
 def get_domain_from_url(url):
     """
-    Extract the main domain name from a URL.
-    
+    Extract the main domain name from a URL using tldextract.
+
     Args:
         url (str): The full URL to parse
-        
+
     Returns:
         str: The main domain name without subdomains
     """
-    # Parse the URL
-    parsed = urlparse(url)
-    # Get the network location (hostname)
-    hostname = parsed.netloc
-    
-    # Split hostname by dots and get the main domain parts
-    parts = hostname.split('.')
-    
-    # Handle www and other subdomains
-    if parts[0] == 'www':
-        parts = parts[1:]
-    
-    # Return the main domain name
-    return parts[0]
+    if not url:
+        return ""
 
+    try:
+        # Extract domain parts using tldextract
+        extracted = tldextract.extract(url)
+
+        # Return the registered domain (without subdomains)
+        # This handles all edge cases with different TLDs properly
+        return extracted.domain
+    except Exception as e:
+        print(f"Error extracting domain from {url}: {e}")
+        return ""
 
 def check_website_score(url):
     domain = get_domain_from_url(url)
