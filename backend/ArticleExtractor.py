@@ -17,8 +17,6 @@ class ArticleExtractor:
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_argument('--start-maximized')
         options.add_argument('--disable-popup-blocking')
-        options.add_argument('--headless')          # ← run in headless mode
-        options.add_argument('--disable-gpu')       # ← disable GPU (good practice with headless)
 
         # Set a custom user agent to help bypass anti-bot measures
         options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "

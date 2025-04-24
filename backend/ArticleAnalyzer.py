@@ -615,11 +615,36 @@ def _extract_article_hybrid(url, main_article=None):
             article_data['similarity_score'] = check_similarity(sim_clean, main_clean)
         return article_data
 
-    # FALLBACK to browser-based extraction
     try:
         scrapper = ArticleExtractor()
         article_data = scrapper.extract_article(url)
-        # ... content checks unchanged ...
+
+        # Check if we actually got meaningful content
+        if not article_data.get('content') or len(article_data.get('content', '')) < 100:
+            print(f"Browser-based extraction failed to get sufficient content for {url}")
+
+            if scrapper.driver:
+                scrapper.driver.quit()
+            return None
+
+        error_indicators = [
+            'could not extract meaningful content',
+                'page load error',
+                'could not initialize driver',
+                'failed to extract',
+                'no content found',
+                'access denied',
+                'robot check',
+                'captcha'
+        ]
+
+        content = article_data.get('content', '').lower()
+        if any(indicator in content for indicator in error_indicators):
+            print(f"Browser-based extraction returned error content for {url}")
+            if scrapper.driver:
+                scrapper.driver.quit()
+            return None
+
         if main_article is None:
             clean_content = ' '.join(article_data['content'].split())
             try:
