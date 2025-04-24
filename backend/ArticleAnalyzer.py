@@ -2,6 +2,8 @@ from datetime import datetime
 import requests
 import concurrent.futures
 from bs4 import BeautifulSoup
+from tldextract import tldextract
+
 from ArticleExtractor import ArticleExtractor
 import random
 import json
@@ -9,6 +11,38 @@ from typing import Optional, List, Dict
 from urllib.parse import urljoin, urlparse
 import re
 from website_checker import check_website_score
+
+
+def normalize_domain(url: str) -> str:
+    """
+    Normalize domain names using tldextract to properly handle
+    different subdomains and variations of the same publisher.
+
+    Examples:
+    - www.bbc.com -> bbc
+    - sports.bbc.co.uk -> bbc
+    - edition.cnn.com -> cnn
+    - news.cnn.com -> cnn
+
+    Args:
+        url (str): The URL to normalize
+
+    Returns:
+        str: The normalized domain name (registered domain without TLD)
+    """
+    if not url:
+        return ""
+
+    try:
+        # Extract domain parts using tldextract
+        extracted = tldextract.extract(url)
+
+        # Return the registered domain (without subdomains)
+        return extracted.domain
+    except Exception as e:
+        print(f"Error normalizing domain for {url}: {e}")
+        return url  # Return the original URL if parsing fails
+
 
 def check_similarity(text1: str, text2: str) -> float:
     import os
@@ -693,19 +727,39 @@ class ArticleAnalyzer:
             self.article['reliability_score'] = -1
 
 
+
     def __get_similar_articles(self):
         print("[DEBUG] ArticleAnalyzer: Starting similar articles retrieval using title:", self.article.get('title', ''))
         similar_articles = self.__search(self.article.get('title', ''))
         print("[DEBUG] ArticleAnalyzer: Google Custom Search returned", len(similar_articles), "results.")
 
-        urls = [item['link'] for item in similar_articles if 'link' in item]
-        print("[DEBUG] ArticleAnalyzer: Extracted", len(urls), "URLs from search results.")
+        # Extract the main article's domain for comparison
+        main_article_domain = normalize_domain(self.article['url'])
+        print(f"[DEBUG] ArticleAnalyzer: Main article domain (normalized): {main_article_domain}")
+
+        # Filter out URLs from the same normalized domain
+        filtered_urls = []
+        for item in similar_articles:
+            if 'link' not in item:
+                continue
+
+            url = item['link']
+            current_domain = normalize_domain(url)
+
+            # Skip this URL if it's from the same domain as the main article
+            if current_domain == main_article_domain:
+                print(f"[DEBUG] ArticleAnalyzer: Skipping URL from same domain: {url} ({current_domain})")
+                continue
+
+            filtered_urls.append(url)
+
+        print(f"[DEBUG] ArticleAnalyzer: Filtered from {len(similar_articles)} to {len(filtered_urls)} URLs after domain normalization.")
 
         extracted_articles = []
         with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
             future_to_url = {
                 executor.submit(_extract_article_hybrid, url, self.article): url
-                for url in urls
+                for url in filtered_urls
             }
             for future in concurrent.futures.as_completed(future_to_url):
                 url = future_to_url[future]
