@@ -754,7 +754,13 @@ class ArticleAnalyzer:
 
 
 
+
     def __get_similar_articles(self):
+        """
+        Get similar articles from Google Custom Search API using the article title.
+        Extracts full content from URLs to calculate accurate similarity scores.
+        But uses Google-provided titles for display to avoid unnecessary parsing.
+        """
         print("[DEBUG] ArticleAnalyzer: Starting similar articles retrieval using title:", self.article.get('title', ''))
         similar_articles = self.__search(self.article.get('title', ''))
         print("[DEBUG] ArticleAnalyzer: Google Custom Search returned", len(similar_articles), "results.")
@@ -763,13 +769,16 @@ class ArticleAnalyzer:
         main_article_domain = normalize_domain(self.article['url'])
         print(f"[DEBUG] ArticleAnalyzer: Main article domain (normalized): {main_article_domain}")
 
-        # Filter out URLs from the same normalized domain
+        # Create a mapping of URLs to their Google-provided titles
+        url_to_title_map = {}
         filtered_urls = []
+        
         for item in similar_articles:
             if 'link' not in item:
                 continue
 
             url = item['link']
+            google_title = item.get('title', '')  # Store Google title
             current_domain = normalize_domain(url)
 
             # Skip this URL if it's from the same domain as the main article
@@ -777,10 +786,13 @@ class ArticleAnalyzer:
                 print(f"[DEBUG] ArticleAnalyzer: Skipping URL from same domain: {url} ({current_domain})")
                 continue
 
+            # Store the mapping and add URL to filtered list
+            url_to_title_map[url] = google_title
             filtered_urls.append(url)
 
         print(f"[DEBUG] ArticleAnalyzer: Filtered from {len(similar_articles)} to {len(filtered_urls)} URLs after domain normalization.")
 
+        # Extract content from filtered URLs (in parallel)
         extracted_articles = []
         with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
             future_to_url = {
@@ -793,13 +805,20 @@ class ArticleAnalyzer:
                     print(f"[DEBUG] ArticleAnalyzer: Extracting article from URL: {url}")
                     data = future.result()
                     if data:
+                        # Use the Google-provided title (when available)
+                        if url in url_to_title_map and url_to_title_map[url]:
+                            data['google_title'] = url_to_title_map[url]
+                        
                         extracted_articles.append(data)
                         print(f"[DEBUG] ArticleAnalyzer: Extraction successful for {url}")
                     else:
                         print(f"[DEBUG] ArticleAnalyzer: No data extracted for {url}")
                 except Exception as e:
                     print(f"[DEBUG] ArticleAnalyzer: Error extracting {url}: {e}")
+                    
         return extracted_articles
+
+
 
     def __search(self, query: str, num_results: int = 10):
         print("[DEBUG] ArticleAnalyzer: Performing Google Custom Search with query:", query)
@@ -824,8 +843,23 @@ class ArticleAnalyzer:
 
 
     def get_similar(self):
-        print("[DEBUG] ArticleAnalyzer: Returning", len(self.extracted_articles), "similar articles.")
-        return self.extracted_articles
+        """Return similar articles with accurate similarity scores and Google titles."""
+        # Create a display-friendly version of similar articles with Google titles
+        display_articles = []
+        for article in self.extracted_articles:
+            display_article = {
+                'url': article['url'],
+                # Use Google title if available, otherwise fallback to extracted title
+                'title': article.get('google_title', article.get('title', 'Untitled Article')),
+                'similarity_score': article.get('similarity_score', 0.5)
+            }
+            display_articles.append(display_article)
+            
+        # Sort by similarity score (highest first)
+        display_articles.sort(key=lambda x: x.get('similarity_score', 0), reverse=True)
+        
+        print(f"[DEBUG] ArticleAnalyzer: Returning {len(display_articles)} similar articles.")
+        return display_articles
 
     def get_images_data(self):
         """

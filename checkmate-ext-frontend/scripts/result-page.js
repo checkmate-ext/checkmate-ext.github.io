@@ -187,8 +187,10 @@ function displaySimilarArticles(data) {
                 ? Math.round(article.similarity_score * 100) 
                 : Math.floor(Math.random() * 100);
             
+            // Use the Google-provided title without fallback to 'Untitled Article'
+            // since we're now sending it from the backend
             articleElement.innerHTML = `
-                <h3>${article.title || 'Untitled Article'}</h3>
+                <h3>${article.title}</h3>
                 <a href="${article.url}" target="_blank">${article.url}</a>
                 <div class="similarity-badge">
                     Similarity: ${similarityScore}%
