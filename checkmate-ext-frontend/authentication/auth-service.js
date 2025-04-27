@@ -3,7 +3,7 @@ export default class AuthService {
     constructor(apiUrl) {
         this.apiUrl = apiUrl;  // Store the API URL (e.g., 'http://localhost:5000')
         this.token = localStorage.getItem('token') || sessionStorage.getItem('token');  // Get token from localStorage if it exists
-        this.googleClientId = "94517049358-tgqqobr0kk38dofd1h5l0bm019url60c.apps.googleusercontent.com"; // Google Client ID
+        this.googleClientId = "1029076451566-0jqo4bubftitqf3opbl0kd8gmm89k5qd.apps.googleusercontent.com"; // Google Client ID
     }
 
     async login(email, password, rememberMe = false) {

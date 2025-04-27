@@ -79,7 +79,7 @@ def create_app():
     app.config['VISION_API_KEY'] = os.getenv("VISION_API_KEY")
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
     app.config['EMAIL_VERIFICATION_SECRET_KEY'] = os.getenv('EMAIL_VERIFICATION_SECRET_KEY')
-    app.config['GOOGLE_CLIENT_ID'] = "94517049358-tgqqobr0kk38dofd1h5l0bm019url60c.apps.googleusercontent.com"
+    app.config['GOOGLE_CLIENT_ID'] = "1029076451566-0jqo4bubftitqf3opbl0kd8gmm89k5qd.apps.googleusercontent.com"
     app.config["SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
 
     # Database configuration
