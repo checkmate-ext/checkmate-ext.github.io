@@ -1188,6 +1188,7 @@ def fetch_stats(current_user):
         twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        one_year_ago = datetime.utcnow() - timedelta(days=365)  # New: For yearly data
 
         # Get recent articles (last 24 hours)
         recent_articles = ArticleSearch.query.join(ArticleRequest).filter(
@@ -1205,6 +1206,12 @@ def fetch_stats(current_user):
         monthly_articles = ArticleSearch.query.join(ArticleRequest).filter(
             ArticleRequest.user_id == current_user.id,
             ArticleRequest.created_at >= thirty_days_ago
+        ).all()
+        
+        # Get yearly articles (new)
+        yearly_articles = ArticleSearch.query.join(ArticleRequest).filter(
+            ArticleRequest.user_id == current_user.id,
+            ArticleRequest.created_at >= one_year_ago
         ).all()
 
         # Get all-time articles count
@@ -1230,6 +1237,12 @@ def fetch_stats(current_user):
         for article in monthly_articles:
             monthly_scores.append(article.reliability_score)
         avg_monthly_accuracy = sum(monthly_scores) / len(monthly_scores) if monthly_scores else 0
+        
+        # Yearly (new)
+        yearly_scores = []
+        for article in yearly_articles:
+            yearly_scores.append(article.reliability_score)
+        avg_yearly_accuracy = sum(yearly_scores) / len(yearly_scores) if yearly_scores else 0
 
         # Get article distribution by day for the past week
         daily_counts = db.session.query(
@@ -1262,14 +1275,14 @@ def fetch_stats(current_user):
             str(week.week.date()): week.count for week in weekly_counts
         }
 
-        # Get article distribution by month (last 6 months)
-        six_months_ago = datetime.utcnow() - timedelta(days=180)
+        # Get article distribution by month (last 12 months for yearly view)
+        twelve_months_ago = datetime.utcnow() - timedelta(days=365)
         monthly_counts = db.session.query(
             func.date_trunc('month', ArticleRequest.created_at).label('month'),
             func.count(ArticleRequest.article_id).label('count')
         ).filter(
             ArticleRequest.user_id == current_user.id,
-            ArticleRequest.created_at >= six_months_ago
+            ArticleRequest.created_at >= twelve_months_ago
         ).group_by(
             func.date_trunc('month', ArticleRequest.created_at)
         ).all()
@@ -1277,6 +1290,19 @@ def fetch_stats(current_user):
         monthly_distribution = {
             str(month.month.date()): month.count for month in monthly_counts
         }
+        
+        # Calculate quarterly distribution for yearly view (new)
+        quarterly_distribution = {}
+        for date_str, count in monthly_distribution.items():
+            try:
+                date = datetime.strptime(date_str, '%Y-%m-%d')
+                quarter = f"Q{(date.month-1)//3 + 1} {date.year}"
+                if quarter in quarterly_distribution:
+                    quarterly_distribution[quarter] += count
+                else:
+                    quarterly_distribution[quarter] = count
+            except Exception as e:
+                print(f"Error processing date {date_str}: {e}")
 
         # Format recent articles data
         articles_data = [{
@@ -1294,6 +1320,7 @@ def fetch_stats(current_user):
         return jsonify({
             # Daily stats
             'articles_analyzed': len(recent_articles),
+            'articles_analyzed_daily': len(recent_articles),  # Duplicate for mobile app compatibility
             'daily_usage_left': app.config['DAILY_USAGE'] - len(recent_articles),
             'daily_accuracy': avg_daily_accuracy,
             'daily_distribution': daily_distribution,
@@ -1307,6 +1334,11 @@ def fetch_stats(current_user):
             'articles_analyzed_monthly': len(monthly_articles),
             'monthly_accuracy': avg_monthly_accuracy,
             'monthly_distribution': monthly_distribution,
+            
+            # Yearly stats (new)
+            'articles_analyzed_yearly': len(yearly_articles),
+            'yearly_accuracy': avg_yearly_accuracy,
+            'quarterly_distribution': quarterly_distribution,
 
             # Other stats
             'total_articles': total_articles,
@@ -1319,7 +1351,6 @@ def fetch_stats(current_user):
         db.session.rollback()
         print(f"Error fetching stats: {str(e)}")
         return jsonify({'error': 'Failed to fetch stats'}), 500
-
 
 if __name__ == '__main__':
     # Run the app on all network interfaces (0.0.0.0) instead of just localhost
