@@ -11,7 +11,39 @@ from typing import Optional, List, Dict
 from urllib.parse import urljoin, urlparse
 import re
 from website_checker import check_website_score
+from spellchecker import SpellChecker
+import nltk
+import os
 
+NLTK_DATA_DIR = os.path.expanduser(r"C:\nltk_data")  # or "/usr/local/share/nltk_data", etc.
+nltk.data.path.append(NLTK_DATA_DIR)
+
+# 2) Download the models you need, quietly
+for pkg in ("punkt", "averaged_perceptron_tagger"):
+    try:
+        nltk.data.find(f"tokenizers/{pkg}" if pkg == "punkt"
+                       else f"taggers/{pkg}")
+    except LookupError:
+        print(f"Downloading NLTK resource: {pkg} → {NLTK_DATA_DIR}")
+        nltk.download(pkg, download_dir=NLTK_DATA_DIR, quiet=True)
+
+_spell = SpellChecker()
+
+def get_misspellings(text: str):
+    # 1) Split on whitespace and POS-tag
+    tokens = text.split()
+    tagged  = nltk.pos_tag(tokens)
+
+    # 2) Drop single‐token proper nouns
+    filtered_tokens = [w for w, t in tagged if t not in ('NNP','NNPS')]
+
+    # 3) Lowercase + strip out non-words
+    words = re.findall(r"\b[a-z']{2,}\b",
+                       " ".join(filtered_tokens).lower())
+
+    # 4) Spell-check
+    misspelled = _spell.unknown(words)
+    return words, misspelled
 
 def normalize_domain(url: str) -> str:
     """
@@ -575,6 +607,22 @@ def _extract_article_hybrid(url, main_article=None):
             # CLEAN AND GET SUBJECTIVITY
             clean_content = article_data['content'].replace('\n', ' ').replace('\r', ' ')
             clean_content = ' '.join(clean_content.split())
+
+            # ─── SPELLING CHECK (pyspellchecker) ───
+            words      = clean_content.split()
+            misspelled = _spell.unknown(words)
+
+            words, misspelled = get_misspellings(clean_content)
+
+            # record in your article_data dict
+            article_data['spelling_issues']   = len(misspelled)
+            article_data['linguistic_issues'] = len(misspelled)
+
+            # ─── PRINT OUTPUT ───
+            print(f"[SPELL-CHECK] Found {len(misspelled)} misspelled word(s).")
+            if misspelled:
+                print("[SPELL-CHECK] Misspelled words:", ", ".join(sorted(misspelled)))
+
             try:
                 resp = requests.post(
                     "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",
@@ -630,7 +678,6 @@ def _extract_article_hybrid(url, main_article=None):
         return article_data
 
     try:
-        print("bombardino ")
         scrapper = ArticleExtractor()
         article_data = scrapper.extract_article(url)
 
@@ -662,6 +709,21 @@ def _extract_article_hybrid(url, main_article=None):
 
         if main_article is None:
             clean_content = ' '.join(article_data['content'].split())
+
+            words      = clean_content.split()
+            misspelled = _spell.unknown(words)
+
+            words, misspelled = get_misspellings(clean_content)
+
+            # record in your article_data dict
+            article_data['spelling_issues']   = len(misspelled)
+            article_data['linguistic_issues'] = len(misspelled)
+
+            # ─── PRINT OUTPUT ───
+            print(f"[SPELL-CHECK] Found {len(misspelled)} misspelled word(s).")
+            if misspelled:
+                print("[SPELL-CHECK] Misspelled words:", ", ".join(sorted(misspelled)))
+
             try:
                 resp = requests.post(
                     "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",

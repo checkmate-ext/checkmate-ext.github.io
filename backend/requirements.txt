@@ -31,3 +31,8 @@ google-genai
 itsdangerous
 iyzipay
 tldextract
+
+#grammar
+pyspellchecker
+nltk
+
