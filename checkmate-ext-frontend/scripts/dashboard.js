@@ -1,4 +1,5 @@
 // Constants
+const API_BASE_URL = 'http://localhost:5000';
 const REFRESH_INTERVAL = 300000; // 5 minutes
 const ANIMATION_DURATION = 1500;
 const CHART_COLORS = {
@@ -12,6 +13,10 @@ class DashboardManager {
         this.weeklyChart = null;
         this.statsData = null;
         this.isLoading = false;
+        this.currentTimeRange = 'week'; // Default to weekly view
+        
+        // Make accessible globally for theme script
+        window.dashboardManager = this;
         this.init();
     }
 
@@ -30,6 +35,7 @@ class DashboardManager {
             this.hideLoadingState();
             
             // Create mock data as fallback
+            this.statsData = this.createMockData();
             this.updateUI();
             try {
                 this.initializeChart();
@@ -37,6 +43,23 @@ class DashboardManager {
                 console.error('Failed to initialize chart with fallback data:', chartError);
             }
         }
+    }
+
+    createMockData() {
+        return {
+            articles_analyzed: 0,
+            daily_limit: 5,
+            daily_usage_left: 5,
+            weekly_accuracy: 0,
+            monthly_accuracy: 0,
+            yearly_accuracy: 0,
+            total_articles: 0,
+            articles: [],
+            daily_distribution: {},
+            weekly_distribution: {},
+            monthly_distribution: {},
+            quarterly_distribution: {}
+        };
     }
 
     showLoadingState() {
@@ -62,21 +85,16 @@ class DashboardManager {
     }
 
     showError(message) {
-        const errorContainer = document.getElementById('errorContainer') || this.createErrorContainer();
-        errorContainer.textContent = message;
-        errorContainer.classList.add('visible');
-        setTimeout(() => {
-            errorContainer.classList.remove('visible');
-        }, 5000);
+        const errorContainer = document.getElementById('errorMessage');
+        if (errorContainer) {
+            errorContainer.textContent = message;
+            errorContainer.classList.add('visible');
+            setTimeout(() => {
+                errorContainer.classList.remove('visible');
+            }, 5000);
+        }
     }
 
-    createErrorContainer() {
-        const container = document.createElement('div');
-        container.id = 'errorContainer';
-        container.className = 'error-message';
-        document.querySelector('.container').prepend(container);
-        return container;
-    }
 
     async fetchDashboardData() {
         try {
@@ -84,33 +102,53 @@ class DashboardManager {
             if (!token) {
                 throw new Error('No authentication token found');
             }
-
-            // Use a timeout promise to prevent long hangs
-            const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Connection timeout')), 5000)
-            );
-
-            // The fetch promise
-            const fetchPromise = fetch('http://localhost:5000/user/stats', {
+    
+            console.log('Fetching dashboard data...');
+            const response = await fetch(`${API_BASE_URL}/user/stats`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 }
             });
-
-            // Race the fetch against the timeout
-            const response = await Promise.race([fetchPromise, timeoutPromise]);
-
+            
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorText = await response.text();
+                throw new Error(`API error: ${response.status}, ${errorText}`);
             }
-
+            
             this.statsData = await response.json();
+            console.log('Received stats data:', this.statsData);
+            
+            if (!this.statsData) {
+                throw new Error('Empty response from API');
+            }
+            
+            // Enhanced normalization of accuracy values
+            // These could come in 0-1 range, 0-100 range, or potentially even larger values
+            this.statsData.weekly_accuracy = this.normalizePercentage(this.statsData.weekly_accuracy);
+            this.statsData.monthly_accuracy = this.normalizePercentage(this.statsData.monthly_accuracy);
+            this.statsData.yearly_accuracy = this.normalizePercentage(this.statsData.yearly_accuracy);
+            
             return this.statsData;
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
             throw error;
+        }
+    }
+
+    normalizePercentage(value) {
+        if (value === undefined || value === null) return 0;
+        
+        // Convert to number if it's a string
+        const numValue = typeof value === 'string' ? parseFloat(value) : value;
+        
+        // Since we know the backend is now consistently returning percentages in 0-100 range,
+        // we can simplify this function
+        if (numValue >= 0) {
+            return numValue * 100; // Values already in 0-100 range from backend
+        } else {
+            return 0; // Fallback for negative values
         }
     }
 
@@ -130,29 +168,52 @@ class DashboardManager {
         this.animateElements();
     }
 
-    updateProgressBar() {
-        const usageBar = document.getElementById('usageBar');
-        const usageLabel = document.querySelector('.progress-label');
-        
-        if (!this.statsData.articles_analyzed) {
-            this.statsData.articles_analyzed = 0;
-        }
-        
-        if (!this.statsData.daily_limit) {
-            this.statsData.daily_limit = 10; // Fallback value
-        }
-        
-        const percentage = (this.statsData.articles_analyzed / this.statsData.daily_limit) * 100;
 
-        // Animate the progress bar
-        usageBar.style.transition = 'width 1s ease-in-out';
-        usageBar.style.width = `${percentage}%`;
-
-        // Update the label
-        usageLabel.textContent = `${Math.round(percentage)}% of daily limit used`;
+updateProgressBar() {
+    const usageBar = document.getElementById('usageBar');
+    const usageLabel = document.querySelector('.progress-label');
+    
+    if (!usageBar || !usageLabel) {
+        console.error('Progress bar elements not found');
+        return;
     }
+    
+    // Ensure articles_analyzed is a number
+    let articlesAnalyzed = 0;
+    if (this.statsData.articles_analyzed !== undefined && this.statsData.articles_analyzed !== null) {
+        articlesAnalyzed = parseInt(this.statsData.articles_analyzed) || 0;
+    }
+    
+    // Ensure daily_limit is a number and not zero
+    let dailyLimit = 5; // Default fallback
+    if (this.statsData.daily_limit !== undefined && this.statsData.daily_limit !== null) {
+        dailyLimit = parseInt(this.statsData.daily_limit) || dailyLimit;
+    }
+    
+    const percentage = Math.min(100, Math.max(0, (articlesAnalyzed / dailyLimit) * 100));
+    
+    // Direct update without resetting to zero first
+    usageBar.style.transition = 'width 1s ease-in-out';
+    usageBar.style.width = `${percentage}%`;
+    
+    // Update color based on usage
+    if (percentage > 90) {
+        usageBar.style.backgroundColor = '#dc3545'; // Red
+    } else if (percentage > 75) {
+        usageBar.style.backgroundColor = '#ffc107'; // Yellow
+    } else {
+        usageBar.style.backgroundColor = CHART_COLORS.primary; // Green
+    }
+    
+    // Update the label with explicit values
+    usageLabel.textContent = `${articlesAnalyzed} of ${dailyLimit} articles used today`;
+    
+    // Log for debugging
+    console.log('Updated progress bar:', { articlesAnalyzed, dailyLimit, percentage });
+}
 
     updateAllStatCards() {
+        // First 3 stats are fixed
         const stats = [
             {
                 title: 'Daily Limit',
@@ -165,11 +226,6 @@ class DashboardManager {
                 subtitle: 'articles analyzed'
             },
             {
-                title: 'Reliability',
-                value: `${Number(this.statsData.weekly_accuracy || 0).toFixed(2)}%`,
-                subtitle: 'last 7 days'
-            },
-            {
                 title: 'Total Articles',
                 value: this.statsData.total_articles || 0,
                 subtitle: 'all time'
@@ -177,70 +233,165 @@ class DashboardManager {
         ];
 
         stats.forEach(stat => this.updateStatCard(stat.title, stat.value, stat.subtitle));
+        
+        // Update Reliability based on current time range
+        this.updateStatCardsByTimeRange();
     }
+    
+    updateStatCardsByTimeRange() {
+        // Update reliability card based on selected time range
+        let accuracy;
+        let timeLabel;
+        
+        switch (this.currentTimeRange) {
+            case 'week':
+                accuracy = this.statsData.weekly_accuracy || 0;
+                timeLabel = 'last 7 days';
+                break;
+            case 'month':
+                accuracy = this.statsData.monthly_accuracy || 0;
+                timeLabel = 'last 30 days';
+                break;
+            case 'year':
+                accuracy = this.statsData.yearly_accuracy || 0;
+                timeLabel = 'last 365 days';
+                break;
+            default:
+                accuracy = this.statsData.weekly_accuracy || 0;
+                timeLabel = 'last 7 days';
+        }
+        
+        // Format accuracy to 1 decimal place
+        // We've already normalized it in fetchDashboardData so it should be in the 0-100 range
+        const formattedAccuracy = parseFloat(accuracy).toFixed(1);
+        
+        // Log for debugging
+        console.log(`Reliability for ${this.currentTimeRange}: raw=${accuracy}, formatted=${formattedAccuracy}%`);
+        
+        this.updateStatCard('Reliability', `${formattedAccuracy}%`, timeLabel);
+    }
+
 
     updateStatCard(title, value, subtitle) {
         const cards = document.querySelectorAll('.stat-card');
-        for (const card of cards) {
+        let found = false;
+        
+        cards.forEach(card => {
             const titleEl = card.querySelector('.stat-title');
             if (titleEl && titleEl.textContent === title) {
+                found = true;
                 const valueEl = card.querySelector('.stat-value');
                 const subtitleEl = card.querySelector('.stat-subtitle');
 
-                // Animate value changes
-                if (valueEl) this.animateValue(valueEl, value);
-                if (subtitleEl) subtitleEl.textContent = subtitle;
-                break;
+                // Animate value changes if possible, or set directly
+                if (valueEl) {
+                    try {
+                        this.animateValue(valueEl, value);
+                    } catch (e) {
+                        valueEl.textContent = value;
+                    }
+                }
+                
+                // Update subtitle
+                if (subtitleEl && subtitle) {
+                    subtitleEl.textContent = subtitle;
+                }
             }
-        }
+        });
+        
+        return found;
     }
 
     animateValue(element, newValue) {
         if (!element) return;
         
-        let start = 0;
+        // Handle percentage values
+        let isPercentage = false;
+        let startValue = 0;
+        let targetValue = 0;
+        
+        // Parse current element value
         try {
-            start = parseInt(element.textContent.replace(/\D/g, '')) || 0;
+            const currentText = element.textContent;
+            startValue = parseFloat(currentText.replace(/[^\d.-]/g, '')) || 0;
         } catch (e) {
-            start = 0;
+            startValue = 0;
         }
         
-        let end = 0;
+        // Parse target value
         try {
-            end = parseInt(newValue.toString().replace(/\D/g, '')) || 0;
-        } catch (e) {
-            end = 0;
-        }
-        
-        const duration = 1000;
-        const steps = 20;
-        const step = (end - start) / steps;
-        
-        let current = start;
-        let counter = 0;
-        
-        const update = () => {
-            counter++;
-            current += step;
-            if (counter >= steps || (step > 0 && current >= end) || (step < 0 && current <= end)) {
-                element.textContent = newValue;
+            if (typeof newValue === 'string') {
+                isPercentage = newValue.includes('%');
+                targetValue = parseFloat(newValue.replace(/[^\d.-]/g, '')) || 0;
             } else {
-                element.textContent = Math.round(current).toString();
-                requestAnimationFrame(update);
+                targetValue = parseFloat(newValue) || 0;
             }
+        } catch (e) {
+            targetValue = 0;
+        }
+        
+        // Skip animation if values are the same
+        if (Math.abs(startValue - targetValue) < 0.1) {
+            element.textContent = typeof newValue === 'string' ? newValue : targetValue;
+            return;
+        }
+        
+        const duration = 1000; // ms
+        const stepTime = 20; // ms
+        const steps = duration / stepTime;
+        const increment = (targetValue - startValue) / steps;
+        
+        let currentValue = startValue;
+        let currentStep = 0;
+        
+        const animateStep = () => {
+            currentStep++;
+            currentValue += increment;
+            
+            // Ensure we end with exact target
+            if (currentStep >= steps) {
+                element.textContent = isPercentage ? `${targetValue.toFixed(1)}%` : newValue;
+                return;
+            }
+            
+            // Format based on type
+            if (isPercentage) {
+                element.textContent = `${currentValue.toFixed(1)}%`;
+            } else if (Number.isInteger(targetValue)) {
+                element.textContent = Math.round(currentValue);
+            } else {
+                element.textContent = currentValue.toFixed(1);
+            }
+            
+            requestAnimationFrame(animateStep);
         };
         
-        requestAnimationFrame(update);
+        requestAnimationFrame(animateStep);
     }
 
     updateUserInfo() {
         const welcomeText = document.querySelector('.welcome-text');
-        if (welcomeText && this.statsData.subscription_plan) {
-            welcomeText.textContent = `Welcome Back`;
+        if (welcomeText) {
+            try {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    // Extract name from JWT token
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    if (payload.name) {
+                        welcomeText.textContent = `Welcome back, ${payload.name}!`;
+                    } else if (payload.email) {
+                        const username = payload.email.split('@')[0];
+                        welcomeText.textContent = `Welcome back, ${username}!`;
+                    }
+                }
+            } catch (e) {
+                console.error('Error parsing token for welcome message:', e);
+            }
         }
     }
 
     animateElements() {
+        // Optional: Add animations when cards first appear
         document.querySelectorAll('.stat-card').forEach((card, index) => {
             card.style.opacity = '0';
             card.style.transform = 'translateY(20px)';
@@ -257,7 +408,7 @@ class DashboardManager {
             const chartCanvas = document.getElementById('weeklyChart');
             
             if (!chartCanvas) {
-                console.error('Weekly chart canvas element not found');
+                console.error('Chart canvas element not found');
                 return;
             }
             
@@ -274,14 +425,26 @@ class DashboardManager {
                 return;
             }
             
-            let weeklyData;
+            let chartData;
             try {
-                weeklyData = this.processWeeklyData();
+                switch (this.currentTimeRange) {
+                    case 'week':
+                        chartData = this.processWeeklyData();
+                        break;
+                    case 'month':
+                        chartData = this.processMonthlyData();
+                        break;
+                    case 'year':
+                        chartData = this.processYearlyData();
+                        break;
+                    default:
+                        chartData = this.processWeeklyData();
+                }
             } catch (error) {
-                console.error('Error processing weekly data:', error);
-                weeklyData = {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    values: [0, 0, 0, 0, 0, 0, 0]
+                console.error(`Error processing ${this.currentTimeRange} data:`, error);
+                chartData = {
+                    labels: ['No Data'],
+                    values: [0]
                 };
             }
             
@@ -292,10 +455,10 @@ class DashboardManager {
             this.weeklyChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: weeklyData.labels,
+                    labels: chartData.labels,
                     datasets: [{
                         label: 'Articles Analyzed',
-                        data: weeklyData.values,
+                        data: chartData.values,
                         backgroundColor: CHART_COLORS.primary,
                         borderRadius: 4,
                     }]
@@ -378,6 +541,7 @@ class DashboardManager {
                 });
             }
 
+            // Rotate data so it starts from the current day
             const today = new Date().getDay();
             const rotatedData = [...weeklyData.slice(today + 1), ...weeklyData.slice(0, today + 1)];
             const rotatedLabels = [...days.slice(today + 1), ...days.slice(0, today + 1)];
@@ -394,33 +558,166 @@ class DashboardManager {
             };
         }
     }
+    
+    processMonthlyData() {
+        // Default data - show last 30 days
+        const labels = [];
+        const values = new Array(30).fill(0);
+        
+        try {
+            if (this.statsData?.daily_distribution) {
+                // Create array of last 30 days
+                const dates = [];
+                for (let i = 29; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    dates.push(date.toISOString().split('T')[0]);
+                }
+                
+                // Add labels (just show every 5th day for readability)
+                dates.forEach((date, index) => {
+                    if (index % 5 === 0 || index === 29) {
+                        const d = new Date(date);
+                        labels.push(`${d.getDate()}/${d.getMonth() + 1}`);
+                    } else {
+                        labels.push('');
+                    }
+                    
+                    // Add value if it exists in the distribution
+                    if (this.statsData.daily_distribution[date]) {
+                        values[index] = this.statsData.daily_distribution[date];
+                    }
+                });
+                
+                return { labels, values };
+            }
+            
+            // If no data, return empty month view
+            for (let i = 0; i < 30; i += 5) {
+                labels.push(`Day ${i+1}`);
+            }
+            
+            return { labels, values };
+        } catch (error) {
+            console.error('Error in processMonthlyData:', error);
+            return {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                values: [0, 0, 0, 0]
+            };
+        }
+    }
+    
+    processYearlyData() {
+        try {
+            // Prefer monthly distribution for year view instead of quarterly
+            if (this.statsData?.monthly_distribution) {
+                // Get the past 12 months
+                const allMonths = [];
+                for (let i = 11; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(1); // First day of month to avoid issues with varying month lengths
+                    date.setMonth(date.getMonth() - i);
+                    allMonths.push(date.toISOString().split('T')[0].substring(0, 7) + "-01"); // Format as YYYY-MM-01
+                }
+                
+                // Create labels for all 12 months, regardless of data presence
+                const labels = allMonths.map(date => {
+                    const d = new Date(date);
+                    return d.toLocaleString('default', { month: 'short' });
+                });
+                
+                // Get values, defaulting to 0 for months with no data
+                const values = allMonths.map(monthDate => {
+                    // Find if there's data for this month
+                    for (const [date, count] of Object.entries(this.statsData.monthly_distribution)) {
+                        if (date.startsWith(monthDate.substring(0, 7))) {
+                            return count;
+                        }
+                    }
+                    return 0;
+                });
+                
+                return { labels, values };
+            } 
+            // Fallback to quarterly if available
+            else if (this.statsData?.quarterly_distribution) {
+                const quarters = Object.keys(this.statsData.quarterly_distribution).sort();
+                const values = quarters.map(q => this.statsData.quarterly_distribution[q]);
+                
+                return {
+                    labels: quarters,
+                    values: values
+                };
+            }
+            
+            // Default yearly view - show all 12 months with zero values
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return {
+                labels: months,
+                values: new Array(12).fill(0)
+            };
+        } catch (error) {
+            console.error('Error in processYearlyData:', error);
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return {
+                labels: months,
+                values: new Array(12).fill(0)
+            };
+        }
+    }
+    
 
     setupEventListeners() {
-        // Refresh button
-        const refreshButton = document.getElementById('refreshBtn');
-        if (refreshButton) {
-            refreshButton.addEventListener('click', () => {
-                if (!this.isLoading) {
-                    this.refreshDashboard();
+        // Time range selector
+        const timeRangeSelector = document.getElementById('timeRangeSelector');
+        if (timeRangeSelector) {
+            timeRangeSelector.addEventListener('change', (e) => {
+                this.currentTimeRange = e.target.value;
+                this.initializeChart();
+                this.updateStatCardsByTimeRange();
+            });
+        }
+        
+        // History button
+        const historyBtn = document.getElementById('historyBtn');
+        if (historyBtn) {
+            historyBtn.addEventListener('click', () => {
+                if (typeof navigateTo === 'function') {
+                    navigateTo('HistoryPage.html');
+                } else {
+                    window.location.href = 'HistoryPage.html';
                 }
             });
         }
-
-        // Add hover effects for stat cards
-        document.querySelectorAll('.stat-card').forEach(card => {
-            card.addEventListener('mouseenter', () => {
-                card.style.transform = 'translateY(-5px)';
-                card.style.transition = 'transform 0.3s ease';
+        
+        // Menu button
+        const menuBtn = document.getElementById('menuBtn');
+        if (menuBtn) {
+            menuBtn.addEventListener('click', () => {
+                if (typeof navigateTo === 'function') {
+                    navigateTo('MainMenuPage.html');
+                } else {
+                    window.location.href = 'MainMenuPage.html';
+                }
             });
-            card.addEventListener('mouseleave', () => {
-                card.style.transform = 'translateY(0)';
+        }
+        
+        // Profile button
+        const profileBtn = document.getElementById('profileBtn');
+        if (profileBtn) {
+            profileBtn.addEventListener('click', () => {
+                if (typeof navigateTo === 'function') {
+                    navigateTo('ProfilePage.html');
+                } else {
+                    window.location.href = 'ProfilePage.html';
+                }
             });
-        });
+        }
     }
 
     setupAutoRefresh() {
         setInterval(() => {
-            if (!this.isLoading) {
+            if (!this.isLoading && document.visibilityState !== 'hidden') {
                 this.refreshDashboard();
             }
         }, REFRESH_INTERVAL);
@@ -440,43 +737,6 @@ class DashboardManager {
         }
     }
 }
-
-// Add required CSS
-const style = document.createElement('style');
-style.textContent = `
-    .loading {
-        opacity: 0.7;
-        pointer-events: none;
-    }
-
-    .error-message {
-        color: #dc3545;
-        padding: 10px;
-        margin: 10px 0;
-        border-radius: 4px;
-        background-color: #f8d7da;
-        display: none;
-        animation: fadeIn 0.3s ease-in;
-    }
-
-    .error-message.visible {
-        display: block;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .stat-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .stat-card:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-`;
-document.head.appendChild(style);
 
 // Initialize dashboard when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
