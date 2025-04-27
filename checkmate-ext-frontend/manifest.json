@@ -47,7 +47,7 @@
     "sandbox": "sandbox allow-scripts; script-src 'self' https://apis.google.com https://www.gstatic.com https://www.googleapis.com https://securetoken.googleapis.com; object-src 'self'"
   },
   "oauth2": {
-    "client_id": "94517049358-tgqqobr0kk38dofd1h5l0bm019url60c.apps.googleusercontent.com",
+    "client_id": "1029076451566-0jqo4bubftitqf3opbl0kd8gmm89k5qd.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/userinfo.profile"
