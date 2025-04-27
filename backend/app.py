@@ -208,6 +208,7 @@ def scrap_and_search(current_user):
                 'website_credibility': website_credibility['credibility_score'],
                 'article_id': past_article.id,
                 'objectivity_score': past_article.objectivity_score,
+                'title_objectivity_score':  None,
                 'bias_prediction': past_article.bias_prediction,
                 'bias_probabilities': past_article.bias_probabilities
             })
@@ -286,6 +287,7 @@ def scrap_and_search(current_user):
             'article_id': new_search.id,
             'objectivity_score': article['objectivity_score'],
             'bias_prediction': article['bias_prediction'],
+            'title_objectivity_score':  article.get('title_objectivity_score'),
             'bias_probabilities': article['bias_probabilities']
         })
 

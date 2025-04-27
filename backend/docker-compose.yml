@@ -1,0 +1,9 @@
+version: '3'
+services:
+  checkmate-backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:r%3Bq%28a6V%5E%3A8xS%21VN@db.c63c8kk8ymr9.us-east-1.rds.amazonaws.com:5432/db
+    restart: always
