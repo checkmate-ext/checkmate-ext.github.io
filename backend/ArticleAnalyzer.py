@@ -11,39 +11,7 @@ from typing import Optional, List, Dict
 from urllib.parse import urljoin, urlparse
 import re
 from website_checker import check_website_score
-from spellchecker import SpellChecker
-import nltk
-import os
 
-NLTK_DATA_DIR = os.path.expanduser(r"C:\nltk_data")  # or "/usr/local/share/nltk_data", etc.
-nltk.data.path.append(NLTK_DATA_DIR)
-
-# 2) Download the models you need, quietly
-for pkg in ("punkt", "averaged_perceptron_tagger"):
-    try:
-        nltk.data.find(f"tokenizers/{pkg}" if pkg == "punkt"
-                       else f"taggers/{pkg}")
-    except LookupError:
-        print(f"Downloading NLTK resource: {pkg} → {NLTK_DATA_DIR}")
-        nltk.download(pkg, download_dir=NLTK_DATA_DIR, quiet=True)
-
-_spell = SpellChecker()
-
-def get_misspellings(text: str):
-    # 1) Split on whitespace and POS-tag
-    tokens = text.split()
-    tagged  = nltk.pos_tag(tokens)
-
-    # 2) Drop single‐token proper nouns
-    filtered_tokens = [w for w, t in tagged if t not in ('NNP','NNPS')]
-
-    # 3) Lowercase + strip out non-words
-    words = re.findall(r"\b[a-z']{2,}\b",
-                       " ".join(filtered_tokens).lower())
-
-    # 4) Spell-check
-    misspelled = _spell.unknown(words)
-    return words, misspelled
 
 def normalize_domain(url: str) -> str:
     """
@@ -607,49 +575,19 @@ def _extract_article_hybrid(url, main_article=None):
             # CLEAN AND GET SUBJECTIVITY
             clean_content = article_data['content'].replace('\n', ' ').replace('\r', ' ')
             clean_content = ' '.join(clean_content.split())
-
-            # ─── SPELLING CHECK (pyspellchecker) ───
-            words      = clean_content.split()
-            misspelled = _spell.unknown(words)
-
-            words, misspelled = get_misspellings(clean_content)
-
-            # record in your article_data dict
-            article_data['spelling_issues']   = len(misspelled)
-            article_data['linguistic_issues'] = len(misspelled)
-
-            # ─── PRINT OUTPUT ───
-            print(f"[SPELL-CHECK] Found {len(misspelled)} misspelled word(s).")
-            if misspelled:
-                print("[SPELL-CHECK] Misspelled words:", ", ".join(sorted(misspelled)))
-
             try:
-                resp = requests.post(
+                response = requests.post(
                     "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",
                     headers={"Content-Type": "application/json"},
                     json={"text": clean_content},
                     timeout=120,
                 )
-                resp.raise_for_status()
-                article_data['objectivity_score'] = resp.json().get('objectivity_prob', -1)
+                response.raise_for_status()
+                article_data['objectivity_score'] = response.json().get('objectivity_prob', -1)
+                print(f"object: is {article_data['objectivity_score']}")
             except (requests.RequestException, ValueError, KeyError) as e:
-                print(f"Error getting text-based objectivity: {e}")
+                print(f"Error getting objectivity score from API: {e}")
                 article_data['objectivity_score'] = -1
-
-            # 2) title-based subjectivity
-            try:
-                title_resp = requests.post(
-                    "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",
-                    headers={"Content-Type": "application/json"},
-                    json={"text": article_data.get("title", "")},
-                    timeout=120,
-                )
-                title_resp.raise_for_status()
-                article_data['title_objectivity_score'] = title_resp.json().get('objectivity_prob', -1)
-                print(f"title_objectivity_score: {article_data['title_objectivity_score']}")
-            except (requests.RequestException, ValueError, KeyError) as e:
-                print(f"Error getting title-based objectivity: {e}")
-                article_data['title_objectivity_score'] = -1
 
             # BIAS
             try:
@@ -678,6 +616,7 @@ def _extract_article_hybrid(url, main_article=None):
         return article_data
 
     try:
+        print("bombardino ")
         scrapper = ArticleExtractor()
         article_data = scrapper.extract_article(url)
 
@@ -691,13 +630,13 @@ def _extract_article_hybrid(url, main_article=None):
 
         error_indicators = [
             'could not extract meaningful content',
-                'page load error',
-                'could not initialize driver',
-                'failed to extract',
-                'no content found',
-                'access denied',
-                'robot check',
-                'captcha'
+            'page load error',
+            'could not initialize driver',
+            'failed to extract',
+            'no content found',
+            'access denied',
+            'robot check',
+            'captcha'
         ]
 
         content = article_data.get('content', '').lower()
@@ -709,48 +648,17 @@ def _extract_article_hybrid(url, main_article=None):
 
         if main_article is None:
             clean_content = ' '.join(article_data['content'].split())
-
-            words      = clean_content.split()
-            misspelled = _spell.unknown(words)
-
-            words, misspelled = get_misspellings(clean_content)
-
-            # record in your article_data dict
-            article_data['spelling_issues']   = len(misspelled)
-            article_data['linguistic_issues'] = len(misspelled)
-
-            # ─── PRINT OUTPUT ───
-            print(f"[SPELL-CHECK] Found {len(misspelled)} misspelled word(s).")
-            if misspelled:
-                print("[SPELL-CHECK] Misspelled words:", ", ".join(sorted(misspelled)))
-
             try:
-                resp = requests.post(
+                response = requests.post(
                     "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",
                     headers={"Content-Type": "application/json"},
                     json={"text": clean_content},
                     timeout=120,
                 )
-                resp.raise_for_status()
-                article_data['objectivity_score'] = resp.json().get('objectivity_prob', -1)
-            except (requests.RequestException, ValueError, KeyError) as e:
-                print(f"Error getting text-based objectivity: {e}")
+                response.raise_for_status()
+                article_data['objectivity_score'] = response.json().get('objectivity_prob', -1)
+            except:
                 article_data['objectivity_score'] = -1
-
-            # 2) title-based subjectivity
-            try:
-                title_resp = requests.post(
-                    "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",
-                    headers={"Content-Type": "application/json"},
-                    json={"text": article_data.get("title", "")},
-                    timeout=120,
-                )
-                title_resp.raise_for_status()
-                article_data['title_objectivity_score'] = title_resp.json().get('objectivity_prob', -1)
-                print(f"title_objectivity_score: {article_data['title_objectivity_score']}")
-            except (requests.RequestException, ValueError, KeyError) as e:
-                print(f"Error getting title-based objectivity: {e}")
-                article_data['title_objectivity_score'] = -1
 
             try:
                 bias_response = requests.post(
@@ -867,7 +775,7 @@ class ArticleAnalyzer:
         # Create a mapping of URLs to their Google-provided titles
         url_to_title_map = {}
         filtered_urls = []
-        
+
         for item in similar_articles:
             if 'link' not in item:
                 continue
@@ -903,14 +811,14 @@ class ArticleAnalyzer:
                         # Use the Google-provided title (when available)
                         if url in url_to_title_map and url_to_title_map[url]:
                             data['google_title'] = url_to_title_map[url]
-                        
+
                         extracted_articles.append(data)
                         print(f"[DEBUG] ArticleAnalyzer: Extraction successful for {url}")
                     else:
                         print(f"[DEBUG] ArticleAnalyzer: No data extracted for {url}")
                 except Exception as e:
                     print(f"[DEBUG] ArticleAnalyzer: Error extracting {url}: {e}")
-                    
+
         return extracted_articles
 
 
@@ -949,10 +857,10 @@ class ArticleAnalyzer:
                 'similarity_score': article.get('similarity_score', 0.5)
             }
             display_articles.append(display_article)
-            
+
         # Sort by similarity score (highest first)
         display_articles.sort(key=lambda x: x.get('similarity_score', 0), reverse=True)
-        
+
         print(f"[DEBUG] ArticleAnalyzer: Returning {len(display_articles)} similar articles.")
         return display_articles
 

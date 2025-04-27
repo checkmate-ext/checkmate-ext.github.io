@@ -1,4 +1,3 @@
-// Clear any cached tokens when the extension starts
 chrome.runtime.onInstalled.addListener(() => {
     clearCachedTokens();
 });

@@ -1,5 +1,5 @@
 // API URL Configuration
-export const API_URL = 'http://10.0.2.2:5000';
+export const API_URL = 'https://checkmate-backend-api-1029076451566.us-central1.run.app';
 // For production, uncomment the line below and replace with your actual API URL
 // export const API_URL = 'https://your-production-api.com';
 
