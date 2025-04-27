@@ -141,13 +141,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           const scoreDiv = document.createElement('div');
           scoreDiv.classList.add('history-score');
-          scoreDiv.textContent = search.reliability_score ? Math.round(search.reliability_score) : 'N/A';
+          const rawScore = search.reliability_score || 0;
+          const displayScore = rawScore <= 1 ? Math.round(rawScore * 100) : Math.round(rawScore);
+          scoreDiv.textContent = search.reliability_score ? displayScore : 'N/A';
 
           // Set background-color based on score thresholds
           const score = search.reliability_score || 0;
-          if (score >= 75) {
+          if (displayScore >= 75) {
             scoreDiv.style.backgroundColor = 'var(--score-green)';
-          } else if (score >= 50) {
+          } else if (displayScore >= 50) {
             scoreDiv.style.backgroundColor = 'var(--score-neutral)';
           } else {
             scoreDiv.style.backgroundColor = 'var(--score-red)';
