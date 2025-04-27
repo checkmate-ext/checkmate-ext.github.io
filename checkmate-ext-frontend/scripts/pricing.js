@@ -54,9 +54,9 @@ function renderPricingUI(currentPlan) {
   else
     addPlanCard('premium', 'Premium', '$9.99/mo', ['Advanced AI Checks', 'Unlimited checks', 'Priority support'], 'Current Plan', true);
   if (currentPlan !== 'enterprise')
-    addPlanCard('enterprise', 'Enterprise', '$29.99/mo', ['All Premium features', 'Team features'], 'Upgrade');
+    addPlanCard('enterprise', 'Enterprise', 'Contact Us', ['All Premium features', 'Team features'], 'Upgrade');
   else
-    addPlanCard('enterprise', 'Enterprise', '$29.99/mo', ['All Premium features', 'Team features'], 'Current Plan', true);
+    addPlanCard('enterprise', 'Enterprise', '$Contact Us', ['All Premium features', 'Team features'], 'Current Plan', true);
 
   document.querySelectorAll('.card-btn').forEach(btn => btn.addEventListener('click', handlePlanSelection));
 }
