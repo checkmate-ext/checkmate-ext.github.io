@@ -576,18 +576,32 @@ def _extract_article_hybrid(url, main_article=None):
             clean_content = article_data['content'].replace('\n', ' ').replace('\r', ' ')
             clean_content = ' '.join(clean_content.split())
             try:
-                response = requests.post(
+                resp = requests.post(
                     "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",
                     headers={"Content-Type": "application/json"},
                     json={"text": clean_content},
                     timeout=120,
                 )
-                response.raise_for_status()
-                article_data['objectivity_score'] = response.json().get('objectivity_prob', -1)
-                print(f"object: is {article_data['objectivity_score']}")
+                resp.raise_for_status()
+                article_data['objectivity_score'] = resp.json().get('objectivity_prob', -1)
             except (requests.RequestException, ValueError, KeyError) as e:
-                print(f"Error getting objectivity score from API: {e}")
+                print(f"Error getting text-based objectivity: {e}")
                 article_data['objectivity_score'] = -1
+
+            # 2) title-based subjectivity
+            try:
+                title_resp = requests.post(
+                    "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",
+                    headers={"Content-Type": "application/json"},
+                    json={"text": article_data.get("title", "")},
+                    timeout=120,
+                )
+                title_resp.raise_for_status()
+                article_data['title_objectivity_score'] = title_resp.json().get('objectivity_prob', -1)
+                print(f"title_objectivity_score: {article_data['title_objectivity_score']}")
+            except (requests.RequestException, ValueError, KeyError) as e:
+                print(f"Error getting title-based objectivity: {e}")
+                article_data['title_objectivity_score'] = -1
 
             # BIAS
             try:
@@ -648,16 +662,32 @@ def _extract_article_hybrid(url, main_article=None):
         if main_article is None:
             clean_content = ' '.join(article_data['content'].split())
             try:
-                response = requests.post(
+                resp = requests.post(
                     "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",
                     headers={"Content-Type": "application/json"},
                     json={"text": clean_content},
                     timeout=120,
                 )
-                response.raise_for_status()
-                article_data['objectivity_score'] = response.json().get('objectivity_prob', -1)
-            except:
+                resp.raise_for_status()
+                article_data['objectivity_score'] = resp.json().get('objectivity_prob', -1)
+            except (requests.RequestException, ValueError, KeyError) as e:
+                print(f"Error getting text-based objectivity: {e}")
                 article_data['objectivity_score'] = -1
+
+            # 2) title-based subjectivity
+            try:
+                title_resp = requests.post(
+                    "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",
+                    headers={"Content-Type": "application/json"},
+                    json={"text": article_data.get("title", "")},
+                    timeout=120,
+                )
+                title_resp.raise_for_status()
+                article_data['title_objectivity_score'] = title_resp.json().get('objectivity_prob', -1)
+                print(f"title_objectivity_score: {article_data['title_objectivity_score']}")
+            except (requests.RequestException, ValueError, KeyError) as e:
+                print(f"Error getting title-based objectivity: {e}")
+                article_data['title_objectivity_score'] = -1
 
             try:
                 bias_response = requests.post(
