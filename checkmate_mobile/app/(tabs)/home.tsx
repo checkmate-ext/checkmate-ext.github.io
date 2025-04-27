@@ -94,7 +94,7 @@ export default function Home() {
             // Ensure numeric values are proper numbers
             const processedData = {
                 ...response.data,
-                articles_analyzed_daily: Number(response.data.articles_analyzed_daily) || 0,
+                articles_analyzed_daily: Number(response.data.articles_analyzed) || 0,
                 total_articles: Number(response.data.total_articles) || 0,
                 daily_limit: Number(response.data.daily_limit) || 1, // Default to 1 to avoid division by zero
                 weekly_accuracy: Number(response.data.weekly_accuracy) || 0
@@ -182,7 +182,7 @@ export default function Home() {
                 style={[
                     styles.articleCard,
                     {
-                        borderLeftColor: getScoreColor(article.reliability_score),
+                        borderLeftColor: getScoreColor((article.reliability_score*100).toFixed(2)),
                     }
                 ]}
             >
@@ -218,12 +218,12 @@ export default function Home() {
                             <Text
                                 variant="bodyMedium"
                                 style={{
-                                    color: getScoreColor(article.reliability_score),
+                                    color: getScoreColor((article.reliability_score*100).toFixed(2)),
                                     marginLeft: 4,
                                     fontWeight: 'bold'
                                 }}
                             >
-                                {article.reliability_score}%
+                                {(article.reliability_score*100).toFixed(2)}%
                             </Text>
                         </View>
                         <IconButton
@@ -240,8 +240,8 @@ export default function Home() {
     // Function to determine color based on score - safely handle non-numeric values
     const getScoreColor = (score) => {
         const numericScore = Number(score) || 0;
-        if (numericScore >= 80) return '#4CAF50'; // Green
-        if (numericScore >= 60) return '#FFC107'; // Yellow/Amber
+        if (numericScore >= 75) return '#4CAF50'; // Green
+        if (numericScore >= 50) return '#FFC107'; // Yellow/Amber
         return '#F44336'; // Red
     };
 
