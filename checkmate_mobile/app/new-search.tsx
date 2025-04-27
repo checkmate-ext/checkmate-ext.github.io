@@ -10,6 +10,7 @@ import { moderateScale } from 'react-native-size-matters';
 import axios from 'axios';
 import { API_URL } from './constants/Config';
 import * as Haptics from 'expo-haptics';
+import * as Clipboard from 'expo-clipboard'; // Add this import for Clipboard functionality
 import { router } from 'expo-router';
 import { authStyles } from './styles/auth';
 
@@ -104,10 +105,13 @@ export default function NewSearch() {
         },
     });
 
-    // Add this useEffect hook to handle shared URLs
+    // Handle shared URLs
     useEffect(() => {
-        if (sharedUrl) {
-            const decodedUrl = decodeURIComponent(sharedUrl);
+        // Handle the case where sharedUrl might be an array
+        const urlToUse = Array.isArray(sharedUrl) ? sharedUrl[0] : sharedUrl;
+
+        if (urlToUse) {
+            const decodedUrl = decodeURIComponent(urlToUse);
             setUrl(decodedUrl);
             setIsSharedUrl(true);
             setShowBanner(true);
@@ -120,7 +124,7 @@ export default function NewSearch() {
             }
         }
 
-        // Additionally, check for initial URL (in case deep linking opened the app)
+        // Check for initial URL (in case deep linking opened the app)
         const checkInitialUrl = async () => {
             try {
                 const initialUrl = await Linking.getInitialURL();
@@ -171,8 +175,16 @@ export default function NewSearch() {
             }
         });
 
+        // Use the proper cleanup method depending on what Linking.addEventListener returns
         return () => {
-            subscription.remove();
+            // If subscription has a remove method
+            if (subscription && typeof subscription.remove === 'function') {
+                subscription.remove();
+            }
+            // For newer Expo versions (SDK 48+)
+            else if (subscription) {
+                subscription();
+            }
         };
     }, [sharedUrl, token]);
 
@@ -182,7 +194,6 @@ export default function NewSearch() {
         return urlPattern.test(input);
     };
 
-    // Modify the handleAnalyzeArticle function to accept an optional URL parameter
     const handleAnalyzeArticle = async (articleUrl = null) => {
         const urlToAnalyze = articleUrl || url;
 
@@ -207,12 +218,15 @@ export default function NewSearch() {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            if (response.data && response.data.article) {
-                // Find the article ID from the backend response
-                const articleId = response.data.article_id || "1"; // Fallback ID
-                console.log('article_id: ', articleId);
-                // Navigate to the article detail screen
-                router.push(`/article/${articleId}`);
+            // Always check for article_id in the response
+            if (response.data && response.data.article_id) {
+                console.log('Article analyzed successfully, ID:', response.data.article_id);
+
+                // Provide success feedback
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+                // Navigate to the article detail screen with the correct ID
+                router.push(`/article/${response.data.article_id}`);
 
                 // Reset the form if it wasn't a shared URL
                 if (!isSharedUrl) {
@@ -222,12 +236,14 @@ export default function NewSearch() {
                 setIsSharedUrl(false);
                 setShowBanner(false);
             } else {
+                console.error('Missing article_id in response:', response.data);
                 setError('Failed to analyze the article. Please try again.');
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             }
 
         } catch (error) {
             console.error('Error analyzing article:', error);
-            setError('An error occurred while analyzing the article. Please try again.');
+            setError(error.response?.data?.error || 'An error occurred while analyzing the article. Please try again.');
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         } finally {
             setLoading(false);
@@ -249,7 +265,8 @@ export default function NewSearch() {
 
     const handlePasteUrl = async () => {
         try {
-            const clipboardContent = await Clipboard.getString();
+            // Use getStringAsync instead of getString
+            const clipboardContent = await Clipboard.getStringAsync();
             if (validateUrl(clipboardContent)) {
                 setUrl(clipboardContent);
                 setError('');
@@ -260,6 +277,8 @@ export default function NewSearch() {
             }
         } catch (error) {
             console.error('Error accessing clipboard:', error);
+            setError('Failed to paste from clipboard');
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
     };
 

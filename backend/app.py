@@ -64,9 +64,9 @@ def create_app():
             "origins": [
                 "chrome-extension://kmgjckbbdjcmoeflecnlmndlgdjfkdfl",  # Your extension ID
                 "http://localhost:5000",  # Local development
-                "http://172.20.10.9:5000",  # Add your phone's network connection
-                "capacitor://localhost",  # For Capacitor if you're using it
-                "http://localhost",  # Generic localhost
+                "http://172.20.10.9:5000",
+                "capacitor://localhost",
+                "http://localhost",
                 "*"  # Allow all origins (use for testing only!)
             ],
             "methods": ["GET", "POST", "OPTIONS"],

@@ -616,6 +616,7 @@ def _extract_article_hybrid(url, main_article=None):
         return article_data
 
     try:
+        print("bombardino ")
         scrapper = ArticleExtractor()
         article_data = scrapper.extract_article(url)
 
@@ -736,6 +737,8 @@ class ArticleAnalyzer:
         }
         print("[DEBUG] Reliability payload:", rel_payload)
 
+
+        print("content:", self.article)
         try:
             rel_resp = requests.post(
                 "https://checkmate-api-1029076451566.us-central1.run.app/reliability",
