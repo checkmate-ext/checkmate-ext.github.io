@@ -18,4 +18,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 5000
 
 # Start the FastAPI server with Uvicorn
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000", "--reload"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+
+
