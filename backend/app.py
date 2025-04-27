@@ -64,9 +64,9 @@ def create_app():
             "origins": [
                 "chrome-extension://kmgjckbbdjcmoeflecnlmndlgdjfkdfl",  # Your extension ID
                 "http://localhost:5000",  # Local development
-                "http://172.20.10.9:5000",  # Add your phone's network connection
-                "capacitor://localhost",  # For Capacitor if you're using it
-                "http://localhost",  # Generic localhost
+                "http://172.20.10.9:5000",
+                "capacitor://localhost",
+                "http://localhost",
                 "*"  # Allow all origins (use for testing only!)
             ],
             "methods": ["GET", "POST", "OPTIONS"],
@@ -154,6 +154,7 @@ def token_required(f):
     return decorated
 
 
+
 @app.route('/scrap_and_search', methods=['POST'])
 @token_required
 def scrap_and_search(current_user):
@@ -212,8 +213,6 @@ def scrap_and_search(current_user):
                 'bias_probabilities': past_article.bias_probabilities
             })
 
-        print(f"Processing URL: {url}")
-
         print(f"[DEBUG] scrap_and_search: No past article found. Proceeding to extract new article for URL: {url}")
         try:
             google_search = ArticleAnalyzer(
@@ -226,6 +225,7 @@ def scrap_and_search(current_user):
                 print("[DEBUG] scrap_and_search: Article validation failed")
                 return jsonify({'error': f"Could not extract meaningful content from {url}"}), 400
 
+            # Get similar articles with Google-provided titles
             similar_articles = google_search.get_similar()
             article = google_search.article
             print("[DEBUG] scrap_and_search: Article extracted successfully.")
@@ -241,7 +241,7 @@ def scrap_and_search(current_user):
             title=article['title'],
             reliability_score=article.get('reliability_score', -1),
             credibility_score=cred_score,
-            objectivity_score=article.get('objectivity_score', -1),  # Fixed: Use get() with default
+            objectivity_score=article.get('objectivity_score', -1),
             bias_prediction=article.get('bias_prediction', -1),
             bias_probabilities=article.get('bias_probabilities', -1)
         )
@@ -256,11 +256,13 @@ def scrap_and_search(current_user):
 
         db.session.add(article_request)
 
+        # Store similar articles with Google-provided titles
         similar_articles_to_insert = []
         for sim in similar_articles:
+            # Use title directly from Google API (already in sim['title'])
             safe_title = (sim.get('title') or '')[:500]
-            safe_url   = (sim.get('url')   or '')[:500]
-            sim_score  = sim.get('similarity_score', 0.0)
+            safe_url = (sim.get('url') or '')[:500]
+            sim_score = sim.get('similarity_score', 0.0)
             similar_articles_to_insert.append(
                 SimilarArticle(
                     main_article_id=new_search.id,
@@ -274,13 +276,12 @@ def scrap_and_search(current_user):
             db.session.bulk_save_objects(similar_articles_to_insert)
 
         db.session.commit()
-        print(similar_articles)
         print("[DEBUG] scrap_and_search: Database commit successful. Similar articles count:", len(similar_articles))
         return jsonify({
             'reliability_score': article['reliability_score'],
             'message': f"Results for {url}",
             'article': article,
-            'similar_articles': similar_articles,
+            'similar_articles': similar_articles,  # These now have Google-provided titles
             'images_data': images_data,
             'website_credibility': cred_score,
             'article_id': new_search.id,
@@ -294,7 +295,6 @@ def scrap_and_search(current_user):
         # Rollback any database changes if there was an error
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
-
 
 # --- Helper functions for token generation ---
 def generate_confirmation_token(email):

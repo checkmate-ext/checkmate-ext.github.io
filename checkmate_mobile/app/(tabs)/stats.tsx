@@ -302,28 +302,6 @@ export default function Stats() {
         );
     };
 
-    const renderAccuracyChart = () => {
-        // For future implementation or if you want to implement it now
-        return (
-            <Card style={styles.chartCard}>
-                <Text style={styles.chartTitle}>Reliability Distribution</Text>
-                <Text style={{color: theme.colors.text, textAlign: 'center', marginBottom: moderateScale(10)}}>
-                    Feature coming soon!
-                </Text>
-                <Button
-                    mode="outlined"
-                    onPress={() => {
-                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-                    }}
-                    textColor={theme.colors.secondary}
-                    style={{borderColor: theme.colors.secondary, borderRadius: moderateScale(8)}}
-                >
-                    Request This Feature
-                </Button>
-            </Card>
-        );
-    };
-
     if (loading && !stats) {
         return (
             <LinearGradient
@@ -411,7 +389,6 @@ export default function Stats() {
 
                     {renderStatCard()}
                     {renderDistributionChart()}
-                    {renderAccuracyChart()}
                 </View>
             </ScrollView>
         </LinearGradient>

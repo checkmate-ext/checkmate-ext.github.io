@@ -157,11 +157,11 @@ export default function History() {
 
         // Apply reliability filter
         if (activeFilter === 'high') {
-            filtered = filtered.filter(article => article.reliability_score >= 80);
+            filtered = filtered.filter(article => article.reliability_score >= 75);
         } else if (activeFilter === 'medium') {
-            filtered = filtered.filter(article => article.reliability_score >= 60 && article.reliability_score < 80);
+            filtered = filtered.filter(article => article.reliability_score >= 50 && article.reliability_score < 75);
         } else if (activeFilter === 'low') {
-            filtered = filtered.filter(article => article.reliability_score < 60);
+            filtered = filtered.filter(article => article.reliability_score < 50);
         }
 
         setFilteredArticles(filtered);
@@ -174,8 +174,8 @@ export default function History() {
 
     // Function to determine color based on score
     const getScoreColor = (score) => {
-        if (score >= 80) return '#4CAF50'; // Green
-        if (score >= 60) return '#FFC107'; // Yellow/Amber
+        if (score >= 75) return '#4CAF50'; // Green
+        if (score >= 50) return '#FFC107'; // Yellow/Amber
         return '#F44336'; // Red
     };
 
@@ -187,7 +187,7 @@ export default function History() {
             <Card
                 style={[
                     styles.articleCard,
-                    { borderLeftColor: getScoreColor(item.reliability_score) }
+                    { borderLeftColor: getScoreColor((item.reliability_score*100).toFixed(2)) }
                 ]}
             >
                 <Card.Content>
@@ -215,12 +215,12 @@ export default function History() {
                             <Text
                                 variant="bodyMedium"
                                 style={{
-                                    color: getScoreColor(item.reliability_score),
+                                    color: getScoreColor((item.reliability_score*100).toFixed(2)),
                                     marginLeft: moderateScale(4),
                                     fontWeight: 'bold'
                                 }}
                             >
-                                {item.reliability_score}%
+                                {(item.reliability_score*100).toFixed(2)}%
                             </Text>
                         </View>
                         <IconButton
