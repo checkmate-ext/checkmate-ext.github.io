@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+// app/(tabs)/profile.tsx
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, SafeAreaView, Platform, Dimensions } from 'react-native';
 import { Text, Card, Button, Avatar, Divider, useTheme, IconButton, Menu, Dialog, Portal, TextInput, HelperText } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
-import { moderateScale } from 'react-native-size-matters';
-import { authStyles } from '../styles/auth';
 import * as Haptics from 'expo-haptics';
 import axios from 'axios';
 import { API_URL } from '../constants/Config';
-
+import ResponsiveUtils from '../utils/ResponsiveUtils';
+import createResponsiveStyles from '../styles/responsive-styles';
 
 export default function Profile() {
     const { user, signOut, token } = useAuth();
@@ -24,6 +24,21 @@ export default function Profile() {
     const [reportMessage, setReportMessage] = useState('');
     const [reportLoading, setReportLoading] = useState(false);
     const [planDialogVisible, setPlanDialogVisible] = useState(false);
+    const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+
+    // Update dimensions when screen size changes
+    useEffect(() => {
+        const subscription = Dimensions.addEventListener('change', ({ window }) => {
+            setDimensions(window);
+        });
+
+        return () => {
+            // Clean up based on RN version
+            if (typeof subscription?.remove === 'function') {
+                subscription.remove();
+            }
+        };
+    }, []);
 
     const theme = {
         ...useTheme(),
@@ -39,34 +54,37 @@ export default function Profile() {
         },
     };
 
+    // Get responsive styles
+    const responsiveStyles = createResponsiveStyles(theme);
+
     const styles = StyleSheet.create({
         container: {
-            padding: moderateScale(20),
+            padding: ResponsiveUtils.moderateScale(20),
             flex: 1,
         },
         header: {
             alignItems: 'center',
-            marginBottom: moderateScale(20),
+            marginBottom: ResponsiveUtils.moderateScale(20),
         },
         profileAvatar: {
             backgroundColor: theme.colors.accent,
-            marginBottom: moderateScale(10),
+            marginBottom: ResponsiveUtils.moderateScale(10),
         },
         username: {
-            fontSize: moderateScale(22),
+            fontSize: ResponsiveUtils.normalizeFont(22),
             fontWeight: 'bold',
             color: theme.colors.text,
-            marginTop: moderateScale(10),
+            marginTop: ResponsiveUtils.moderateScale(10),
         },
         email: {
-            fontSize: moderateScale(16),
+            fontSize: ResponsiveUtils.normalizeFont(16),
             color: theme.colors.placeholder,
         },
         card: {
             backgroundColor: theme.colors.surface,
-            marginBottom: moderateScale(20),
-            borderRadius: moderateScale(15),
-            padding: moderateScale(15),
+            marginBottom: ResponsiveUtils.moderateScale(20),
+            borderRadius: ResponsiveUtils.moderateScale(15),
+            padding: ResponsiveUtils.moderateScale(15),
             shadowColor: theme.colors.accent,
             shadowOffset: {width: 0, height: 4},
             shadowOpacity: 0.2,
@@ -74,39 +92,43 @@ export default function Profile() {
             elevation: 5,
         },
         cardTitle: {
-            fontSize: moderateScale(18),
+            fontSize: ResponsiveUtils.normalizeFont(18),
             fontWeight: 'bold',
             color: theme.colors.secondary,
-            marginBottom: moderateScale(10),
+            marginBottom: ResponsiveUtils.moderateScale(10),
         },
         menuButton: {
             position: 'absolute',
-            top: moderateScale(10),
-            right: moderateScale(10),
+            top: ResponsiveUtils.moderateScale(10),
+            right: ResponsiveUtils.moderateScale(10),
         },
         settingRow: {
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            paddingVertical: moderateScale(12),
+            paddingVertical: ResponsiveUtils.moderateScale(12),
             borderBottomWidth: 1,
             borderBottomColor: 'rgba(107, 68, 35, 0.2)',
+            flexWrap: 'wrap', // Allow wrapping on smaller screens
         },
         settingLabel: {
-            fontSize: moderateScale(16),
+            fontSize: ResponsiveUtils.normalizeFont(16),
             color: theme.colors.text,
+            flex: 1, // Take available space
+            paddingRight: ResponsiveUtils.moderateScale(10),
         },
         settingValue: {
-            fontSize: moderateScale(16),
+            fontSize: ResponsiveUtils.normalizeFont(16),
             color: theme.colors.secondary,
+            textAlign: 'right',
         },
         divider: {
             backgroundColor: theme.colors.primary,
             opacity: 0.3,
-            marginVertical: moderateScale(15),
+            marginVertical: ResponsiveUtils.moderateScale(15),
         },
         input: {
-            marginBottom: moderateScale(15),
+            marginBottom: ResponsiveUtils.moderateScale(15),
             backgroundColor: theme.colors.background,
         },
         dialogContent: {
@@ -114,11 +136,19 @@ export default function Profile() {
         },
         dialogActions: {
             justifyContent: 'space-between',
-            paddingHorizontal: moderateScale(10),
-            paddingBottom: moderateScale(10),
+            paddingHorizontal: ResponsiveUtils.moderateScale(10),
+            paddingBottom: ResponsiveUtils.moderateScale(10),
         },
         logoutButton: {
-            marginTop: moderateScale(20),
+            marginTop: ResponsiveUtils.moderateScale(20),
+        },
+        // Adjust dialog width based on screen size
+        dialogStyle: {
+            backgroundColor: theme.colors.surface,
+            width: dimensions.width > 600
+                ? Math.min(dimensions.width * 0.7, 500)
+                : dimensions.width * 0.9,
+            alignSelf: 'center',
         },
     });
 
@@ -232,129 +262,133 @@ export default function Profile() {
             colors={['#1A1612', '#241E19', '#2A241E']}
             style={{flex: 1}}
         >
-            <ScrollView>
-                <View style={styles.container}>
-                    <View style={styles.header}>
-                        <Avatar.Text
-                            size={100}
-                            label={user?.email ? user.email[0].toUpperCase() : 'U'}
-                            style={styles.profileAvatar}
-                            color={theme.colors.text}
-                        />
-                        <Text style={styles.username}>
-                            {user?.email ? user.email.split('@')[0] : 'User'}
-                        </Text>
-                        <Text style={styles.email}>
-                            {user?.email || 'user@example.com'}
-                        </Text>
-                    </View>
-
-                    <Card style={styles.card}>
-                        <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-                            <Text style={styles.cardTitle}>Account Settings</Text>
-                            <Menu
-                                visible={menuVisible}
-                                onDismiss={() => setMenuVisible(false)}
-                                anchor={
-                                    <IconButton
-                                        icon="dots-vertical"
-                                        iconColor={theme.colors.secondary}
-                                        size={24}
-                                        onPress={() => setMenuVisible(true)}
-                                    />
-                                }
-                                contentStyle={{backgroundColor: theme.colors.surface}}
-                            >
-                                <Menu.Item
-                                    onPress={() => {
-                                        setMenuVisible(false);
-                                        setReportDialogVisible(true);
-                                    }}
-                                    title="Report Issue"
-                                    titleStyle={{color: theme.colors.text}}
-                                    leadingIcon="flag"
-                                />
-                                <Menu.Item
-                                    onPress={handleSignOut}
-                                    title="Logout"
-                                    titleStyle={{color: theme.colors.text}}
-                                    leadingIcon="logout"
-                                />
-                            </Menu>
-                        </View>
-
-                        <Divider style={styles.divider} />
-
-                        <View style={styles.settingRow}>
-                            <Text style={styles.settingLabel}>Email</Text>
-                            <Text style={styles.settingValue}>{user?.email || 'user@example.com'}</Text>
-                        </View>
-
-                        <View style={styles.settingRow}>
-                            <Text style={styles.settingLabel}>Subscription Plan</Text>
-                            <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                                <Text
-                                    style={[
-                                        styles.settingValue,
-                                        {
-                                            color: user?.subscription_plan === 'Premium'
-                                                ? '#4CAF50'
-                                                : theme.colors.secondary
-                                        }
-                                    ]}
-                                >
-                                    {user?.subscription_plan || 'Free'}
-                                </Text>
-                                <IconButton
-                                    icon="pencil"
-                                    iconColor={theme.colors.secondary}
-                                    size={20}
-                                    onPress={() => setPlanDialogVisible(true)}
-                                />
-                            </View>
-                        </View>
-
-                        <View style={styles.settingRow}>
-                            <Text style={styles.settingLabel}>Password</Text>
-                            <Button
-                                mode="text"
-                                onPress={() => setPasswordDialogVisible(true)}
-                                textColor={theme.colors.secondary}
-                            >
-                                Change
-                            </Button>
-                        </View>
-
-                        <View style={[styles.settingRow, {borderBottomWidth: 0}]}>
-                            <Text style={styles.settingLabel}>Account Created</Text>
-                            <Text style={styles.settingValue}>
-                                {user?.created_at
-                                    ? new Date(user.created_at).toLocaleDateString()
-                                    : new Date().toLocaleDateString()
-                                }
+            <SafeAreaView style={{flex: 1}}>
+                <ScrollView>
+                    <View style={styles.container}>
+                        <View style={styles.header}>
+                            <Avatar.Text
+                                size={ResponsiveUtils.moderateScale(100)}
+                                label={user?.email ? user.email[0].toUpperCase() : 'U'}
+                                style={styles.profileAvatar}
+                                color={theme.colors.text}
+                            />
+                            <Text style={styles.username}>
+                                {user?.email ? user.email.split('@')[0] : 'User'}
+                            </Text>
+                            <Text style={styles.email}>
+                                {user?.email || 'user@example.com'}
                             </Text>
                         </View>
-                    </Card>
 
-                    <Button
-                        mode="contained"
-                        onPress={handleSignOut}
-                        icon="logout"
-                        buttonColor={theme.colors.accent}
-                        textColor={theme.colors.text}
-                        style={[authStyles.primaryButton, styles.logoutButton]}
-                    >
-                        Logout
-                    </Button>
-                </View>
-            </ScrollView>
+                        <Card style={styles.card}>
+                            <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+                                <Text style={styles.cardTitle}>Account Settings</Text>
+                                <Menu
+                                    visible={menuVisible}
+                                    onDismiss={() => setMenuVisible(false)}
+                                    anchor={
+                                        <IconButton
+                                            icon="dots-vertical"
+                                            iconColor={theme.colors.secondary}
+                                            size={24}
+                                            onPress={() => setMenuVisible(true)}
+                                        />
+                                    }
+                                    contentStyle={{backgroundColor: theme.colors.surface}}
+                                >
+                                    <Menu.Item
+                                        onPress={() => {
+                                            setMenuVisible(false);
+                                            setReportDialogVisible(true);
+                                        }}
+                                        title="Report Issue"
+                                        titleStyle={{color: theme.colors.text}}
+                                        leadingIcon="flag"
+                                    />
+                                    <Menu.Item
+                                        onPress={handleSignOut}
+                                        title="Logout"
+                                        titleStyle={{color: theme.colors.text}}
+                                        leadingIcon="logout"
+                                    />
+                                </Menu>
+                            </View>
+
+                            <Divider style={styles.divider} />
+
+                            <View style={styles.settingRow}>
+                                <Text style={styles.settingLabel}>Email</Text>
+                                <Text style={styles.settingValue} numberOfLines={1} ellipsizeMode="tail">
+                                    {user?.email || 'user@example.com'}
+                                </Text>
+                            </View>
+
+                            <View style={styles.settingRow}>
+                                <Text style={styles.settingLabel}>Subscription Plan</Text>
+                                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                                    <Text
+                                        style={[
+                                            styles.settingValue,
+                                            {
+                                                color: user?.subscription_plan === 'Premium'
+                                                    ? '#4CAF50'
+                                                    : theme.colors.secondary
+                                            }
+                                        ]}
+                                    >
+                                        {user?.subscription_plan || 'Free'}
+                                    </Text>
+                                    <IconButton
+                                        icon="pencil"
+                                        iconColor={theme.colors.secondary}
+                                        size={ResponsiveUtils.moderateScale(20)}
+                                        onPress={() => setPlanDialogVisible(true)}
+                                    />
+                                </View>
+                            </View>
+
+                            <View style={styles.settingRow}>
+                                <Text style={styles.settingLabel}>Password</Text>
+                                <Button
+                                    mode="text"
+                                    onPress={() => setPasswordDialogVisible(true)}
+                                    textColor={theme.colors.secondary}
+                                >
+                                    Change
+                                </Button>
+                            </View>
+
+                            <View style={[styles.settingRow, {borderBottomWidth: 0}]}>
+                                <Text style={styles.settingLabel}>Account Created</Text>
+                                <Text style={styles.settingValue}>
+                                    {user?.created_at
+                                        ? new Date(user.created_at).toLocaleDateString()
+                                        : new Date().toLocaleDateString()
+                                    }
+                                </Text>
+                            </View>
+                        </Card>
+
+                        <Button
+                            mode="contained"
+                            onPress={handleSignOut}
+                            icon="logout"
+                            buttonColor={theme.colors.accent}
+                            textColor={theme.colors.text}
+                            style={[responsiveStyles.primaryButton, styles.logoutButton]}
+                        >
+                            Logout
+                        </Button>
+                    </View>
+                </ScrollView>
+            </SafeAreaView>
 
             {/* Password Change Dialog */}
             <Portal>
                 <Dialog
                     visible={passwordDialogVisible}
                     onDismiss={() => setPasswordDialogVisible(false)}
-                    style={{backgroundColor: theme.colors.surface}}
+                    style={styles.dialogStyle}
                 >
                     <Dialog.Title style={{color: theme.colors.secondary}}>Change Password</Dialog.Title>
                     <Dialog.Content>
@@ -421,7 +455,7 @@ export default function Profile() {
                 <Dialog
                     visible={reportDialogVisible}
                     onDismiss={() => setReportDialogVisible(false)}
-                    style={{backgroundColor: theme.colors.surface}}
+                    style={styles.dialogStyle}
                 >
                     <Dialog.Title style={{color: theme.colors.secondary}}>Report an Issue</Dialog.Title>
                     <Dialog.Content>
@@ -471,18 +505,18 @@ export default function Profile() {
                 <Dialog
                     visible={planDialogVisible}
                     onDismiss={() => setPlanDialogVisible(false)}
-                    style={{backgroundColor: theme.colors.surface}}
+                    style={styles.dialogStyle}
                 >
                     <Dialog.Title style={{color: theme.colors.secondary}}>Change Subscription</Dialog.Title>
                     <Dialog.Content>
-                        <Text style={{color: theme.colors.text, marginBottom: moderateScale(10)}}>
+                        <Text style={{color: theme.colors.text, marginBottom: ResponsiveUtils.moderateScale(10)}}>
                             Choose your subscription plan:
                         </Text>
 
                         <Button
                             mode={user?.subscription_plan === 'Free' ? 'contained' : 'outlined'}
                             onPress={() => handleSubscriptionChange('Free')}
-                            style={{marginBottom: moderateScale(10)}}
+                            style={{marginBottom: ResponsiveUtils.moderateScale(10)}}
                             buttonColor={user?.subscription_plan === 'Free' ? theme.colors.accent : undefined}
                             textColor={user?.subscription_plan === 'Free' ? theme.colors.text : theme.colors.secondary}
                         >

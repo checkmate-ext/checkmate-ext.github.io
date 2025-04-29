@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, TouchableOpacity, RefreshControl, StyleSheet } from 'react-native';
+import { View, FlatList, TouchableOpacity, RefreshControl, StyleSheet, SafeAreaView, Dimensions } from 'react-native';
 import { Text, Card, useTheme, Searchbar, ActivityIndicator, IconButton, Chip } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
@@ -7,7 +7,8 @@ import axios from 'axios';
 import { API_URL } from '../constants/Config';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { moderateScale } from 'react-native-size-matters';
+import ResponsiveUtils from '../utils/ResponsiveUtils';
+import createResponsiveStyles from '../styles/responsive-styles';
 
 // Helper function to format dates
 const formatDate = (dateString) => {
@@ -27,6 +28,20 @@ export default function History() {
     const [refreshing, setRefreshing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeFilter, setActiveFilter] = useState('all');
+    const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+
+    // Update dimensions when screen size changes
+    useEffect(() => {
+        const subscription = Dimensions.addEventListener('change', ({ window }) => {
+            setDimensions(window);
+        });
+
+        return () => {
+            if (typeof subscription?.remove === 'function') {
+                subscription.remove();
+            }
+        };
+    }, []);
 
     const theme = {
         ...useTheme(),
@@ -42,36 +57,44 @@ export default function History() {
         },
     };
 
+    // Get responsive styles
+    const responsiveStyles = createResponsiveStyles(theme);
+
     const styles = StyleSheet.create({
         container: {
-            padding: moderateScale(20),
+            padding: ResponsiveUtils.moderateScale(16),
             paddingBottom: 0,
             flex: 1,
         },
         title: {
-            fontSize: moderateScale(28),
+            fontSize: ResponsiveUtils.normalizeFont(28),
             fontWeight: 'bold',
             color: theme.colors.secondary,
-            marginBottom: moderateScale(20),
+            marginBottom: ResponsiveUtils.moderateScale(20),
         },
         searchBar: {
             backgroundColor: theme.colors.surface,
-            marginBottom: moderateScale(15),
-            borderRadius: moderateScale(12),
+            marginBottom: ResponsiveUtils.moderateScale(15),
+            borderRadius: ResponsiveUtils.moderateScale(12),
+            height: ResponsiveUtils.moderateScale(48),
         },
         chipsContainer: {
             flexDirection: 'row',
-            marginBottom: moderateScale(15),
+            marginBottom: ResponsiveUtils.moderateScale(15),
             flexWrap: 'wrap',
         },
         chip: {
-            marginRight: moderateScale(8),
-            marginBottom: moderateScale(8),
+            marginRight: ResponsiveUtils.moderateScale(8),
+            marginBottom: ResponsiveUtils.moderateScale(8),
+            height: ResponsiveUtils.moderateScale(36),
+        },
+        chipText: {
+            fontSize: ResponsiveUtils.normalizeFont(12),
         },
         articleCard: {
             backgroundColor: theme.colors.surface,
-            marginBottom: moderateScale(12),
-            borderRadius: moderateScale(12),
+            marginBottom: ResponsiveUtils.moderateScale(12),
+            borderRadius: ResponsiveUtils.moderateScale(12),
             borderLeftWidth: 4,
             shadowColor: theme.colors.accent,
             shadowOffset: {width: 0, height: 2},
@@ -81,12 +104,14 @@ export default function History() {
         },
         articleTitle: {
             color: theme.colors.text,
-            marginBottom: moderateScale(4),
+            marginBottom: ResponsiveUtils.moderateScale(4),
             fontWeight: '500',
+            fontSize: ResponsiveUtils.normalizeFont(15),
         },
         articleDate: {
             color: theme.colors.placeholder,
-            marginBottom: moderateScale(8),
+            marginBottom: ResponsiveUtils.moderateScale(8),
+            fontSize: ResponsiveUtils.normalizeFont(12),
         },
         statsRow: {
             flexDirection: 'row',
@@ -95,17 +120,27 @@ export default function History() {
         },
         reliabilityLabel: {
             color: theme.colors.secondary,
+            fontSize: ResponsiveUtils.normalizeFont(13),
+        },
+        reliabilityValue: {
+            marginLeft: ResponsiveUtils.moderateScale(4),
+            fontWeight: 'bold',
+            fontSize: ResponsiveUtils.normalizeFont(13),
         },
         emptyContainer: {
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            marginTop: moderateScale(50),
+            marginTop: ResponsiveUtils.moderateScale(50),
         },
         emptyText: {
             color: theme.colors.text,
-            fontSize: moderateScale(16),
+            fontSize: ResponsiveUtils.normalizeFont(16),
             textAlign: 'center',
+            padding: ResponsiveUtils.moderateScale(16),
+        },
+        flatListContent: {
+            paddingBottom: ResponsiveUtils.moderateScale(80),
         },
     });
 
@@ -157,11 +192,11 @@ export default function History() {
 
         // Apply reliability filter
         if (activeFilter === 'high') {
-            filtered = filtered.filter(article => article.reliability_score >= 75);
+            filtered = filtered.filter(article => article.reliability_score >= 0.75);
         } else if (activeFilter === 'medium') {
-            filtered = filtered.filter(article => article.reliability_score >= 50 && article.reliability_score < 75);
+            filtered = filtered.filter(article => article.reliability_score >= 0.5 && article.reliability_score < 0.75);
         } else if (activeFilter === 'low') {
-            filtered = filtered.filter(article => article.reliability_score < 50);
+            filtered = filtered.filter(article => article.reliability_score < 0.5);
         }
 
         setFilteredArticles(filtered);
@@ -214,11 +249,10 @@ export default function History() {
                             </Text>
                             <Text
                                 variant="bodyMedium"
-                                style={{
-                                    color: getScoreColor((item.reliability_score*100).toFixed(2)),
-                                    marginLeft: moderateScale(4),
-                                    fontWeight: 'bold'
-                                }}
+                                style={[
+                                    styles.reliabilityValue,
+                                    {color: getScoreColor((item.reliability_score*100).toFixed(2))}
+                                ]}
                             >
                                 {(item.reliability_score*100).toFixed(2)}%
                             </Text>
@@ -226,7 +260,7 @@ export default function History() {
                         <IconButton
                             icon="chevron-right"
                             iconColor={theme.colors.secondary}
-                            size={20}
+                            size={ResponsiveUtils.moderateScale(20)}
                         />
                     </View>
                 </Card.Content>
@@ -249,116 +283,133 @@ export default function History() {
             colors={['#1A1612', '#241E19', '#2A241E']}
             style={{flex: 1}}
         >
-            <View style={styles.container}>
-                <Searchbar
-                    placeholder="Search articles"
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    placeholderTextColor={theme.colors.placeholder}
-                    iconColor={theme.colors.secondary}
-                    inputStyle={{color: theme.colors.text}}
-                    style={styles.searchBar}
-                />
-
-                <View style={styles.chipsContainer}>
-                    <Chip
-                        selected={activeFilter === 'all'}
-                        onPress={() => setActiveFilter('all')}
-                        style={[
-                            styles.chip,
-                            {
-                                backgroundColor: activeFilter === 'all'
-                                    ? theme.colors.accent
-                                    : theme.colors.surface
-                            }
-                        ]}
-                        textStyle={{
-                            color: theme.colors.text
+            <SafeAreaView style={{flex: 1}}>
+                <View style={styles.container}>
+                    <Searchbar
+                        placeholder="Search articles"
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                        placeholderTextColor={theme.colors.placeholder}
+                        iconColor={theme.colors.secondary}
+                        inputStyle={{
+                            color: theme.colors.text,
+                            fontSize: ResponsiveUtils.normalizeFont(14),
                         }}
-                    >
-                        All
-                    </Chip>
-                    <Chip
-                        selected={activeFilter === 'high'}
-                        onPress={() => setActiveFilter('high')}
-                        style={[
-                            styles.chip,
-                            {
-                                backgroundColor: activeFilter === 'high'
-                                    ? '#4CAF50'
-                                    : theme.colors.surface
-                            }
-                        ]}
-                        textStyle={{
-                            color: activeFilter === 'high'
-                                ? '#fff'
-                                : theme.colors.text
-                        }}
-                    >
-                        High Reliability
-                    </Chip>
-                    <Chip
-                        selected={activeFilter === 'medium'}
-                        onPress={() => setActiveFilter('medium')}
-                        style={[
-                            styles.chip,
-                            {
-                                backgroundColor: activeFilter === 'medium'
-                                    ? '#FFC107'
-                                    : theme.colors.surface
-                            }
-                        ]}
-                        textStyle={{
-                            color: activeFilter === 'medium'
-                                ? '#000'
-                                : theme.colors.text
-                        }}
-                    >
-                        Medium Reliability
-                    </Chip>
-                    <Chip
-                        selected={activeFilter === 'low'}
-                        onPress={() => setActiveFilter('low')}
-                        style={[
-                            styles.chip,
-                            {
-                                backgroundColor: activeFilter === 'low'
-                                    ? '#F44336'
-                                    : theme.colors.surface
-                            }
-                        ]}
-                        textStyle={{
-                            color: activeFilter === 'low'
-                                ? '#fff'
-                                : theme.colors.text
-                        }}
-                    >
-                        Low Reliability
-                    </Chip>
-                </View>
-
-                {loading && !refreshing ? (
-                    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-                        <ActivityIndicator color={theme.colors.secondary} size="large" />
-                    </View>
-                ) : (
-                    <FlatList
-                        data={filteredArticles}
-                        renderItem={renderArticleItem}
-                        keyExtractor={(item) => item.id.toString()}
-                        ListEmptyComponent={renderEmptyList}
-                        contentContainerStyle={{paddingBottom: moderateScale(80)}}
-                        refreshControl={
-                            <RefreshControl
-                                refreshing={refreshing}
-                                onRefresh={onRefresh}
-                                tintColor={theme.colors.secondary}
-                                colors={[theme.colors.secondary]}
-                            />
-                        }
+                        style={styles.searchBar}
                     />
-                )}
-            </View>
+
+                    <View style={styles.chipsContainer}>
+                        <Chip
+                            selected={activeFilter === 'all'}
+                            onPress={() => setActiveFilter('all')}
+                            style={[
+                                styles.chip,
+                                {
+                                    backgroundColor: activeFilter === 'all'
+                                        ? theme.colors.accent
+                                        : theme.colors.surface
+                                }
+                            ]}
+                            textStyle={[
+                                styles.chipText,
+                                {
+                                    color: theme.colors.text
+                                }
+                            ]}
+                        >
+                            All
+                        </Chip>
+                        <Chip
+                            selected={activeFilter === 'high'}
+                            onPress={() => setActiveFilter('high')}
+                            style={[
+                                styles.chip,
+                                {
+                                    backgroundColor: activeFilter === 'high'
+                                        ? '#4CAF50'
+                                        : theme.colors.surface
+                                }
+                            ]}
+                            textStyle={[
+                                styles.chipText,
+                                {
+                                    color: activeFilter === 'high'
+                                        ? '#fff'
+                                        : theme.colors.text
+                                }
+                            ]}
+                        >
+                            High Reliability
+                        </Chip>
+                        <Chip
+                            selected={activeFilter === 'medium'}
+                            onPress={() => setActiveFilter('medium')}
+                            style={[
+                                styles.chip,
+                                {
+                                    backgroundColor: activeFilter === 'medium'
+                                        ? '#FFC107'
+                                        : theme.colors.surface
+                                }
+                            ]}
+                            textStyle={[
+                                styles.chipText,
+                                {
+                                    color: activeFilter === 'medium'
+                                        ? '#000'
+                                        : theme.colors.text
+                                }
+                            ]}
+                        >
+                            Medium Reliability
+                        </Chip>
+                        <Chip
+                            selected={activeFilter === 'low'}
+                            onPress={() => setActiveFilter('low')}
+                            style={[
+                                styles.chip,
+                                {
+                                    backgroundColor: activeFilter === 'low'
+                                        ? '#F44336'
+                                        : theme.colors.surface
+                                }
+                            ]}
+                            textStyle={[
+                                styles.chipText,
+                                {
+                                    color: activeFilter === 'low'
+                                        ? '#fff'
+                                        : theme.colors.text
+                                }
+                            ]}
+                        >
+                            Low Reliability
+                        </Chip>
+                    </View>
+
+                    {loading && !refreshing ? (
+                        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+                            <ActivityIndicator color={theme.colors.secondary} size="large" />
+                        </View>
+                    ) : (
+                        <FlatList
+                            data={filteredArticles}
+                            renderItem={renderArticleItem}
+                            keyExtractor={(item) => item.id.toString()}
+                            ListEmptyComponent={renderEmptyList}
+                            contentContainerStyle={styles.flatListContent}
+                            refreshControl={
+                                <RefreshControl
+                                    refreshing={refreshing}
+                                    onRefresh={onRefresh}
+                                    tintColor={theme.colors.secondary}
+                                    colors={[theme.colors.secondary]}
+                                />
+                            }
+                        />
+                    )}
+                </View>
+            </SafeAreaView>
         </LinearGradient>
     );
 }

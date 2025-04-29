@@ -1,4 +1,4 @@
-import {View, Animated, ScrollView, Image, RefreshControl, TouchableOpacity, StyleSheet} from 'react-native';
+import {View, Animated, ScrollView, Image, RefreshControl, TouchableOpacity, StyleSheet, SafeAreaView, Dimensions, Platform} from 'react-native';
 import {useAuth} from '../context/AuthContext';
 import {useState, useRef, useEffect} from 'react';
 import {
@@ -14,11 +14,11 @@ import {
 } from 'react-native-paper';
 import * as Haptics from 'expo-haptics';
 import {LinearGradient} from 'expo-linear-gradient';
-import {moderateScale} from 'react-native-size-matters';
-import {authStyles} from '../styles/auth';
 import axios from 'axios';
 import {API_URL} from '../constants/Config';
 import {router} from 'expo-router';
+import ResponsiveUtils from '../utils/ResponsiveUtils';
+import createResponsiveStyles from '../styles/responsive-styles';
 
 // Helper function to format dates
 const formatDate = (dateString) => {
@@ -36,6 +36,19 @@ export default function Home() {
     const [refreshing, setRefreshing] = useState(false);
     const [stats, setStats] = useState(null);
     const [recentArticles, setRecentArticles] = useState([]);
+    const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+
+    useEffect(() => {
+        const subscription = Dimensions.addEventListener('change', ({ window }) => {
+            setDimensions(window);
+        });
+
+        return () => {
+            if (typeof subscription?.remove === 'function') {
+                subscription.remove();
+            }
+        };
+    }, []);
 
     const theme = {
         ...useTheme(),
@@ -52,8 +65,11 @@ export default function Home() {
         },
     };
 
+    // Get responsive styles
+    const responsiveStyles = createResponsiveStyles(theme);
+
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(50)).current;
+    const slideAnim = useRef(new Animated.Value(ResponsiveUtils.moderateScale(50))).current;
     const scaleAnim = useRef(new Animated.Value(0.95)).current;
 
     useEffect(() => {
@@ -85,7 +101,6 @@ export default function Home() {
     const fetchUserStats = async () => {
         try {
             setLoading(true);
-            console.log('home token:',token)
 
             const response = await axios.get(`${API_URL}/user/stats`, {
                 headers: { Authorization: `Bearer ${token}` }
@@ -191,8 +206,9 @@ export default function Home() {
                         variant="titleMedium"
                         style={{
                             color: theme.colors.text,
-                            marginBottom: 4,
-                            fontWeight: '500'
+                            marginBottom: ResponsiveUtils.moderateScale(4),
+                            fontWeight: '500',
+                            fontSize: ResponsiveUtils.normalizeFont(15),
                         }}
                         numberOfLines={2}
                     >
@@ -202,7 +218,8 @@ export default function Home() {
                         variant="bodySmall"
                         style={{
                             color: theme.colors.placeholder,
-                            marginBottom: 8,
+                            marginBottom: ResponsiveUtils.moderateScale(8),
+                            fontSize: ResponsiveUtils.normalizeFont(12),
                         }}
                     >
                         {formatDate(article.created_at)}
@@ -211,7 +228,10 @@ export default function Home() {
                         <View style={{flexDirection: 'row', alignItems: 'center'}}>
                             <Text
                                 variant="labelMedium"
-                                style={{color: theme.colors.secondary}}
+                                style={{
+                                    color: theme.colors.secondary,
+                                    fontSize: ResponsiveUtils.normalizeFont(13),
+                                }}
                             >
                                 Reliability:
                             </Text>
@@ -219,8 +239,9 @@ export default function Home() {
                                 variant="bodyMedium"
                                 style={{
                                     color: getScoreColor((article.reliability_score*100).toFixed(2)),
-                                    marginLeft: 4,
-                                    fontWeight: 'bold'
+                                    marginLeft: ResponsiveUtils.moderateScale(4),
+                                    fontWeight: 'bold',
+                                    fontSize: ResponsiveUtils.normalizeFont(13),
                                 }}
                             >
                                 {(article.reliability_score*100).toFixed(2)}%
@@ -229,7 +250,7 @@ export default function Home() {
                         <IconButton
                             icon="chevron-right"
                             iconColor={theme.colors.secondary}
-                            size={20}
+                            size={ResponsiveUtils.moderateScale(20)}
                         />
                     </View>
                 </Card.Content>
@@ -247,19 +268,18 @@ export default function Home() {
 
     const styles = StyleSheet.create({
         container: {
-            opacity: 1,
-            padding: moderateScale(24),
+            padding: ResponsiveUtils.moderateScale(20),
         },
         sectionTitle: {
-            fontSize: moderateScale(22),
+            fontSize: ResponsiveUtils.normalizeFont(22),
             fontWeight: '700',
             color: theme.colors.text,
-            marginBottom: moderateScale(15),
+            marginBottom: ResponsiveUtils.moderateScale(15),
         },
         card: {
             backgroundColor: theme.colors.surface,
-            marginBottom: moderateScale(20),
-            borderRadius: moderateScale(15),
+            marginBottom: ResponsiveUtils.moderateScale(20),
+            borderRadius: ResponsiveUtils.moderateScale(15),
             shadowColor: theme.colors.accent,
             shadowOffset: {width: 0, height: 4},
             shadowOpacity: 0.2,
@@ -268,8 +288,8 @@ export default function Home() {
         },
         articleCard: {
             backgroundColor: theme.colors.surface,
-            marginBottom: moderateScale(12),
-            borderRadius: moderateScale(12),
+            marginBottom: ResponsiveUtils.moderateScale(12),
+            borderRadius: ResponsiveUtils.moderateScale(12),
             borderLeftWidth: 4,
             shadowColor: theme.colors.accent,
             shadowOffset: {width: 0, height: 2},
@@ -280,45 +300,84 @@ export default function Home() {
         statContainer: {
             flex: 1,
             alignItems: 'center',
-            padding: moderateScale(10),
+            padding: ResponsiveUtils.moderateScale(10),
         },
         statValue: {
-            fontSize: moderateScale(28),
+            fontSize: ResponsiveUtils.normalizeFont(28),
             fontWeight: 'bold',
             color: theme.colors.secondary,
         },
         statLabel: {
-            fontSize: moderateScale(14),
+            fontSize: ResponsiveUtils.normalizeFont(14),
             color: theme.colors.text,
         },
         divider: {
             backgroundColor: theme.colors.primary,
             opacity: 0.3,
-            marginVertical: moderateScale(10),
+            marginVertical: ResponsiveUtils.moderateScale(10),
         },
         statsRow: {
             flexDirection: 'row',
             justifyContent: 'space-between',
-            marginBottom: moderateScale(15),
+            marginBottom: ResponsiveUtils.moderateScale(15),
         },
         usageLabel: {
-            fontSize: moderateScale(14),
+            fontSize: ResponsiveUtils.normalizeFont(14),
             color: theme.colors.text,
         },
         button: {
-            borderRadius: moderateScale(12),
-            marginTop: moderateScale(15),
+            borderRadius: ResponsiveUtils.moderateScale(12),
+            marginTop: ResponsiveUtils.moderateScale(15),
         },
         viewAllButton: {
             color: theme.colors.secondary,
         },
         fab: {
             position: 'absolute',
-            margin: moderateScale(16),
+            margin: ResponsiveUtils.moderateScale(16),
             right: 0,
             bottom: 0,
             backgroundColor: theme.colors.accent,
-        }
+        },
+        headerContainer: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: ResponsiveUtils.moderateScale(15),
+        },
+        logoContainer: {
+            shadowColor: theme.colors.secondary,
+            shadowOffset: {width: 0, height: 0},
+            shadowRadius: ResponsiveUtils.moderateScale(8),
+            shadowOpacity: 0.2,
+        },
+        logo: {
+            width: ResponsiveUtils.moderateScale(40),
+            height: ResponsiveUtils.moderateScale(40),
+        },
+        welcomeText: {
+            color: theme.colors.secondary,
+            marginLeft: ResponsiveUtils.moderateScale(10),
+            textShadowColor: theme.colors.accent,
+            textShadowOffset: {width: 0, height: 0},
+            textShadowRadius: 2,
+            fontSize: ResponsiveUtils.normalizeFont(16),
+        },
+        statsCardContent: {
+            padding: ResponsiveUtils.moderateScale(15),
+        },
+        usageContainer: {
+            marginVertical: ResponsiveUtils.moderateScale(10),
+        },
+        emptyArticlesText: {
+            color: theme.colors.text,
+            textAlign: 'center',
+            padding: ResponsiveUtils.moderateScale(15),
+        },
+        logoutButton: {
+            marginTop: ResponsiveUtils.moderateScale(10),
+            marginBottom: ResponsiveUtils.moderateScale(20),
+            paddingVertical: ResponsiveUtils.moderateScale(8),
+        },
     });
 
     return (
@@ -326,247 +385,264 @@ export default function Home() {
             colors={['#1A1612', '#241E19', '#2A241E']}
             style={{flex: 1}}
         >
-            <ScrollView
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        tintColor={theme.colors.secondary}
-                        colors={[theme.colors.secondary]}
-                    />
-                }
-            >
-                <Animated.View
-                    style={[
-                        styles.container,
-                        {
-                            opacity: fadeAnim,
-                            transform: [
-                                {translateY: slideAnim},
-                                {scale: scaleAnim}
-                            ],
-                        }
-                    ]}
+            <SafeAreaView style={{flex: 1}}>
+                <ScrollView
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            tintColor={theme.colors.secondary}
+                            colors={[theme.colors.secondary]}
+                        />
+                    }
+                    contentContainerStyle={{
+                        flexGrow: 1,
+                        paddingBottom: ResponsiveUtils.moderateScale(80)
+                    }}
                 >
-                    <View style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        marginBottom: moderateScale(15)
-                    }}>
-                        <Animated.View
-                            style={{
-                                transform: [{scale: scaleAnim}],
-                                shadowColor: theme.colors.secondary,
-                                shadowOffset: {width: 0, height: 0},
-                                shadowRadius: moderateScale(8),
-                                shadowOpacity: 0.2,
-                            }}
-                        >
-                            <Image
-                                source={require('../../assets/images/logo_no_title.png')}
-                                style={{
-                                    width: moderateScale(40),
-                                    height: moderateScale(40),
-                                }}
-                                resizeMode="contain"
-                            />
-                        </Animated.View>
-                        <Text
-                            variant="titleMedium"
-                            style={{
-                                color: theme.colors.secondary,
-                                marginLeft: moderateScale(10),
-                                textShadowColor: theme.colors.accent,
-                                textShadowOffset: {width: 0, height: 0},
-                                textShadowRadius: 2,
-                            }}
-                        >
-                            Welcome, {user?.email?.split('@')[0] || 'User'}
-                        </Text>
-                    </View>
-
-                    {/* Statistics Overview Card */}
-                    <Card
-                        style={styles.card}
-                    >
-                        <Card.Content>
-                            <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-                                <Text
-                                    variant="titleLarge"
-                                    style={{color: theme.colors.text, marginBottom: 10}}
-                                >
-                                    Dashboard
-                                </Text>
-                                <IconButton
-                                    icon="chart-bar"
-                                    mode="contained-tonal"
-                                    size={20}
-                                    onPress={handleStatisticsPress}
-                                    containerColor={theme.colors.accent}
-                                    iconColor={theme.colors.text}
-                                />
-                            </View>
-
-                            {loading && !stats ? (
-                                <ActivityIndicator
-                                    color={theme.colors.secondary}
-                                    style={{marginVertical: 20}}
-                                />
-                            ) : stats ? (
-                                <>
-                                    <View style={styles.statsRow}>
-                                        <View style={styles.statContainer}>
-                                            <Text
-                                                variant="displaySmall"
-                                                style={styles.statValue}
-                                            >
-                                                {stats.articles_analyzed_daily}
-                                            </Text>
-                                            <Text variant="bodySmall" style={styles.statLabel}>
-                                                Today
-                                            </Text>
-                                        </View>
-                                        <View style={{width: 1, backgroundColor: theme.colors.primary, opacity: 0.3}} />
-                                        <View style={styles.statContainer}>
-                                            <Text
-                                                variant="displaySmall"
-                                                style={styles.statValue}
-                                            >
-                                                {stats.total_articles}
-                                            </Text>
-                                            <Text variant="bodySmall" style={styles.statLabel}>
-                                                Total
-                                            </Text>
-                                        </View>
-                                    </View>
-
-                                    <Divider style={styles.divider} />
-
-                                    <View style={{marginVertical: moderateScale(10)}}>
-                                        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-                                            <Text variant="bodyMedium" style={styles.usageLabel}>
-                                                Daily Usage
-                                            </Text>
-                                            <Text
-                                                variant="bodyMedium"
-                                                style={{color: theme.colors.secondary}}
-                                            >
-                                                {stats.articles_analyzed_daily}/{stats.daily_limit}
-                                            </Text>
-                                        </View>
-                                        <ProgressBar
-                                            progress={calculateProgress()}
-                                            color={getProgressColor()}
-                                            style={{height: moderateScale(6), marginTop: moderateScale(6), borderRadius: moderateScale(3)}}
-                                        />
-                                    </View>
-
-                                    <View style={{marginTop: 10}}>
-                                        <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-                                            <Text variant="bodyMedium" style={{color: theme.colors.text}}>
-                                                Weekly Accuracy
-                                            </Text>
-                                            <Text
-                                                variant="bodyMedium"
-                                                style={{color: getScoreColor(getWeeklyAccuracy())}}
-                                            >
-                                                {getWeeklyAccuracy().toFixed(1)}%
-                                            </Text>
-                                        </View>
-                                    </View>
-                                </>
-                            ) : (
-                                <Text
-                                    variant="bodyLarge"
-                                    style={{color: theme.colors.text, marginVertical: 10}}
-                                >
-                                    No stats available
-                                </Text>
-                            )}
-
-                            <Button
-                                mode="outlined"
-                                onPress={handleStatisticsPress}
-                                icon="chart-line"
-                                style={[
-                                    styles.button,
-                                    {
-                                        borderColor: theme.colors.secondary,
-                                    }
-                                ]}
-                                textColor={theme.colors.secondary}
-                            >
-                                View Full Statistics
-                            </Button>
-                        </Card.Content>
-                    </Card>
-
-                    {/* Recent Articles Section */}
-                    <View style={{marginBottom: moderateScale(20)}}>
-                        <View style={{
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: moderateScale(15)
-                        }}>
-                            <Text
-                                variant="titleLarge"
-                                style={styles.sectionTitle}
-                            >
-                                Recent Articles
-                            </Text>
-                            <Button
-                                mode="text"
-                                onPress={() => router.push('/(tabs)/history')}
-                                textColor={theme.colors.secondary}
-                            >
-                                See All
-                            </Button>
-                        </View>
-
-                        {loading && recentArticles.length === 0 ? (
-                            <ActivityIndicator color={theme.colors.secondary} style={{marginVertical: moderateScale(20)}} />
-                        ) : recentArticles.length > 0 ? (
-                            recentArticles.slice(0, 3).map(article => renderArticleCard(article))
-                        ) : (
-                            <Card style={[styles.card, {padding: moderateScale(15)}]}>
-                                <Text style={{color: theme.colors.text, textAlign: 'center'}}>
-                                    No recent articles found
-                                </Text>
-                            </Card>
-                        )}
-                    </View>
-
-                    <Button
-                        mode="contained"
-                        onPress={handleLogout}
-                        loading={loading}
-                        icon="logout"
-                        contentStyle={{paddingVertical: moderateScale(8)}}
-                        buttonColor={theme.colors.accent}
-                        textColor={theme.colors.text}
+                    <Animated.View
                         style={[
-                            authStyles.primaryButton,
+                            styles.container,
                             {
-                                marginTop: moderateScale(10),
-                                marginBottom: moderateScale(20)
+                                opacity: fadeAnim,
+                                transform: [
+                                    {translateY: slideAnim},
+                                    {scale: scaleAnim}
+                                ],
                             }
                         ]}
                     >
-                        {loading ? 'Logging out...' : 'Logout'}
-                    </Button>
-                </Animated.View>
-            </ScrollView>
+                        <View style={styles.headerContainer}>
+                            <Animated.View style={styles.logoContainer}>
+                                <Image
+                                    source={require('../../assets/images/logo_no_title.png')}
+                                    style={styles.logo}
+                                    resizeMode="contain"
+                                />
+                            </Animated.View>
+                            <Text
+                                variant="titleMedium"
+                                style={styles.welcomeText}
+                            >
+                                Welcome, {user?.email?.split('@')[0] || 'User'}
+                            </Text>
+                        </View>
 
-            <FAB
-                icon="magnify"
-                style={styles.fab}
-                color={theme.colors.text}
-                onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    router.push('/new-search');
-                }}
-            />
+                        {/* Statistics Overview Card */}
+                        <Card style={styles.card}>
+                            <Card.Content style={styles.statsCardContent}>
+                                <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+                                    <Text
+                                        variant="titleLarge"
+                                        style={{
+                                            color: theme.colors.text,
+                                            marginBottom: ResponsiveUtils.moderateScale(10),
+                                            fontSize: ResponsiveUtils.normalizeFont(20)
+                                        }}
+                                    >
+                                        Dashboard
+                                    </Text>
+                                    <IconButton
+                                        icon="chart-bar"
+                                        mode="contained-tonal"
+                                        size={ResponsiveUtils.moderateScale(20)}
+                                        onPress={handleStatisticsPress}
+                                        containerColor={theme.colors.accent}
+                                        iconColor={theme.colors.text}
+                                    />
+                                </View>
+
+                                {loading && !stats ? (
+                                    <ActivityIndicator
+                                        color={theme.colors.secondary}
+                                        style={{marginVertical: ResponsiveUtils.moderateScale(20)}}
+                                    />
+                                ) : stats ? (
+                                    <>
+                                        <View style={styles.statsRow}>
+                                            <View style={styles.statContainer}>
+                                                <Text
+                                                    variant="displaySmall"
+                                                    style={styles.statValue}
+                                                >
+                                                    {stats.articles_analyzed_daily}
+                                                </Text>
+                                                <Text
+                                                    variant="bodySmall"
+                                                    style={styles.statLabel}
+                                                >
+                                                    Today
+                                                </Text>
+                                            </View>
+                                            <View style={{
+                                                width: 1,
+                                                backgroundColor: theme.colors.primary,
+                                                opacity: 0.3
+                                            }} />
+                                            <View style={styles.statContainer}>
+                                                <Text
+                                                    variant="displaySmall"
+                                                    style={styles.statValue}
+                                                >
+                                                    {stats.total_articles}
+                                                </Text>
+                                                <Text
+                                                    variant="bodySmall"
+                                                    style={styles.statLabel}
+                                                >
+                                                    Total
+                                                </Text>
+                                            </View>
+                                        </View>
+
+                                        <Divider style={styles.divider} />
+
+                                        <View style={styles.usageContainer}>
+                                            <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+                                                <Text
+                                                    variant="bodyMedium"
+                                                    style={styles.usageLabel}
+                                                >
+                                                    Daily Usage
+                                                </Text>
+                                                <Text
+                                                    variant="bodyMedium"
+                                                    style={{
+                                                        color: theme.colors.secondary,
+                                                        fontSize: ResponsiveUtils.normalizeFont(14)
+                                                    }}
+                                                >
+                                                    {stats.articles_analyzed_daily}/{stats.daily_limit}
+                                                </Text>
+                                            </View>
+                                            <ProgressBar
+                                                progress={calculateProgress()}
+                                                color={getProgressColor()}
+                                                style={{
+                                                    height: ResponsiveUtils.moderateScale(6),
+                                                    marginTop: ResponsiveUtils.moderateScale(6),
+                                                    borderRadius: ResponsiveUtils.moderateScale(3)
+                                                }}
+                                            />
+                                        </View>
+
+                                        <View style={{marginTop: ResponsiveUtils.moderateScale(10)}}>
+                                            <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+                                                <Text
+                                                    variant="bodyMedium"
+                                                    style={{
+                                                        color: theme.colors.text,
+                                                        fontSize: ResponsiveUtils.normalizeFont(14)
+                                                    }}
+                                                >
+                                                    Weekly Accuracy
+                                                </Text>
+                                                <Text
+                                                    variant="bodyMedium"
+                                                    style={{
+                                                        color: getScoreColor(getWeeklyAccuracy()),
+                                                        fontSize: ResponsiveUtils.normalizeFont(14)
+                                                    }}
+                                                >
+                                                    {getWeeklyAccuracy().toFixed(1)}%
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    </>
+                                ) : (
+                                    <Text
+                                        variant="bodyLarge"
+                                        style={{
+                                            color: theme.colors.text,
+                                            marginVertical: ResponsiveUtils.moderateScale(10),
+                                            fontSize: ResponsiveUtils.normalizeFont(16)
+                                        }}
+                                    >
+                                        No stats available
+                                    </Text>
+                                )}
+
+                                <Button
+                                    mode="outlined"
+                                    onPress={handleStatisticsPress}
+                                    icon="chart-line"
+                                    style={[
+                                        styles.button,
+                                        {
+                                            borderColor: theme.colors.secondary,
+                                        }
+                                    ]}
+                                    textColor={theme.colors.secondary}
+                                >
+                                    View Full Statistics
+                                </Button>
+                            </Card.Content>
+                        </Card>
+
+                        {/* Recent Articles Section */}
+                        <View style={{marginBottom: ResponsiveUtils.moderateScale(20)}}>
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: ResponsiveUtils.moderateScale(15)
+                            }}>
+                                <Text
+                                    variant="titleLarge"
+                                    style={styles.sectionTitle}
+                                >
+                                    Recent Articles
+                                </Text>
+                                <Button
+                                    mode="text"
+                                    onPress={() => router.push('/(tabs)/history')}
+                                    textColor={theme.colors.secondary}
+                                >
+                                    See All
+                                </Button>
+                            </View>
+
+                            {loading && recentArticles.length === 0 ? (
+                                <ActivityIndicator
+                                    color={theme.colors.secondary}
+                                    style={{marginVertical: ResponsiveUtils.moderateScale(20)}}
+                                />
+                            ) : recentArticles.length > 0 ? (
+                                recentArticles.slice(0, 3).map(article => renderArticleCard(article))
+                            ) : (
+                                <Card style={[styles.card, {padding: ResponsiveUtils.moderateScale(15)}]}>
+                                    <Text style={styles.emptyArticlesText}>
+                                        No recent articles found
+                                    </Text>
+                                </Card>
+                            )}
+                        </View>
+
+                        <Button
+                            mode="contained"
+                            onPress={handleLogout}
+                            loading={loading}
+                            icon="logout"
+                            contentStyle={{paddingVertical: ResponsiveUtils.moderateScale(8)}}
+                            buttonColor={theme.colors.accent}
+                            textColor={theme.colors.text}
+                            style={styles.logoutButton}
+                        >
+                            {loading ? 'Logging out...' : 'Logout'}
+                        </Button>
+                    </Animated.View>
+                </ScrollView>
+
+                <FAB
+                    icon="magnify"
+                    style={styles.fab}
+                    color={theme.colors.text}
+                    onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        router.push('/new-search');
+                    }}
+                />
+            </SafeAreaView>
         </LinearGradient>
     );
 }

@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, RefreshControl, Dimensions, StyleSheet } from 'react-native';
+// app/(tabs)/stats.tsx
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, ScrollView, RefreshControl, Dimensions, StyleSheet, SafeAreaView, Platform } from 'react-native';
 import { Text, Card, useTheme, ActivityIndicator, Button, Divider, SegmentedButtons } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
-import { moderateScale } from 'react-native-size-matters';
 import axios from 'axios';
 import { API_URL } from '../constants/Config';
 import * as Haptics from 'expo-haptics';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import { authStyles } from '../styles/auth';
+import ResponsiveUtils from '../utils/ResponsiveUtils';
 
 export default function Stats() {
     const { token } = useAuth();
@@ -16,6 +17,26 @@ export default function Stats() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [timeframe, setTimeframe] = useState('week'); // 'week', 'month', 'year'
+    const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+
+    // Update dimensions when screen size changes (e.g. rotation)
+    useEffect(() => {
+        const subscription = Dimensions.addEventListener('change', ({ window }) => {
+            setDimensions(window);
+        });
+
+        return () => {
+            // Handle cleanup based on RN version
+            if (typeof subscription?.remove === 'function') {
+                subscription.remove();
+            }
+        };
+    }, []);
+
+    const { width: screenWidth, height: screenHeight } = dimensions;
+    // Calculate chart width with safe margins
+    const chartWidth = screenWidth - ResponsiveUtils.horizontalScale(40);
+    const chartHeight = Math.min(220, screenHeight * 0.25);
 
     const theme = {
         ...useTheme(),
@@ -31,18 +52,16 @@ export default function Stats() {
         },
     };
 
-    const screenWidth = Dimensions.get("window").width - moderateScale(40);
-
     const styles = StyleSheet.create({
         container: {
-            padding: moderateScale(20),
+            padding: ResponsiveUtils.moderateScale(16),
             flex: 1,
         },
         card: {
             backgroundColor: theme.colors.surface,
-            marginBottom: moderateScale(20),
-            borderRadius: moderateScale(15),
-            padding: moderateScale(15),
+            marginBottom: ResponsiveUtils.moderateScale(16),
+            borderRadius: ResponsiveUtils.moderateScale(15),
+            padding: ResponsiveUtils.moderateScale(15),
             shadowColor: theme.colors.accent,
             shadowOffset: {width: 0, height: 4},
             shadowOpacity: 0.2,
@@ -50,72 +69,92 @@ export default function Stats() {
             elevation: 5,
         },
         cardTitle: {
-            fontSize: moderateScale(18),
+            fontSize: ResponsiveUtils.normalizeFont(18),
             fontWeight: 'bold',
             color: theme.colors.secondary,
-            marginBottom: moderateScale(10),
+            marginBottom: ResponsiveUtils.moderateScale(10),
         },
         statRow: {
             flexDirection: 'row',
             justifyContent: 'space-between',
-            marginVertical: moderateScale(8),
+            marginVertical: ResponsiveUtils.moderateScale(8),
         },
         statLabel: {
-            fontSize: moderateScale(14),
+            fontSize: ResponsiveUtils.normalizeFont(14),
             color: theme.colors.text,
+            flex: 1, // Allow label to wrap on smaller screens
         },
         statValue: {
-            fontSize: moderateScale(14),
+            fontSize: ResponsiveUtils.normalizeFont(14),
             fontWeight: 'bold',
             color: theme.colors.secondary,
+            paddingLeft: ResponsiveUtils.moderateScale(4),
         },
         divider: {
             backgroundColor: theme.colors.primary,
             opacity: 0.3,
-            marginVertical: moderateScale(10),
+            marginVertical: ResponsiveUtils.moderateScale(10),
         },
         chartCard: {
             backgroundColor: theme.colors.surface,
-            marginBottom: moderateScale(20),
-            borderRadius: moderateScale(15),
-            padding: moderateScale(15),
+            marginBottom: ResponsiveUtils.moderateScale(20),
+            borderRadius: ResponsiveUtils.moderateScale(15),
+            padding: ResponsiveUtils.moderateScale(15),
             alignItems: 'center',
         },
         chartTitle: {
-            fontSize: moderateScale(16),
+            fontSize: ResponsiveUtils.normalizeFont(16),
             fontWeight: 'bold',
             color: theme.colors.secondary,
-            marginBottom: moderateScale(15),
+            marginBottom: ResponsiveUtils.moderateScale(15),
             alignSelf: 'flex-start',
         },
         noDataContainer: {
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            padding: moderateScale(20),
+            padding: ResponsiveUtils.moderateScale(20),
         },
         noDataText: {
             color: theme.colors.text,
-            fontSize: moderateScale(16),
+            fontSize: ResponsiveUtils.normalizeFont(16),
             textAlign: 'center',
-            marginBottom: moderateScale(20),
+            marginBottom: ResponsiveUtils.moderateScale(20),
         },
         timeframeSelector: {
-            marginBottom: moderateScale(20),
+            marginBottom: ResponsiveUtils.moderateScale(16),
+        },
+        errorContainer: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: ResponsiveUtils.moderateScale(20),
+        },
+        errorText: {
+            color: theme.colors.text,
+            fontSize: ResponsiveUtils.normalizeFont(16),
+            textAlign: 'center',
+            marginBottom: ResponsiveUtils.moderateScale(20),
         }
     });
 
-    useEffect(() => {
-        fetchStats();
-    }, []);
+    const fetchStats = useCallback(async () => {
+        if (!token) {
+            console.log("No token available");
+            setLoading(false);
+            setRefreshing(false);
+            return;
+        }
 
-    const fetchStats = async () => {
         try {
             setLoading(true);
+            console.log("Fetching stats with token:", token ? "Token exists" : "No token");
+
             const response = await axios.get(`${API_URL}/user/stats`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
+            console.log("Stats API response received");
             setStats(response.data);
         } catch (error) {
             console.error('Error fetching stats:', error);
@@ -123,7 +162,13 @@ export default function Stats() {
             setLoading(false);
             setRefreshing(false);
         }
-    };
+    }, [token]);
+
+    useEffect(() => {
+        if (token) {
+            fetchStats();
+        }
+    }, [fetchStats, token]);
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -153,28 +198,39 @@ export default function Stats() {
     const prepareChartData = (distributionData, format) => {
         if (!stats || !distributionData) return null;
 
-        // Sort the dates
-        const sortedDates = Object.keys(distributionData).sort();
+        try {
+            // Ensure distributionData is an object with date keys
+            if (typeof distributionData !== 'object') {
+                console.log("Invalid distribution data format:", distributionData);
+                return null;
+            }
 
-        // If we don't have enough data
-        if (sortedDates.length < 2) return null;
+            // Sort the dates
+            const sortedDates = Object.keys(distributionData).sort();
 
-        // Format dates to be more readable
-        const formattedDates = sortedDates.map(date => formatDate(date, format));
+            // If we don't have enough data
+            if (sortedDates.length < 2) return null;
 
-        // Get corresponding values
-        const values = sortedDates.map(date => distributionData[date] || 0);
+            // Format dates to be more readable
+            const formattedDates = sortedDates.map(date => formatDate(date, format));
 
-        return {
-            labels: formattedDates,
-            datasets: [
-                {
-                    data: values,
-                    color: (opacity = 1) => `rgba(210, 180, 140, ${opacity})`, // theme.colors.secondary
-                    strokeWidth: 2
-                }
-            ]
-        };
+            // Get corresponding values
+            const values = sortedDates.map(date => distributionData[date] || 0);
+
+            return {
+                labels: formattedDates,
+                datasets: [
+                    {
+                        data: values,
+                        color: (opacity = 1) => `rgba(210, 180, 140, ${opacity})`, // theme.colors.secondary
+                        strokeWidth: 2
+                    }
+                ]
+            };
+        } catch (error) {
+            console.error("Error preparing chart data:", error);
+            return null;
+        }
     };
 
     const chartConfig = {
@@ -195,15 +251,18 @@ export default function Stats() {
     };
 
     const renderStatCard = () => {
-        let articlesAnalyzed = stats.articles_analyzed_daily;
-        let averageAccuracy = stats.daily_accuracy;
+        // Handle potential undefined values safely
+        if (!stats) return null;
+
+        let articlesAnalyzed = stats.articles_analyzed_daily || 0;
+        let averageAccuracy = stats.daily_accuracy || 0;
 
         if (timeframe === 'week') {
-            articlesAnalyzed = stats.articles_analyzed_weekly;
-            averageAccuracy = stats.weekly_accuracy;
+            articlesAnalyzed = stats.articles_analyzed_weekly || 0;
+            averageAccuracy = stats.weekly_accuracy || 0;
         } else if (timeframe === 'month') {
-            articlesAnalyzed = stats.articles_analyzed_monthly;
-            averageAccuracy = stats.monthly_accuracy;
+            articlesAnalyzed = stats.articles_analyzed_monthly || 0;
+            averageAccuracy = stats.monthly_accuracy || 0;
         }
 
         return (
@@ -219,14 +278,14 @@ export default function Stats() {
 
                 <View style={styles.statRow}>
                     <Text style={styles.statLabel}>Daily Limit</Text>
-                    <Text style={styles.statValue}>{stats.daily_limit}</Text>
+                    <Text style={styles.statValue}>{stats.daily_limit || 0}</Text>
                 </View>
 
                 <Divider style={styles.divider} />
 
                 <View style={styles.statRow}>
                     <Text style={styles.statLabel}>Total Articles Analyzed</Text>
-                    <Text style={styles.statValue}>{stats.total_articles}</Text>
+                    <Text style={styles.statValue}>{stats.total_articles || 0}</Text>
                 </View>
 
                 <View style={styles.statRow}>
@@ -247,7 +306,7 @@ export default function Stats() {
                         styles.statValue,
                         {color: stats.subscription_plan === 'Premium' ? '#4CAF50' : theme.colors.secondary}
                     ]}>
-                        {stats.subscription_plan}
+                        {stats.subscription_plan || 'Free'}
                     </Text>
                 </View>
             </Card>
@@ -255,51 +314,79 @@ export default function Stats() {
     };
 
     const renderDistributionChart = () => {
+        if (!stats) return null;
+
         let distributionData;
         let chartTitle;
         let format;
 
-        if (timeframe === 'week') {
-            distributionData = stats.daily_distribution;
-            chartTitle = 'Daily Articles';
-            format = 'day';
-        } else if (timeframe === 'month') {
-            distributionData = stats.weekly_distribution;
-            chartTitle = 'Weekly Articles';
-            format = 'week';
-        } else { // year view
-            distributionData = stats.monthly_distribution;
-            chartTitle = 'Monthly Articles';
-            format = 'month';
-        }
+        try {
+            if (timeframe === 'week') {
+                distributionData = stats.daily_distribution;
+                chartTitle = 'Daily Articles';
+                format = 'day';
+            } else if (timeframe === 'month') {
+                distributionData = stats.weekly_distribution;
+                chartTitle = 'Weekly Articles';
+                format = 'week';
+            } else { // year view
+                distributionData = stats.monthly_distribution;
+                chartTitle = 'Monthly Articles';
+                format = 'month';
+            }
 
-        const data = prepareChartData(distributionData, format);
+            // Check if distribution data exists
+            if (!distributionData) {
+                return (
+                    <Card style={styles.chartCard}>
+                        <Text style={styles.chartTitle}>{chartTitle}</Text>
+                        <Text style={{color: theme.colors.text, textAlign: 'center'}}>
+                            No data available for this timeframe
+                        </Text>
+                    </Card>
+                );
+            }
 
-        if (!data || data.labels.length < 2) {
+            const data = prepareChartData(distributionData, format);
+
+            if (!data || data.labels.length < 2) {
+                return (
+                    <Card style={styles.chartCard}>
+                        <Text style={styles.chartTitle}>{chartTitle}</Text>
+                        <Text style={{color: theme.colors.text, textAlign: 'center'}}>
+                            Not enough data to display chart
+                        </Text>
+                    </Card>
+                );
+            }
+
             return (
                 <Card style={styles.chartCard}>
                     <Text style={styles.chartTitle}>{chartTitle}</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <BarChart
+                            data={data}
+                            width={Math.max(chartWidth, data.labels.length * 60)} // Ensure width is enough for all labels
+                            height={chartHeight}
+                            chartConfig={chartConfig}
+                            verticalLabelRotation={30}
+                            fromZero
+                            showValuesOnTopOfBars
+                        />
+                    </ScrollView>
+                </Card>
+            );
+        } catch (error) {
+            console.error("Error rendering chart:", error);
+            return (
+                <Card style={styles.chartCard}>
+                    <Text style={styles.chartTitle}>{chartTitle || 'Chart'}</Text>
                     <Text style={{color: theme.colors.text, textAlign: 'center'}}>
-                        Not enough data to display chart
+                        Unable to display chart data
                     </Text>
                 </Card>
             );
         }
-
-        return (
-            <Card style={styles.chartCard}>
-                <Text style={styles.chartTitle}>{chartTitle}</Text>
-                <BarChart
-                    data={data}
-                    width={screenWidth * 0.9}
-                    height={220}
-                    chartConfig={chartConfig}
-                    verticalLabelRotation={30}
-                    fromZero
-                    showValuesOnTopOfBars
-                />
-            </Card>
-        );
     };
 
     if (loading && !stats) {
@@ -319,8 +406,8 @@ export default function Stats() {
                 colors={['#1A1612', '#241E19', '#2A241E']}
                 style={{flex: 1}}
             >
-                <View style={styles.noDataContainer}>
-                    <Text style={styles.noDataText}>
+                <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>
                         No statistics available. Start analyzing articles to see your statistics.
                     </Text>
                     <Button
@@ -343,54 +430,56 @@ export default function Stats() {
             colors={['#1A1612', '#241E19', '#2A241E']}
             style={{flex: 1}}
         >
-            <ScrollView
-                contentContainerStyle={{flexGrow: 1}}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        tintColor={theme.colors.secondary}
-                        colors={[theme.colors.secondary]}
-                    />
-                }
-            >
-                <View style={styles.container}>
-                    <SegmentedButtons
-                        value={timeframe}
-                        onValueChange={(value) => {
-                            setTimeframe(value);
-                            Haptics.selectionAsync(); // Add haptic feedback on selection
-                        }}
-                        buttons={[
-                            {
-                                value: 'day',
-                                label: 'Day',
-                                style: {
-                                    backgroundColor: timeframe === 'day' ? theme.colors.accent : theme.colors.surface
-                                }
-                            },
-                            {
-                                value: 'week',
-                                label: 'Week',
-                                style: {
-                                    backgroundColor: timeframe === 'week' ? theme.colors.accent : theme.colors.surface
-                                }
-                            },
-                            {
-                                value: 'month',
-                                label: 'Month',
-                                style: {
-                                    backgroundColor: timeframe === 'month' ? theme.colors.accent : theme.colors.surface
-                                }
-                            },
-                        ]}
-                        style={styles.timeframeSelector}
-                    />
+            <SafeAreaView style={{flex: 1}}>
+                <ScrollView
+                    contentContainerStyle={{flexGrow: 1}}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            tintColor={theme.colors.secondary}
+                            colors={[theme.colors.secondary]}
+                        />
+                    }
+                >
+                    <View style={styles.container}>
+                        <SegmentedButtons
+                            value={timeframe}
+                            onValueChange={(value) => {
+                                setTimeframe(value);
+                                Haptics.selectionAsync(); // Add haptic feedback on selection
+                            }}
+                            buttons={[
+                                {
+                                    value: 'day',
+                                    label: 'Day',
+                                    style: {
+                                        backgroundColor: timeframe === 'day' ? theme.colors.accent : theme.colors.surface
+                                    }
+                                },
+                                {
+                                    value: 'week',
+                                    label: 'Week',
+                                    style: {
+                                        backgroundColor: timeframe === 'week' ? theme.colors.accent : theme.colors.surface
+                                    }
+                                },
+                                {
+                                    value: 'month',
+                                    label: 'Month',
+                                    style: {
+                                        backgroundColor: timeframe === 'month' ? theme.colors.accent : theme.colors.surface
+                                    }
+                                },
+                            ]}
+                            style={styles.timeframeSelector}
+                        />
 
-                    {renderStatCard()}
-                    {renderDistributionChart()}
-                </View>
-            </ScrollView>
+                        {renderStatCard()}
+                        {renderDistributionChart()}
+                    </View>
+                </ScrollView>
+            </SafeAreaView>
         </LinearGradient>
     );
 }
