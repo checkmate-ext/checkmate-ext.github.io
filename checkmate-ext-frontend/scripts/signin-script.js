@@ -1,6 +1,6 @@
 import AuthService from '../authentication/auth-service.js';
 
-const authService = new AuthService('http://localhost:5000');
+const authService = new AuthService('https://checkmate-backend-api-1029076451566.us-central1.run.app');
 
 document.addEventListener('DOMContentLoaded', () => {
     const signInButton = document.getElementById('signInToMain');

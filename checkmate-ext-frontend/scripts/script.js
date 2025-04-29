@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            const response = await fetch("http://localhost:5000/user/send-verification-code", {
+            const response = await fetch("https://checkmate-backend-api-1029076451566.us-central1.run.app/user/send-verification-code", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email })
@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            const response = await fetch("http://localhost:5000/user/verify-email", {
+            const response = await fetch("https://checkmate-backend-api-1029076451566.us-central1.run.app/user/verify-email", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, code: verificationCode })
