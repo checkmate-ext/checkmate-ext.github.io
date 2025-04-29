@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "checkmate_mobile",
-    "slug": "checkmate_mobile",
+    "slug": "checkmate",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -16,7 +16,10 @@
       ]
     },
     "android": {
-      "permissions": ["INTERNET"],
+      "allowBackup": false,
+      "permissions": [
+        "INTERNET"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -67,6 +70,12 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": false
+        }
       ]
     ],
     "experiments": {
@@ -77,8 +86,9 @@
         "origin": false
       },
       "eas": {
-        "projectId": "your-project-id"
+        "projectId": "9df3da6c-579f-4c06-a194-37133154b460"
       }
-    }
+    },
+    "owner": "ba2222"
   }
 }

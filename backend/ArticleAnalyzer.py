@@ -11,7 +11,21 @@ from typing import Optional, List, Dict
 from urllib.parse import urljoin, urlparse
 import re
 from website_checker import check_website_score
+from textblob import TextBlob
+from spellchecker import SpellChecker
 
+def get_misspellings(text: str):
+    # 1) Create a local SpellChecker instance
+    spell = SpellChecker()
+    # 2) Pull out only “words” of letters/apostrophes (2+ chars)
+    raw = re.findall(r"\b[a-zA-Z']{2,}\b", text)
+    # 3) Drop tokens that start with an uppercase letter
+    filtered = [tok for tok in raw if not tok[0].isupper()]
+    # 4) Lowercase for spell-checking
+    words = [w.lower() for w in filtered]
+    # 5) Spell-check with our local instance
+    misspelled = spell.unknown(words)
+    return words, misspelled
 
 def normalize_domain(url: str) -> str:
     """
@@ -219,7 +233,6 @@ def find_enhanced_title(soup):
     title_tag = soup.find('title')
     if title_tag:
         return title_tag.get_text().strip()
-
     return ""
 
 
@@ -505,8 +518,7 @@ def validate_article_data(article_data: dict) -> bool:
 
     return True
 
-
-def _extract_with_requests(url: str, min_text_length: int = 300):
+def _extract_with_requests(url: str, min_text_length: int = 100):
     """
     Fetch and parse an article using requests and BeautifulSoup.
     Extract the title, text content, and images using multiple heuristics.
@@ -575,19 +587,46 @@ def _extract_article_hybrid(url, main_article=None):
             # CLEAN AND GET SUBJECTIVITY
             clean_content = article_data['content'].replace('\n', ' ').replace('\r', ' ')
             clean_content = ' '.join(clean_content.split())
+            #
+            # ─── SPELL-CHECK via get_misspellings ───
+            words, misspelled = get_misspellings(clean_content)
+
+            article_data['spelling_issues']   = len(misspelled)
+            article_data['linguistic_issues'] = len(misspelled)
+
+            # debug output
+            print(f"[SPELL-CHECK] Vocabulary size: {len(set(words))} unique words")
+            print(f"[SPELL-CHECK] Found {len(misspelled)} misspelled word(s):")
+            if misspelled:
+                print("  " + ", ".join(sorted(misspelled)))
+
             try:
-                response = requests.post(
+                resp = requests.post(
                     "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",
                     headers={"Content-Type": "application/json"},
                     json={"text": clean_content},
                     timeout=120,
                 )
-                response.raise_for_status()
-                article_data['objectivity_score'] = response.json().get('objectivity_prob', -1)
-                print(f"object: is {article_data['objectivity_score']}")
+                resp.raise_for_status()
+                article_data['objectivity_score'] = resp.json().get('objectivity_prob', -1)
             except (requests.RequestException, ValueError, KeyError) as e:
-                print(f"Error getting objectivity score from API: {e}")
+                print(f"Error getting text-based objectivity: {e}")
                 article_data['objectivity_score'] = -1
+
+            # 2) title-based subjectivity
+            try:
+                title_resp = requests.post(
+                    "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",
+                    headers={"Content-Type": "application/json"},
+                    json={"text": article_data.get("title", "")},
+                    timeout=120,
+                )
+                title_resp.raise_for_status()
+                article_data['title_objectivity_score'] = title_resp.json().get('objectivity_prob', -1)
+                print(f"title_objectivity_score: {article_data['title_objectivity_score']}")
+            except (requests.RequestException, ValueError, KeyError) as e:
+                print(f"Error getting title-based objectivity: {e}")
+                article_data['title_objectivity_score'] = -1
 
             # BIAS
             try:
@@ -616,7 +655,6 @@ def _extract_article_hybrid(url, main_article=None):
         return article_data
 
     try:
-        print("bombardino ")
         scrapper = ArticleExtractor()
         article_data = scrapper.extract_article(url)
 
@@ -648,17 +686,47 @@ def _extract_article_hybrid(url, main_article=None):
 
         if main_article is None:
             clean_content = ' '.join(article_data['content'].split())
+
+
+            words, misspelled = get_misspellings(clean_content)
+
+            # record counts
+            article_data['spelling_issues']   = len(misspelled)
+            article_data['linguistic_issues'] = len(misspelled)
+
+            # debug output
+            print(f"[SPELL-CHECK] Vocabulary size: {len(set(words))} unique words")
+            print(f"[SPELL-CHECK] Found {len(misspelled)} misspelled word(s):")
+            if misspelled:
+                print("  " + ", ".join(sorted(misspelled)))
+
             try:
-                response = requests.post(
+                resp = requests.post(
                     "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",
                     headers={"Content-Type": "application/json"},
                     json={"text": clean_content},
                     timeout=120,
                 )
-                response.raise_for_status()
-                article_data['objectivity_score'] = response.json().get('objectivity_prob', -1)
-            except:
+                resp.raise_for_status()
+                article_data['objectivity_score'] = resp.json().get('objectivity_prob', -1)
+            except (requests.RequestException, ValueError, KeyError) as e:
+                print(f"Error getting text-based objectivity: {e}")
                 article_data['objectivity_score'] = -1
+
+            # 2) title-based subjectivity
+            try:
+                title_resp = requests.post(
+                    "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",
+                    headers={"Content-Type": "application/json"},
+                    json={"text": article_data.get("title", "")},
+                    timeout=120,
+                )
+                title_resp.raise_for_status()
+                article_data['title_objectivity_score'] = title_resp.json().get('objectivity_prob', -1)
+                print(f"title_objectivity_score: {article_data['title_objectivity_score']}")
+            except (requests.RequestException, ValueError, KeyError) as e:
+                print(f"Error getting title-based objectivity: {e}")
+                article_data['title_objectivity_score'] = -1
 
             try:
                 bias_response = requests.post(
@@ -754,8 +822,6 @@ class ArticleAnalyzer:
             body = getattr(e.response, 'text', '<no body>')
             print(f"[DEBUG] Error getting reliability score: {e}\nResponse body: {body}")
             self.article['reliability_score'] = -1
-
-
 
 
     def __get_similar_articles(self):

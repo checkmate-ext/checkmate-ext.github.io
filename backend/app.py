@@ -208,6 +208,7 @@ def scrap_and_search(current_user):
                 'website_credibility': website_credibility['credibility_score'],
                 'article_id': past_article.id,
                 'objectivity_score': past_article.objectivity_score,
+                'title_objectivity_score':  None,
                 'bias_prediction': past_article.bias_prediction,
                 'bias_probabilities': past_article.bias_probabilities
             })
@@ -286,6 +287,7 @@ def scrap_and_search(current_user):
             'article_id': new_search.id,
             'objectivity_score': article['objectivity_score'],
             'bias_prediction': article['bias_prediction'],
+            'title_objectivity_score':  article.get('title_objectivity_score'),
             'bias_probabilities': article['bias_probabilities']
         })
 
@@ -293,7 +295,6 @@ def scrap_and_search(current_user):
         # Rollback any database changes if there was an error
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
-
 
 # --- Helper functions for token generation ---
 def generate_confirmation_token(email):
@@ -1206,7 +1207,7 @@ def fetch_stats(current_user):
             ArticleRequest.user_id == current_user.id,
             ArticleRequest.created_at >= thirty_days_ago
         ).all()
-        
+
         # Get yearly articles (new)
         yearly_articles = ArticleSearch.query.join(ArticleRequest).filter(
             ArticleRequest.user_id == current_user.id,
@@ -1236,7 +1237,7 @@ def fetch_stats(current_user):
         for article in monthly_articles:
             monthly_scores.append(article.reliability_score)
         avg_monthly_accuracy = sum(monthly_scores) / len(monthly_scores) if monthly_scores else 0
-        
+
         # Yearly (new)
         yearly_scores = []
         for article in yearly_articles:
@@ -1289,7 +1290,7 @@ def fetch_stats(current_user):
         monthly_distribution = {
             str(month.month.date()): month.count for month in monthly_counts
         }
-        
+
         # Calculate quarterly distribution for yearly view (new)
         quarterly_distribution = {}
         for date_str, count in monthly_distribution.items():
@@ -1333,7 +1334,7 @@ def fetch_stats(current_user):
             'articles_analyzed_monthly': len(monthly_articles),
             'monthly_accuracy': avg_monthly_accuracy,
             'monthly_distribution': monthly_distribution,
-            
+
             # Yearly stats (new)
             'articles_analyzed_yearly': len(yearly_articles),
             'yearly_accuracy': avg_yearly_accuracy,
