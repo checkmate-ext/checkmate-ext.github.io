@@ -10,7 +10,7 @@ export const authStyles = StyleSheet.create({
     logoContainer: {
         alignItems: 'center',
         marginBottom: moderateScale(48), // Increased spacing
-        paddingTop: moderateScale(20),
+        paddingTop: moderateScale(20), 
     },
     logo: {
         width: moderateScale(150), // Slightly larger logo

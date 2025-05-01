@@ -1,7 +1,24 @@
 // app/article/[id].tsx
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Linking, Share } from 'react-native';
-import { Text, Card, useTheme, ActivityIndicator, Button, Divider, IconButton, ProgressBar } from 'react-native-paper';
+import {
+    View,
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    Linking,
+    Share,
+    Platform
+} from 'react-native';
+import {
+    Text,
+    Card,
+    useTheme,
+    ActivityIndicator,
+    Button,
+    Divider,
+    IconButton,
+    ProgressBar
+} from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
 import { useDeepLinkContext } from '../context/DeepLinkContext';
@@ -17,7 +34,8 @@ export default function ArticleDetailScreen() {
     const { id } = useLocalSearchParams();
     const { token } = useAuth();
     const { generateShareUrl } = useDeepLinkContext();
-    const [articleData, setArticleData] = useState(null);
+
+    const [articleData, setArticleData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [expandedSimilar, setExpandedSimilar] = useState(false);
 
@@ -58,7 +76,7 @@ export default function ArticleDetailScreen() {
             borderRadius: moderateScale(15),
             padding: moderateScale(15),
             shadowColor: theme.colors.accent,
-            shadowOffset: {width: 0, height: 4},
+            shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.2,
             shadowRadius: 6,
             elevation: 5,
@@ -74,22 +92,19 @@ export default function ArticleDetailScreen() {
             justifyContent: 'space-between',
             marginBottom: moderateScale(15),
         },
-        scoreBox: {
+        objectivityScoreBox: {
             flex: 1,
             alignItems: 'center',
             padding: moderateScale(10),
             backgroundColor: 'rgba(0,0,0,0.1)',
             borderRadius: moderateScale(8),
-            marginHorizontal: moderateScale(5),
+            marginTop: moderateScale(10),
         },
-        scoreValue: {
-            fontSize: moderateScale(24),
-            fontWeight: 'bold',
-            marginBottom: moderateScale(5),
-        },
-        scoreLabel: {
-            fontSize: moderateScale(12),
-            color: theme.colors.text,
+        biasContainer: {
+            marginTop: moderateScale(15),
+            padding: moderateScale(10),
+            backgroundColor: 'rgba(0,0,0,0.1)',
+            borderRadius: moderateScale(8),
         },
         sectionTitle: {
             fontSize: moderateScale(16),
@@ -122,49 +137,18 @@ export default function ArticleDetailScreen() {
             justifyContent: 'space-between',
             marginTop: moderateScale(15),
         },
-        actionButton: {
-            flex: 1,
-            marginHorizontal: moderateScale(5),
-        },
         backButton: {
             position: 'absolute',
             top: moderateScale(10),
             left: moderateScale(10),
             zIndex: 10,
         },
-        objectivityScoreBox: {
-            flex: 1,
-            alignItems: 'center',
-            padding: moderateScale(10),
-            backgroundColor: 'rgba(0,0,0,0.1)',
-            borderRadius: moderateScale(8),
-            marginHorizontal: moderateScale(5),
-            marginTop: moderateScale(10),
-        },
-        biasContainer: {
-            marginTop: moderateScale(15),
-            padding: moderateScale(10),
-            backgroundColor: 'rgba(0,0,0,0.1)',
-            borderRadius: moderateScale(8),
-        },
-        biasLabel: {
-            fontSize: moderateScale(14),
-            fontWeight: 'bold',
-            color: theme.colors.secondary,
-            marginBottom: moderateScale(5),
-        },
-        biasValue: {
-            fontSize: moderateScale(14),
-            color: theme.colors.text,
-        },
-        // Styles for credibility banner
         credibilityBanner: {
             alignItems: 'center',
             justifyContent: 'center',
             padding: moderateScale(10),
             marginBottom: moderateScale(15),
             borderRadius: moderateScale(8),
-            fontWeight: 'bold',
             borderWidth: 1,
         },
         credibilityBannerGreen: {
@@ -184,129 +168,85 @@ export default function ArticleDetailScreen() {
             fontWeight: '600',
             textAlign: 'center',
         },
-        credibilityTextGreen: {
-            color: '#27ae60',
-        },
-        credibilityTextNeutral: {
-            color: '#f39c12',
-        },
-        credibilityTextRed: {
-            color: '#c0392b',
-        },
+        credibilityTextGreen: { color: '#27ae60' },
+        credibilityTextNeutral: { color: '#f39c12' },
+        credibilityTextRed: { color: '#c0392b' },
     });
 
     useEffect(() => {
-        if (id) {
-            fetchArticleData();
-        }
+        if (id) fetchArticle();
     }, [id]);
 
-    const fetchArticleData = async () => {
-        if (!id) return;
-
+    const fetchArticle = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const response = await axios.get(`${API_URL}/article/${id}/`, {
-                headers: { Authorization: `Bearer ${token}` }
+            const res = await axios.get(`${API_URL}/article/${id}/`, {
+                headers: { Authorization: `Bearer ${token}` },
             });
-
-            setArticleData(response.data);
-        } catch (error) {
-            console.error('Error fetching article data:', error);
+            setArticleData(res.data);
+        } catch (e) {
+            console.error('Error fetching article data:', e);
         } finally {
             setLoading(false);
         }
     };
 
-    const getScoreColor = (score) => {
-        const numericScore = Number(score) || 0;
-        if (numericScore >= 80) return '#4CAF50'; // Green
-        if (numericScore >= 60) return '#FFC107'; // Yellow/Amber
-        return '#F44336'; // Red
+    const getScoreColor = (score: number) => {
+        if (score >= 0.8) return '#4CAF50';
+        if (score >= 0.6) return '#FFC107';
+        return '#F44336';
     };
 
-    // Helper function to interpret the categorical credibility values
-    const getCredibilityStatus = (credibilityValue) => {
-        // Default values in case credibilityValue is undefined
-        let status = 'Unknown';
-        let color = styles.credibilityBannerNeutral;
-        let textColor = styles.credibilityTextNeutral;
-
-        // Check the credibility value
-        if (credibilityValue !== undefined && credibilityValue !== null) {
-            if (credibilityValue === 0) {
-                status = 'Credible';
-                color = styles.credibilityBannerGreen;
-                textColor = styles.credibilityTextGreen;
-            } else if (credibilityValue === 1) {
-                status = 'Mixed';
-                color = styles.credibilityBannerNeutral;
-                textColor = styles.credibilityTextNeutral;
-            } else if (credibilityValue === 2) {
-                status = 'Unreliable';
-                color = styles.credibilityBannerRed;
-                textColor = styles.credibilityTextRed;
-            }
+    const getCredibilityStatus = (val: number) => {
+        switch (val) {
+            case 0:
+                return {
+                    status: 'Credible',
+                    style: [styles.credibilityBanner, styles.credibilityBannerGreen],
+                    textStyle: [styles.credibilityText, styles.credibilityTextGreen],
+                };
+            case 2:
+                return {
+                    status: 'Unreliable',
+                    style: [styles.credibilityBanner, styles.credibilityBannerRed],
+                    textStyle: [styles.credibilityText, styles.credibilityTextRed],
+                };
+            default:
+                return {
+                    status: 'Mixed',
+                    style: [styles.credibilityBanner, styles.credibilityBannerNeutral],
+                    textStyle: [styles.credibilityText, styles.credibilityTextNeutral],
+                };
         }
-
-        return { status, color, textColor };
     };
 
-    const handleOpenArticle = async (url) => {
-        try {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            await Linking.openURL(url);
-        } catch (error) {
-            console.error('Error opening URL:', error);
-        }
+    const handleOpen = async (link: string) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        await Linking.openURL(link);
     };
 
     const handleShareArticle = async () => {
-        if (!articleData || !articleData.article) return;
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+        const link = articleData.article.url;
+        const deepLink = generateShareUrl(link);
+        const baseMsg = `Check the reliability of this article with CheckMate:\n\n${articleData.article.title}\n\n`;
 
         try {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-            // Generate a share message that includes the CheckMate share URL
-            const shareMessage = `Check the reliability of this article with CheckMate:\n${articleData.article.title}\n${articleData.article.url}\n\nReliability Score: ${Math.round(articleData.reliability_score*100)}%`;
-
-            // Use the share URL generated by our deep linking handler
-            const shareUrl = generateShareUrl(articleData.article.url);
-
-            // Open system share dialog
-            await Share.share({
-                message: shareMessage,
-                url: shareUrl || articleData.article.url,
-                title: 'Article Analysis from CheckMate',
-            });
-        } catch (error) {
-            console.error('Error sharing:', error);
-        }
-    };
-
-    // Format bias prediction for display
-    const formatBiasPrediction = (prediction) => {
-        if (!prediction || prediction === -1) return 'Not available';
-
-        // Capitalize first letter and replace underscores with spaces
-        return prediction.split('_')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
-    };
-
-    // Parse bias probabilities
-    const parseBiasProbabilities = (probabilities) => {
-        if (!probabilities || probabilities === -1) return null;
-
-        try {
-            // If it's already an object, use it directly
-            if (typeof probabilities === 'object') return probabilities;
-
-            // If it's a string, try to parse it
-            return JSON.parse(probabilities);
+            if (Platform.OS === 'ios') {
+                await Share.share({
+                    title: 'Article Analysis from CheckMate',
+                    message: baseMsg,
+                    url: deepLink || link,
+                });
+            } else {
+                await Share.share({
+                    title: 'Article Analysis from CheckMate',
+                    message: `${baseMsg}${deepLink || link}`,
+                });
+            }
         } catch (e) {
-            console.error('Error parsing bias probabilities:', e);
-            return null;
+            console.error('Error sharing article:', e);
         }
     };
 
@@ -314,25 +254,25 @@ export default function ArticleDetailScreen() {
         return (
             <LinearGradient
                 colors={['#1A1612', '#241E19', '#2A241E']}
-                style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}
+                style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
             >
-                <ActivityIndicator color={theme.colors.secondary} size="large" />
+                <ActivityIndicator size="large" color={theme.colors.secondary} />
             </LinearGradient>
         );
     }
 
-    if (!articleData || !articleData.article) {
+    if (!articleData?.article) {
         return (
             <LinearGradient
                 colors={['#1A1612', '#241E19', '#2A241E']}
-                style={{flex: 1, justifyContent: 'center', alignItems: 'center', padding: moderateScale(20)}}
+                style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: moderateScale(20) }}
             >
-                <Text style={{color: theme.colors.text, textAlign: 'center', marginBottom: moderateScale(20)}}>
+                <Text style={{ color: theme.colors.text, textAlign: 'center', marginBottom: moderateScale(20) }}>
                     Unable to load article details.
                 </Text>
                 <Button
                     mode="contained"
-                    onPress={fetchArticleData}
+                    onPress={fetchArticle}
                     buttonColor={theme.colors.accent}
                     textColor={theme.colors.text}
                     style={authStyles.primaryButton}
@@ -343,17 +283,11 @@ export default function ArticleDetailScreen() {
         );
     }
 
-    // Parse bias probabilities for display
-    const biasProbabilities = parseBiasProbabilities(articleData.bias_probabilities);
-
-    // Get credibility status
-    const credibility = getCredibilityStatus(articleData.website_credibility);
+    const { status, style: bannerStyle, textStyle } =
+        getCredibilityStatus(articleData.website_credibility);
 
     return (
-        <LinearGradient
-            colors={['#1A1612', '#241E19', '#2A241E']}
-            style={{flex: 1}}
-        >
+        <LinearGradient colors={['#1A1612', '#241E19', '#2A241E']} style={{ flex: 1 }}>
             <IconButton
                 icon="chevron-left"
                 iconColor={theme.colors.secondary}
@@ -365,117 +299,88 @@ export default function ArticleDetailScreen() {
                 }}
             />
 
-            <ScrollView style={{marginTop: moderateScale(40)}}>
+            <ScrollView style={{ marginTop: moderateScale(40) }}>
                 <View style={styles.container}>
-                    <Text style={styles.title}>
-                        {articleData.article.title}
-                    </Text>
+                    <Text style={styles.title}>{articleData.article.title}</Text>
 
-                    <TouchableOpacity onPress={() => handleOpenArticle(articleData.article.url)}>
+                    <TouchableOpacity onPress={() => handleOpen(articleData.article.url)}>
                         <Text style={styles.articleUrl} numberOfLines={1}>
                             {articleData.article.url}
                         </Text>
                     </TouchableOpacity>
 
-                    {/* Reliability Scores Card */}
                     <Card style={styles.card}>
                         <Text style={styles.cardTitle}>Reliability Analysis</Text>
 
-                        {/* Website Credibility Banner */}
-                        <View
-                            style={[
-                                styles.credibilityBanner,
-                                credibility.color
-                            ]}
-                        >
-                            <Text
-                                style={[
-                                    styles.credibilityText,
-                                    credibility.textColor
-                                ]}
-                            >
-                                Website Credibility: {credibility.status}
-                            </Text>
+                        <View style={bannerStyle}>
+                            <Text style={textStyle}>Website Credibility: {status}</Text>
                         </View>
 
                         <View style={styles.scoreContainer}>
-                            <View style={styles.scoreBox}>
+                            <View style={styles.objectivityScoreBox}>
                                 <Text
-                                    style={[
-                                        styles.scoreValue,
-                                        {color: getScoreColor(articleData.reliability_score*100)}
-                                    ]}
+                                    style={{
+                                        fontSize: moderateScale(24),
+                                        fontWeight: 'bold',
+                                        color: getScoreColor(articleData.reliability_score),
+                                    }}
                                 >
-                                    {Math.round(articleData.reliability_score*100)}%
+                                    {Math.round(articleData.reliability_score * 100)}%
                                 </Text>
-                                <Text style={styles.scoreLabel}>Reliability</Text>
+                                <Text style={{ fontSize: moderateScale(12), color: theme.colors.text }}>
+                                    Reliability
+                                </Text>
                             </View>
                         </View>
 
-                        {/* Objectivity Score */}
-                        {articleData.objectivity_score && articleData.objectivity_score !== -1 && (
+                        {articleData.objectivity_score != null && (
                             <View style={styles.objectivityScoreBox}>
                                 <Text
-                                    style={[
-                                        styles.scoreValue,
-                                        {color: getScoreColor(articleData.objectivity_score*100)}
-                                    ]}
+                                    style={{
+                                        fontSize: moderateScale(24),
+                                        fontWeight: 'bold',
+                                        color: getScoreColor(articleData.objectivity_score),
+                                    }}
                                 >
-                                    {Math.round(articleData.objectivity_score*100)}%
+                                    {Math.round(articleData.objectivity_score * 100)}%
                                 </Text>
-                                <Text style={styles.scoreLabel}>Objectivity</Text>
-                            </View>
-                        )}
-
-                        {/* Bias Information */}
-                        {articleData.bias_prediction && articleData.bias_prediction !== -1 && (
-                            <View style={styles.biasContainer}>
-                                <Text style={styles.biasLabel}>Bias Assessment:</Text>
-                                <Text style={styles.biasValue}>
-                                    {formatBiasPrediction(articleData.bias_prediction)}
+                                <Text style={{ fontSize: moderateScale(12), color: theme.colors.text }}>
+                                    Objectivity
                                 </Text>
-
-                                {biasProbabilities && (
-                                    <View style={{marginTop: moderateScale(10)}}>
-                                        <Text style={[styles.biasLabel, {fontSize: moderateScale(12)}]}>
-                                            Bias Probability Breakdown:
-                                        </Text>
-                                        {Object.entries(biasProbabilities).map(([bias, probability], index) => (
-                                            <Text key={index} style={[styles.biasValue, {fontSize: moderateScale(12)}]}>
-                                                {bias.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}:
-                                                {' '}{(parseFloat(probability) * 100).toFixed(1)}%
-                                            </Text>
-                                        ))}
-                                    </View>
-                                )}
                             </View>
                         )}
 
                         <Text style={styles.sectionTitle}>Analysis Summary</Text>
-                        <Text style={{color: theme.colors.text, marginBottom: moderateScale(10)}}>
-                            This article has a {articleData.reliability_score*100 >= 80 ? 'high' :
-                            articleData.reliability_score*100 >= 60 ? 'moderate' : 'low'} reliability score,
-                            indicating {articleData.reliability_score*100 >= 80 ? 'trustworthy content with well-verified information.' :
-                            articleData.reliability_score*100 >= 60 ? 'generally reliable content with some potential concerns.' :
-                                'potential issues with accuracy or bias in the information presented.'}
+                        <Text style={{ color: theme.colors.text, marginBottom: moderateScale(10) }}>
+                            This article has a{' '}
+                            {articleData.reliability_score >= 0.8
+                                ? 'high'
+                                : articleData.reliability_score >= 0.6
+                                    ? 'moderate'
+                                    : 'low'}{' '}
+                            reliability score, indicating{' '}
+                            {articleData.reliability_score >= 0.8
+                                ? 'trustworthy content.'
+                                : articleData.reliability_score >= 0.6
+                                    ? 'generally reliable content.'
+                                    : 'potential issues with accuracy or bias.'}
                         </Text>
 
                         <View style={styles.buttonRow}>
                             <Button
                                 mode="outlined"
                                 icon="open-in-new"
-                                onPress={() => handleOpenArticle(articleData.article.url)}
-                                style={[styles.actionButton, {borderColor: theme.colors.secondary}]}
+                                onPress={() => handleOpen(articleData.article.url)}
+                                style={{ flex: 1, marginRight: moderateScale(5) }}
                                 textColor={theme.colors.secondary}
                             >
                                 Open Article
                             </Button>
-
                             <Button
                                 mode="outlined"
                                 icon="share-variant"
                                 onPress={handleShareArticle}
-                                style={[styles.actionButton, {borderColor: theme.colors.secondary, marginLeft: moderateScale(10)}]}
+                                style={{ flex: 1, marginLeft: moderateScale(5) }}
                                 textColor={theme.colors.secondary}
                             >
                                 Share
@@ -483,45 +388,44 @@ export default function ArticleDetailScreen() {
                         </View>
                     </Card>
 
-                    {/* Similar Articles Card */}
                     <Card style={styles.card}>
                         <Text style={styles.cardTitle}>Similar Articles</Text>
-
-                        {articleData.similar_articles && articleData.similar_articles.length > 0 ? (
+                        {articleData.similar_articles?.length > 0 ? (
                             <>
-                                {(expandedSimilar ? articleData.similar_articles : articleData.similar_articles.slice(0, 3)).map((article, index) => (
+                                {(expandedSimilar
+                                        ? articleData.similar_articles
+                                        : articleData.similar_articles.slice(0, 3)
+                                ).map((sim, idx) => (
                                     <TouchableOpacity
-                                        key={index}
-                                        onPress={() => handleOpenArticle(article.url)}
+                                        key={idx}
+                                        onPress={() => handleOpen(sim.url)}
                                         style={styles.similarArticleCard}
                                     >
                                         <Text style={styles.similarArticleTitle} numberOfLines={2}>
-                                            {article.title}
+                                            {sim.title}
                                         </Text>
                                         <Text style={styles.similarArticleUrl} numberOfLines={1}>
-                                            {article.url}
+                                            {sim.url}
                                         </Text>
-                                        <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                             <Text
                                                 style={[
                                                     styles.similarityScore,
-                                                    {color: getScoreColor(article.similarity_score * 100)}
+                                                    { color: getScoreColor(sim.similarity_score) }
                                                 ]}
                                             >
-                                                Similarity: {Math.round(article.similarity_score * 100)}%
+                                                Similarity: {Math.round(sim.similarity_score * 100)}%
                                             </Text>
-                                            {/* Add ShareExtension component for each similar article */}
-                                            <ShareExtension url={article.url} title={article.title} compact={true} />
+                                            <ShareExtension url={sim.url} title={sim.title} compact />
                                         </View>
                                     </TouchableOpacity>
                                 ))}
-
                                 {articleData.similar_articles.length > 3 && (
                                     <Button
                                         mode="text"
                                         onPress={() => {
                                             Haptics.selectionAsync();
-                                            setExpandedSimilar(!expandedSimilar);
+                                            setExpandedSimilar((v) => !v);
                                         }}
                                         textColor={theme.colors.secondary}
                                     >
@@ -530,7 +434,7 @@ export default function ArticleDetailScreen() {
                                 )}
                             </>
                         ) : (
-                            <Text style={{color: theme.colors.text, textAlign: 'center', padding: moderateScale(10)}}>
+                            <Text style={{ color: theme.colors.text, textAlign: 'center', padding: moderateScale(10) }}>
                                 No similar articles found.
                             </Text>
                         )}

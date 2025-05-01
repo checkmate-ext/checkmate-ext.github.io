@@ -7,42 +7,27 @@ import { useDeepLinkContext } from '../context/DeepLinkContext';
 
 const ShareExtension = ({ url, title, compact = false }) => {
     const { generateShareUrl } = useDeepLinkContext();
+    const theme = useTheme();
 
-    const theme = {
-        ...useTheme(),
-        colors: {
-            ...useTheme().colors,
-            primary: '#8B7355',
-            secondary: '#D2B48C',
-            accent: '#6B4423',
-            text: '#E8DCC4',
-        },
-    };
-
-   const handleShare = async () => {
-        // Haptic feedback
+    const handleShare = async () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
+        const deepLink = generateShareUrl(url);
+        const baseMessage = `Check the reliability of this article with CheckMate!\n\n${title}\n\n`;
+
         try {
-            // Generate share message
-            const shareMessage = `Check the reliability of this article with CheckMate!\n\n${title}\n${url}\n\n`;
-            const shareUrl = generateShareUrl(url);
-
-            // Open system share dialog
-            const result = await Share.share({
-                message: shareMessage + (Platform.OS === 'ios' ? shareUrl : ''),
-                url: Platform.OS === 'ios' ? shareUrl : url,
-                title: 'Analyze with CheckMate',
-            });
-
-            if (result.action === Share.sharedAction) {
-                if (result.activityType) {
-                    // Shared with activity type of result.activityType
-                } else {
-                    // Shared
-                }
-            } else if (result.action === Share.dismissedAction) {
-                // Dismissed
+            if (Platform.OS === 'ios') {
+                await Share.share({
+                    title: 'Analyze with CheckMate',
+                    message: baseMessage,
+                    url: deepLink || url
+                });
+            } else {
+                // Android merges URL into the message
+                await Share.share({
+                    title: 'Analyze with CheckMate',
+                    message: `${baseMessage}${deepLink || url}`
+                });
             }
         } catch (error) {
             console.error('Error sharing article:', error);
