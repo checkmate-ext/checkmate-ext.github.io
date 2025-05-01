@@ -6,14 +6,14 @@
     <title>CheckMate - Fake News Detection Extension</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Previous styles remain unchanged */
         :root {
-            --bg-color: #0a0a0a;
-            --surface-color: #1a1a1a;
-            --primary-color: #4a00e0;
-            --secondary-color: #00e5ff;
-            --text-color: #ffffff;
-            --text-secondary: #b0b0b0;
+            --bg-color: #f5f2e9;
+            --surface-color: #e5dcc9;
+            --primary-color: #8b5a2b;
+            --secondary-color: #4d6160;
+            --accent-color: #d68c45;
+            --text-color: #2c2418;
+            --text-secondary: #5a4d3e;
         }
         body {
             font-family: 'Inter', sans-serif;
@@ -30,16 +30,17 @@
             padding: 0 20px;
         }
         header {
-            background-color: rgba(10, 10, 10, 0.8);
+            background-color: rgba(245, 242, 233, 0.95);
             backdrop-filter: blur(10px);
             position: fixed;
             width: 100%;
             top: 0;
             z-index: 1000;
             transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(139, 90, 43, 0.1);
         }
         header.scrolled {
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px rgba(139, 90, 43, 0.2);
         }
         nav {
             display: flex;
@@ -47,16 +48,27 @@
             align-items: center;
             padding: 1rem 0;
         }
-        .logo {
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-text {
             font-size: 1.5em;
             font-weight: bold;
-            color: var(--secondary-color);
+            color: var(--primary-color);
             text-transform: uppercase;
             letter-spacing: 2px;
+        }
+        .logo-image {
+            height: 50px;
+            width: auto;
         }
         .nav-links {
             list-style: none;
             display: flex;
+            margin: 0;
+            padding: 0;
         }
         .nav-links li {
             margin-left: 30px;
@@ -75,7 +87,7 @@
             height: 2px;
             bottom: -5px;
             left: 0;
-            background-color: var(--secondary-color);
+            background-color: var(--accent-color);
             transform: scaleX(0);
             transition: transform 0.3s ease;
         }
@@ -106,19 +118,30 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
             opacity: 0.05;
             z-index: 0;
         }
         .hero-content {
             position: relative;
             z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .mascot-container {
+            width: 200px;
+            margin-bottom: 30px;
+        }
+        .mascot-image {
+            width: 100%;
+            height: auto;
         }
         .hero h1 {
             font-size: 4em;
             margin-bottom: 20px;
             animation: fadeInUp 1s ease;
-            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-size: 300% 300%;
@@ -133,8 +156,8 @@
         }
         .cta-button {
             display: inline-block;
-            background-color: var(--secondary-color);
-            color: var(--bg-color);
+            background-color: var(--accent-color);
+            color: #fff;
             padding: 14px 28px;
             text-decoration: none;
             border-radius: 30px;
@@ -162,9 +185,8 @@
         }
         .cta-button:hover {
             background-color: var(--primary-color);
-            color: var(--text-color);
             transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(74, 0, 224, 0.3);
+            box-shadow: 0 10px 20px rgba(139, 90, 43, 0.3);
         }
         .features {
             display: grid;
@@ -191,7 +213,7 @@
             left: -2px;
             right: -2px;
             bottom: -2px;
-            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
             z-index: -1;
             filter: blur(15px);
             opacity: 0;
@@ -201,7 +223,7 @@
             opacity: 0.3;
         }
         .feature h3 {
-            color: var(--secondary-color);
+            color: var(--primary-color);
             font-size: 1.4em;
             margin-bottom: 15px;
         }
@@ -225,59 +247,102 @@
         }
         .download-link:hover {
             background-color: var(--primary-color);
-            color: var(--text-color);
+            color: #fff;
             transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(74, 0, 224, 0.3);
+            box-shadow: 0 10px 20px rgba(139, 90, 43, 0.3);
         }
 
-        /* New Team Section Styles */
-        .team-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-        .team-member {
-            background-color: var(--surface-color);
-            border-radius: 20px;
-            padding: 30px;
+        /* Team Section Styles */
+        .team-intro {
             text-align: center;
-            transition: all 0.3s ease;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto 40px;
+            font-size: 1.1em;
+        }
+
+        .team-showcase {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .team-image-container {
             position: relative;
+            width: 100%;
+            max-width: 800px;
+            border-radius: 20px;
             overflow: hidden;
-        }
-        .team-member:hover {
-            transform: translateY(-10px);
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
         }
-        .team-member::before {
+
+        .team-image-container::before {
             content: '';
             position: absolute;
             top: -2px;
             left: -2px;
             right: -2px;
             bottom: -2px;
-            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
             z-index: -1;
             filter: blur(15px);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .team-member:hover::before {
             opacity: 0.3;
         }
-        .team-member h3 {
-            color: var(--secondary-color);
-            margin-bottom: 10px;
-            font-size: 1.2em;
+
+        .team-image-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
-        .team-member-image {
-            width: 120px;
-            height: 120px;
-            border-radius: 60px;
-            margin: 0 auto 20px;
-            background-color: var(--primary-color);
-            opacity: 0.8;
+
+        .team-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .team-image-container:hover .team-image {
+            transform: scale(1.02);
+        }
+
+        .team-members-list {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .team-member-card {
+            background-color: var(--surface-color);
+            border-radius: 15px;
+            padding: 20px 15px;
+            flex: 1;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .team-member-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-left: 3px solid var(--accent-color);
+        }
+
+        .team-member-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .team-role {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            font-weight: 500;
         }
 
         /* Privacy Policy Styles */
@@ -286,10 +351,11 @@
             padding: 40px;
             border-radius: 20px;
             margin-top: 40px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
         .privacy-policy h3 {
-            color: var(--secondary-color);
-            border-bottom: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--accent-color);
             padding-bottom: 10px;
             margin-top: 25px;
         }
@@ -297,7 +363,7 @@
             color: var(--text-secondary);
             margin-bottom: 15px;
         }
-        .privacy-policy ul {
+        .privacy-policy ul, .privacy-policy ol {
             color: var(--text-secondary);
             margin-left: 20px;
             margin-bottom: 15px;
@@ -313,6 +379,7 @@
             padding: 20px 0;
             text-align: center;
             margin-top: 40px;
+            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
         }
         footer p {
             color: var(--text-secondary);
@@ -350,8 +417,16 @@
             .feature {
                 padding: 30px;
             }
-            .team-grid {
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            .team-members-list {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+            .team-member-card {
+                width: 80%;
+            }
+            .mascot-container {
+                width: 150px;
             }
         }
     </style>
@@ -359,12 +434,15 @@
 <body>
 <header>
     <nav class="container">
-        <div class="logo">CheckMate</div>
+        <div class="logo-container">
+            <div class="logo-text">CheckMate</div>
+        </div>
         <ul class="nav-links">
             <li><a href="#about">About</a></li>
             <li><a href="#features">Features</a></li>
             <li><a href="#team">Team</a></li>
             <li><a href="#reports">Reports</a></li>
+            <li><a href="./reports/UM.pdf">How to Use</a></li>
             <li><a href="#privacy">Privacy</a></li>
         </ul>
     </nav>
@@ -373,6 +451,9 @@
 <main>
     <section class="hero">
         <div class="container hero-content">
+            <div class="mascot-container">
+                <img src="./reports/detective_mascot.png" alt="CheckMate Detective Mascot" class="mascot-image">
+            </div>
             <h1>CheckMate</h1>
             <p class="tagline">Your Trusted Mate for Truth</p>
             <a href="#" class="cta-button">Install</a>
@@ -401,38 +482,45 @@
             </div>
         </div>
     </section>
-
     <section id="team" class="container">
         <h2>Our Team</h2>
-        <div class="team-grid">
-            <div class="team-member">
-                <div class="team-member-image"></div>
-                <h3>Alp Batu Aksan</h3>
+        <p class="team-intro">We are the innovative minds behind CheckMate.</p>
+
+        <div class="team-showcase">
+            <div class="team-image-container">
+                <img src="./reports/team-theme.jpg" alt="CheckMate Team" class="team-image">
             </div>
-            <div class="team-member">
-                <div class="team-member-image"></div>
-                <h3>Pelin Öner</h3>
-            </div>
-            <div class="team-member">
-                <div class="team-member-image"></div>
-                <h3>İpek Sönmez</h3>
-            </div>
-            <div class="team-member">
-                <div class="team-member-image"></div>
-                <h3>Efe Tuna Can</h3>
-            </div>
-            <div class="team-member">
-                <div class="team-member-image"></div>
-                <h3>Ayberk Berat Eroğlu</h3>
+
+            <div class="team-members-list">
+                <div class="team-member-card">
+                    <h3>Alp Batu Aksan</h3>
+                </div>
+
+                <div class="team-member-card">
+                    <h3>Ayberk Berat Eroğlu</h3>
+                </div>
+
+                <div class="team-member-card">
+                    <h3>Pelin Öner</h3>
+                </div>
+
+                <div class="team-member-card">
+                    <h3>Efe Tuna Can</h3>
+                </div>
+
+                <div class="team-member-card">
+                    <h3>İpek Sönmez</h3>
+                </div>
             </div>
         </div>
     </section>
-
     <section id="reports" class="container">
         <h2>Reports</h2>
         <div class="download-section">
             <a href="./reports/report1.pdf" class="download-link">Project Specification</a>
             <a href="./reports/report2.pdf" class="download-link">Analysis and Requirements</a>
+            <a href="./reports/report3.pdf" class="download-link">Detailed Design</a>
+            <a href="./reports/UM.pdf" class="download-link">User Manual</a>
         </div>
     </section>
 
@@ -440,10 +528,10 @@
         <h2>Privacy Policy</h2>
         <div class="privacy-policy">
             <p class="privacy-date">Effective Date: April 29, 2025</p>
-            
+
             <h3>Introduction</h3>
             <p>CheckMate is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our browser extension. By using CheckMate, you agree to the practices described in this policy.</p>
-            
+
             <h3>Information We Collect</h3>
             <p>We collect the following types of information:</p>
             <ul>
@@ -452,7 +540,7 @@
                 <li><strong>Authentication Information:</strong> We collect and store authentication tokens to securely log you into your account and provide personalized services. These tokens are encrypted and stored securely.</li>
                 <li><strong>Website Content:</strong> We analyze the content of the web pages you visit to provide fact-checking and reliability scores. This content is processed locally or sent to our servers for analysis, depending on the feature.</li>
             </ul>
-            
+
             <h3>How We Use Your Information</h3>
             <ol>
                 <li><strong>To Provide Services:</strong> We use your information to analyze website content, verify facts, and provide reliability scores.</li>
@@ -460,14 +548,14 @@
                 <li><strong>Personalization:</strong> We use your data to personalize your experience, such as saving your preferences and providing tailored recommendations.</li>
                 <li><strong>Improvement:</strong> We analyze usage data to improve our services and develop new features.</li>
             </ol>
-            
+
             <h3>How We Protect Your Information</h3>
             <ul>
                 <li><strong>Encryption:</strong> All data transmitted between your browser and our servers is encrypted using industry-standard protocols.</li>
                 <li><strong>Limited Access:</strong> Only authorized personnel have access to your data, and it is used strictly for the purposes outlined in this policy.</li>
                 <li><strong>Data Minimization:</strong> We only collect the information necessary to provide our services.</li>
             </ul>
-            
+
             <h3>Sharing Your Information</h3>
             <p>We do not sell or share your personal information with third parties, except:</p>
             <ol>
@@ -475,19 +563,19 @@
                 <li><strong>For Legal Compliance:</strong> When required by law or to protect our legal rights.</li>
                 <li><strong>With Service Providers:</strong> To trusted third-party services (e.g., Google, Facebook) for authentication and analysis purposes.</li>
             </ol>
-            
+
             <h3>Your Choices</h3>
             <ol>
                 <li><strong>Access and Control:</strong> You can access, update, or delete your personal information by contacting us at checkmatextest@gmail.com.</li>
                 <li><strong>Opt-Out:</strong> You can disable the extension or revoke permissions at any time through your browser settings.</li>
             </ol>
-            
+
             <h3>Changes to This Policy</h3>
             <p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated effective date.</p>
-            
+
             <h3>Contact Us</h3>
             <p>If you have any questions or concerns about this Privacy Policy, please contact us at: checkmatextest@gmail.com</p>
-            
+
             <p>By using the CheckMate extension, you agree to this Privacy Policy.</p>
         </div>
     </section>
