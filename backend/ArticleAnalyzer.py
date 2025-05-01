@@ -785,26 +785,32 @@ class ArticleAnalyzer:
         print(f"[DEBUG] ArticleAnalyzer: Retrieved {len(self.extracted_articles)} similar articles.")
 
         # ─ reliability call ─
-        # 1) Look up domain credibility
-        cred_info   = check_website_score(self.article['url'])
-        cred_val    = cred_info.get("credibility_score")
+        cred_info  = check_website_score(self.article['url'])
+        cred_val   = cred_info.get("credibility_score")
         credibility_score = {0:"credible",1:"mixed",2:"uncredible"}.get(cred_val, "mixed")
-
-        # 2) Gather similarity scores (clamp to [0,1])
         similarity_scores = [
             max(0.0, min(art.get('similarity_score', 0.0), 1.0))
             for art in self.extracted_articles
         ]
 
-        # 3) Build payload
+        # ── NEW: spelling error % ──
+        clean = ' '.join(self.article['content'].split())
+        words, misspelled = get_misspellings(clean)
+        total_words = len(words) or 1
+        spelling_error_pct = len(misspelled) / (100* total_words * 100)
+        print(f"[SPELL-CHECK] {len(misspelled)} misspellings out of {total_words} words "
+              f"→ {spelling_error_pct:.2f}% errors")
+
+        # ─── BUILD UPDATED PAYLOAD ───
         rel_payload = {
-            "bias_probs":         self.article.get('bias_probabilities', {}),
-            "objectivity_score":  self.article.get('objectivity_score', -1),
-            "credibility_score":  credibility_score,
-            "similarity_scores":  similarity_scores
+            "bias_probs":            self.article.get('bias_probabilities', {}),
+            "objectivity_score":     self.article.get('objectivity_score', -1),
+            "title_objectivity":     self.article.get('title_objectivity_score', -1),
+            "credibility_score":     credibility_score,
+            "similarity_scores":     similarity_scores,
+            "grammatical_error_rate":    spelling_error_pct,
         }
         print("[DEBUG] Reliability payload:", rel_payload)
-
 
         print("content:", self.article)
         try:
