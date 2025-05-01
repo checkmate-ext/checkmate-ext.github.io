@@ -1,29 +1,28 @@
-import requests
-import iyzipay
-from dotenv import load_dotenv
-from flask import Flask, request, jsonify, current_app
-from flask_mail import Mail, Message
-from flask_cors import CORS
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
-from sqlalchemy import func
-from itsdangerous import URLSafeTimedSerializer
-from flask import url_for
-
-import hmac
-import hashlib
 import base64
-import string
-from models import db, User, ArticleSearch, SimilarArticle, ArticleRequest
-from ArticleAnalyzer import ArticleAnalyzer, validate_article_data, ArticleExtractionError
+import hashlib
+import hmac
+import json
 import os
 import random
-import jwt
-import json
+import string
 from datetime import datetime, timedelta
 from functools import wraps
-from website_checker import check_website_score
+
+import iyzipay
+import jwt
+import requests
+from dotenv import load_dotenv
+from flask import Flask, request, jsonify, current_app
+from flask import url_for
+from flask_cors import CORS
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer
+from sqlalchemy import func
+
+from ArticleAnalyzer import ArticleAnalyzer, validate_article_data
 from email_verification.TOTPVerification import TOTPVerification
+from models import db, User, ArticleSearch, SimilarArticle, ArticleRequest
+from website_checker import check_website_score
 
 PLAN_PRICES = {
     'premium': '49.99',
@@ -154,7 +153,6 @@ def token_required(f):
     return decorated
 
 
-
 @app.route('/scrap_and_search', methods=['POST'])
 @token_required
 def scrap_and_search(current_user):
@@ -190,7 +188,6 @@ def scrap_and_search(current_user):
                 'similarity_score': article.similarity_score
             } for article in past_similar_articles]
 
-
             print("crocodilo bombardino")
 
             past_request = ArticleRequest.query.filter_by(user_id=current_user.id, article_id=past_article.id).first()
@@ -202,10 +199,7 @@ def scrap_and_search(current_user):
                 db.session.add(article_request)
                 db.session.commit()
 
-        print("tralelero tralala")
-
-        print(past_article.spelling_issues)
-        return jsonify({
+            return jsonify({
                 'reliability_score': past_article.reliability_score,
                 'message': f"Results for {url}",
                 'article': article_data,
@@ -214,15 +208,17 @@ def scrap_and_search(current_user):
                 'website_credibility': website_credibility['credibility_score'],
                 'article_id': past_article.id,
                 'objectivity_score': past_article.objectivity_score,
-                'title_objectivity_score':  past_article.title_objectivity,
+                'title_objectivity_score': past_article.title_objectivity,
                 'bias_prediction': past_article.bias_prediction,
                 'bias_probabilities': past_article.bias_probabilities,
                 'spelling_issues': past_article.spelling_issues,
                 'linguistic_issues': past_article.linguistic_issues
             })
+        print("tralelero tralala")
 
         print(f"[DEBUG] scrap_and_search: No past article found. Proceeding to extract new article for URL: {url}")
         try:
+            print("cappucino assasino")
             google_search = ArticleAnalyzer(
                 app.config['G_API_KEY'],
                 app.config['CX_ID'],
@@ -282,7 +278,7 @@ def scrap_and_search(current_user):
                     similarity_score=sim_score
                 )
             )
- 
+
         if similar_articles_to_insert:
             db.session.bulk_save_objects(similar_articles_to_insert)
 
@@ -299,7 +295,7 @@ def scrap_and_search(current_user):
             'article_id': new_search.id,
             'objectivity_score': article['objectivity_score'],
             'bias_prediction': article['bias_prediction'],
-            'title_objectivity_score':  article['title_objectivity_score'],
+            'title_objectivity_score': article['title_objectivity_score'],
             'bias_probabilities': article['bias_probabilities'],
             'spelling_issues': article['spelling_issues'],
             'linguistic_issues': article['linguistic_issues'],
@@ -310,6 +306,7 @@ def scrap_and_search(current_user):
         # Rollback any database changes if there was an error
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
 
 # --- Helper functions for token generation ---
 def generate_confirmation_token(email):
@@ -588,6 +585,7 @@ def get_article_data(current_user, article_id):
             'error': 'Failed to retrieve article data',
             'message': str(e)
         }), 500
+
 
 def generate_verification_code():
     return str(random.randint(100000, 999999))
@@ -1313,7 +1311,7 @@ def fetch_stats(current_user):
         for date_str, count in monthly_distribution.items():
             try:
                 date = datetime.strptime(date_str, '%Y-%m-%d')
-                quarter = f"Q{(date.month-1)//3 + 1} {date.year}"
+                quarter = f"Q{(date.month - 1) // 3 + 1} {date.year}"
                 if quarter in quarterly_distribution:
                     quarterly_distribution[quarter] += count
                 else:
@@ -1368,6 +1366,7 @@ def fetch_stats(current_user):
         db.session.rollback()
         print(f"Error fetching stats: {str(e)}")
         return jsonify({'error': 'Failed to fetch stats'}), 500
+
 
 if __name__ == '__main__':
     # Run the app on all network interfaces (0.0.0.0) instead of just localhost
