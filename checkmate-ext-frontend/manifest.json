@@ -12,7 +12,8 @@
   "host_permissions": [
     "https://*.facebook.com/",
     "http://localhost:5000/*",
-    "http://127.0.0.1:5000/*"
+    "http://127.0.0.1:5000/*",
+    "https://checkmate-backend-api-1029076451566.us-central1.run.app/*"
   ],
   "web_accessible_resources": [{
     "resources": [
