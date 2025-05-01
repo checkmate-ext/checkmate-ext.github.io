@@ -210,7 +210,8 @@ def scrap_and_search(current_user):
                 'bias_prediction': past_article.bias_prediction,
                 'bias_probabilities': past_article.bias_probabilities,
                 'spelling_issues': past_article.spelling_issues,
-                'linguistic_issues': past_article.linguistic_issues
+                'linguistic_issues': past_article.linguistic_issues,
+                'pct': past_article.pct,
             })
 
         print(f"[DEBUG] scrap_and_search: No past article found. Proceeding to extract new article for URL: {url}")
@@ -244,7 +245,8 @@ def scrap_and_search(current_user):
             bias_probabilities=article.get('bias_probabilities', -1),
             title_objectivity=article.get('title_objectivity_score', -1),
             linguistic_issues=article.get('linguistic_issues', -1),
-            spelling_issues=article.get('spelling_issues', -1)
+            spelling_issues=article.get('spelling_issues', -1),
+            pct=article.get('pct', -1),
         )
 
         db.session.add(new_search)
@@ -292,7 +294,7 @@ def scrap_and_search(current_user):
             'bias_probabilities': article['bias_probabilities'],
             'spelling_issues': article['spelling_issues'],
             'linguistic_issues': article['linguistic_issues'],
-
+            'pct': article['pct'],
         })
 
     except Exception as e:

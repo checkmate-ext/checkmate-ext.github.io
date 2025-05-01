@@ -637,6 +637,7 @@ class ArticleAnalyzer:
         words, misspelled = get_misspellings(clean)
         total_words = len(words) or 1
         spelling_error_pct = len(misspelled) / total_words
+        self.article['pct'] = spelling_error_pct
         print(f"[SPELL-CHECK] {len(misspelled)} misspellings out of {total_words} words "
               f"→ {spelling_error_pct:.2f}% errors")
 
