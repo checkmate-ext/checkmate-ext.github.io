@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "checkmate_mobile",
+    "name": "CheckMate",
     "slug": "checkmate",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/icon128.png",
     "scheme": "checkmate",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -58,7 +58,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/icon128.png"
     },
     "plugins": [
       "expo-router",
