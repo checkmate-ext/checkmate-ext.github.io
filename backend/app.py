@@ -246,7 +246,7 @@ def scrap_and_search(current_user):
             title_objectivity=article.get('title_objectivity_score', -1),
             linguistic_issues=article.get('linguistic_issues', -1),
             spelling_issues=article.get('spelling_issues', -1),
-            pct=article.get('pct', -1),
+            pct=article.get('pct', -1)
         )
 
         db.session.add(new_search)
