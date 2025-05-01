@@ -18,17 +18,30 @@ export default function Stats() {
     const [refreshing, setRefreshing] = useState(false);
     const [timeframe, setTimeframe] = useState('week'); // 'week', 'month', 'year'
     const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+    const [error, setError] = useState(null);
 
     // Update dimensions when screen size changes (e.g. rotation)
     useEffect(() => {
-        const subscription = Dimensions.addEventListener('change', ({ window }) => {
+        // Safe way to handle dimension changes that works in development and production
+        const updateDimensions = ({ window }) => {
             setDimensions(window);
-        });
+        };
+
+        const subscription = Dimensions.addEventListener('change', updateDimensions);
 
         return () => {
-            // Handle cleanup based on RN version
-            if (typeof subscription?.remove === 'function') {
-                subscription.remove();
+            if (subscription) {
+                try {
+                    // Handle both older and newer RN versions
+                    if (typeof subscription.remove === 'function') {
+                        subscription.remove();
+                    } else {
+                        // Modern approach
+                        subscription();
+                    }
+                } catch (err) {
+                    // Silent catch to prevent crashes
+                }
             }
         };
     }, []);
@@ -140,24 +153,61 @@ export default function Stats() {
 
     const fetchStats = useCallback(async () => {
         if (!token) {
-            console.log("No token available");
             setLoading(false);
             setRefreshing(false);
+            setError("No authentication token found. Please login again.");
             return;
         }
 
         try {
             setLoading(true);
-            console.log("Fetching stats with token:", token ? "Token exists" : "No token");
+            setError(null);
 
             const response = await axios.get(`${API_URL}/user/stats`, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}` },
+                timeout: 10000 // 10 second timeout
             });
 
-            console.log("Stats API response received");
-            setStats(response.data);
+            // Make sure we received valid data
+            if (response.data) {
+                // Process and clean data to prevent rendering issues
+                const cleanedData = {
+                    // Apply default values for potentially missing fields
+                    articles_analyzed_daily: Number(response.data.articles_analyzed_daily || 0),
+                    articles_analyzed_weekly: Number(response.data.articles_analyzed_weekly || 0),
+                    articles_analyzed_monthly: Number(response.data.articles_analyzed_monthly || 0),
+                    total_articles: Number(response.data.total_articles || 0),
+                    daily_limit: Number(response.data.daily_limit || 1),
+                    daily_accuracy: Number(response.data.daily_accuracy || 0),
+                    weekly_accuracy: Number(response.data.weekly_accuracy || 0),
+                    monthly_accuracy: Number(response.data.monthly_accuracy || 0),
+                    subscription_plan: response.data.subscription_plan || 'Free',
+
+                    // Handle distribution data with extra care
+                    daily_distribution: response.data.daily_distribution || {},
+                    weekly_distribution: response.data.weekly_distribution || {},
+                    monthly_distribution: response.data.monthly_distribution || {},
+
+                    // Optional fields that might be present
+                    articles: response.data.articles || []
+                };
+
+                setStats(cleanedData);
+            } else {
+                setError("Received invalid data format from server");
+            }
         } catch (error) {
-            console.error('Error fetching stats:', error);
+            // Detailed error handling
+            if (error.response) {
+                // Server responded with an error status
+                setError(`Server error: ${error.response.status} - ${error.response.data?.message || 'Unknown error'}`);
+            } else if (error.request) {
+                // Request was made but no response received
+                setError("Network error: Could not connect to the server");
+            } else {
+                // Something else went wrong
+                setError(`Error: ${error.message || 'Unknown error occurred'}`);
+            }
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -177,20 +227,29 @@ export default function Stats() {
 
     // Function to determine color based on score
     const getScoreColor = (score) => {
-        if (score >= 80) return '#4CAF50'; // Green
-        if (score >= 60) return '#FFC107'; // Yellow/Amber
+        const numericScore = Number(score) || 0;
+        if (numericScore >= 80) return '#4CAF50'; // Green
+        if (numericScore >= 60) return '#FFC107'; // Yellow/Amber
         return '#F44336'; // Red
     };
 
     // Helper function to format date for display
     const formatDate = (dateString, format) => {
-        const date = new Date(dateString);
-        if (format === 'month') {
-            return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-        } else if (format === 'week') {
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        } else {
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        if (!dateString) return '';
+
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return ''; // Invalid date
+
+            if (format === 'month') {
+                return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            } else if (format === 'week') {
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            } else {
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }
+        } catch (e) {
+            return ''; // Handle date formatting errors gracefully
         }
     };
 
@@ -200,22 +259,31 @@ export default function Stats() {
 
         try {
             // Ensure distributionData is an object with date keys
-            if (typeof distributionData !== 'object') {
-                console.log("Invalid distribution data format:", distributionData);
+            if (typeof distributionData !== 'object' || distributionData === null) {
                 return null;
             }
 
-            // Sort the dates
-            const sortedDates = Object.keys(distributionData).sort();
+            // Get array of dates (keys)
+            const dates = Object.keys(distributionData);
 
             // If we don't have enough data
-            if (sortedDates.length < 2) return null;
+            if (dates.length < 2) return null;
+
+            // Sort the dates chronologically
+            const sortedDates = dates.sort((a, b) => new Date(a) - new Date(b));
 
             // Format dates to be more readable
-            const formattedDates = sortedDates.map(date => formatDate(date, format));
+            const formattedDates = sortedDates.map(date => formatDate(date, format))
+                .filter(date => date !== ''); // Remove invalid dates
+
+            // If we don't have enough valid dates after filtering
+            if (formattedDates.length < 2) return null;
 
             // Get corresponding values
-            const values = sortedDates.map(date => distributionData[date] || 0);
+            const values = sortedDates.map(date => {
+                const value = distributionData[date];
+                return typeof value === 'number' ? value : 0;
+            });
 
             return {
                 labels: formattedDates,
@@ -228,7 +296,7 @@ export default function Stats() {
                 ]
             };
         } catch (error) {
-            console.error("Error preparing chart data:", error);
+            // Silent error handling to prevent crashes
             return null;
         }
     };
@@ -254,6 +322,7 @@ export default function Stats() {
         // Handle potential undefined values safely
         if (!stats) return null;
 
+        // Default values if stats properties are missing
         let articlesAnalyzed = stats.articles_analyzed_daily || 0;
         let averageAccuracy = stats.daily_accuracy || 0;
 
@@ -335,8 +404,8 @@ export default function Stats() {
                 format = 'month';
             }
 
-            // Check if distribution data exists
-            if (!distributionData) {
+            // Check if distribution data exists and is not empty
+            if (!distributionData || Object.keys(distributionData).length === 0) {
                 return (
                     <Card style={styles.chartCard}>
                         <Text style={styles.chartTitle}>{chartTitle}</Text>
@@ -349,7 +418,7 @@ export default function Stats() {
 
             const data = prepareChartData(distributionData, format);
 
-            if (!data || data.labels.length < 2) {
+            if (!data || !data.labels || data.labels.length < 2) {
                 return (
                     <Card style={styles.chartCard}>
                         <Text style={styles.chartTitle}>{chartTitle}</Text>
@@ -377,7 +446,6 @@ export default function Stats() {
                 </Card>
             );
         } catch (error) {
-            console.error("Error rendering chart:", error);
             return (
                 <Card style={styles.chartCard}>
                     <Text style={styles.chartTitle}>{chartTitle || 'Chart'}</Text>
@@ -396,6 +464,31 @@ export default function Stats() {
                 style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}
             >
                 <ActivityIndicator color={theme.colors.secondary} size="large" />
+            </LinearGradient>
+        );
+    }
+
+    if (error) {
+        return (
+            <LinearGradient
+                colors={['#1A1612', '#241E19', '#2A241E']}
+                style={{flex: 1}}
+            >
+                <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>
+                        {error}
+                    </Text>
+                    <Button
+                        mode="contained"
+                        onPress={fetchStats}
+                        loading={loading}
+                        buttonColor={theme.colors.accent}
+                        textColor={theme.colors.text}
+                        style={authStyles.primaryButton}
+                    >
+                        Try Again
+                    </Button>
+                </View>
             </LinearGradient>
         );
     }
@@ -447,7 +540,11 @@ export default function Stats() {
                             value={timeframe}
                             onValueChange={(value) => {
                                 setTimeframe(value);
-                                Haptics.selectionAsync(); // Add haptic feedback on selection
+                                try {
+                                    Haptics.selectionAsync(); // Add haptic feedback on selection
+                                } catch (e) {
+                                    // Silently handle haptics error
+                                }
                             }}
                             buttons={[
                                 {
