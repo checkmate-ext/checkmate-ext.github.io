@@ -19,8 +19,9 @@ class User(db.Model):
     is_verified = db.Column(db.Boolean, default=False)
     iyzico_customer_id = db.Column(db.String(128), nullable=True)
 
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+
+def set_password(self, password):
+    self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -40,6 +41,10 @@ class ArticleSearch(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     similar_articles = db.relationship('SimilarArticle', backref='main_article', lazy=True)
     requests = db.relationship('ArticleRequest', backref='article', lazy=True)
+    spelling_issues = db.Column(db.Integer)
+    linguistic_issues = db.Column(db.Integer)
+    title_objectivity = db.Column(db.Float(precision=53))
+
 
 class SimilarArticle(db.Model):
     __tablename__ = 'similar_articles'
