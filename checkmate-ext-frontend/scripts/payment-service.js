@@ -1,5 +1,4 @@
-// payment-service.js
-const API_BASE_URL = 'https://checkmate-backend-api-1029076451566.us-central1.run.app';
+import { API_BASE_URL } from './config.js';
 
 class PaymentService {
     constructor() {

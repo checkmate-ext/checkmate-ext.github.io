@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "../config/config";
+
 document.addEventListener('DOMContentLoaded', () => {
     // Handle radio button selection styling
     const radioButtons = document.querySelectorAll('.custom-radio input');
@@ -51,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.disabled = true;
 
         try {
-            const response = await fetch('https://checkmate-backend-api-1029076451566.us-central1.run.app/report', {
+            const response = await fetch(`${API_BASE_URL}/report`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

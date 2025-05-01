@@ -1,3 +1,4 @@
+import { API_BASE_URL, ENDPOINTS, AUTH_CONFIG } from '../config/config.js';
 document.addEventListener('DOMContentLoaded', () => {
     const currentPageUrlElement = document.getElementById('currentPageUrl');
     const analyzeButton = document.getElementById('analyzeButton');
@@ -33,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
             analyzeButton.innerHTML = '<div class="loading-spinner"></div>Analyzing...';
 
             // Send the URL to the Python server
-            fetch(`https://checkmate-backend-api-1029076451566.us-central1.run.app/scrap_and_search`, {
+            fetch(`${API_BASE_URL}/scrap_and_search`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -77,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
             urlAnalyzeButton.innerHTML = '<div class="loading-spinner"></div>Analyzing...';
 
             // Send the URL to the Python server
-            fetch(`https://checkmate-backend-api-1029076451566.us-central1.run.app/scrap_and_search`, {
+            fetch(`${API_BASE_URL}/scrap_and_search`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

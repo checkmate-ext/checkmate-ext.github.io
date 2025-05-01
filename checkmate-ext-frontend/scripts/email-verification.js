@@ -1,5 +1,5 @@
 // email-verification.js
-
+import { API_BASE_URL, ENDPOINTS, AUTH_CONFIG } from '../config/config.js';
 document.addEventListener('DOMContentLoaded', () => {
     // Section elements
     const sections = {
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // API calls
     async function sendVerificationCode(email) {
-        const response = await fetch('https://checkmate-backend-api-1029076451566.us-central1.run.app/user/send-verification-code', {
+        const response = await fetch(`${API_BASE_URL}/user/send-verification-code`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email })
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function verifyCode(email, code) {
-        const response = await fetch('https://checkmate-backend-api-1029076451566.us-central1.run.app/user/verify-code', {
+        const response = await fetch(`${API_BASE_URL}/user/verify-code`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, code })
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function updatePassword(email, newPassword) {
-        const response = await fetch('https://checkmate-backend-api-1029076451566.us-central1.run.app/user/update-forgotten-password', {
+        const response = await fetch(`${API_BASE_URL}/user/update-forgotten-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, new_password: newPassword })

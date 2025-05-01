@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "../config/config";
+
 // Update Password Handler
 document.getElementById('updateBtn').addEventListener('click', async (e) => {
     e.preventDefault();
@@ -22,7 +24,7 @@ document.getElementById('updateBtn').addEventListener('click', async (e) => {
           throw new Error('Authentication required. Please log in.');
         }
 
-        const response = await fetch('https://checkmate-backend-api-1029076451566.us-central1.run.app/user/update-password', {
+        const response = await fetch(`${API_BASE_URL}/user/update-password`, {
             method: 'POST',
             mode: 'cors',
             headers: {

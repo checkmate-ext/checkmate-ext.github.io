@@ -1,3 +1,5 @@
+import { API_BASE_URL, ENDPOINTS, AUTH_CONFIG } from '../config/config.js';
+
 async function fetchDailyStats() {
     try {
         const token = localStorage.getItem('token');
@@ -6,7 +8,7 @@ async function fetchDailyStats() {
             return;
         }
 
-        const response = await fetch('https://checkmate-backend-api-1029076451566.us-central1.run.app/user/stats', {
+        const response = await fetch(`${API_BASE_URL}/user/stats`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,

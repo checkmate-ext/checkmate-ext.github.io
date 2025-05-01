@@ -1,4 +1,5 @@
 // Language: JavaScript
+import { API_BASE_URL, ENDPOINTS, AUTH_CONFIG } from '../config/config.js';
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('token');
     const historyList = document.querySelector('.history-list');
@@ -10,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         console.debug('Fetching search history...');
-      const response = await fetch('https://checkmate-backend-api-1029076451566.us-central1.run.app/user/searches', {
+      const response = await fetch(`${API_BASE_URL}/user/searches`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -84,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
               });
               
-              const response = await fetch(`https://checkmate-backend-api-1029076451566.us-central1.run.app/article/${articleId}/`, {
+              const response = await fetch(`${API_BASE_URL}/article/${articleId}/`, {
                 method: 'GET',
                 headers: {
                   'Content-Type': 'application/json',

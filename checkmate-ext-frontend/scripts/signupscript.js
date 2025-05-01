@@ -1,6 +1,7 @@
 import AuthService from '../authentication/auth-service.js';
+import { API_BASE_URL } from '../config/config.js';
 
-const authService = new AuthService('https://checkmate-backend-api-1029076451566.us-central1.run.app');
+const authService = new AuthService(API_BASE_URL);
 
 document.addEventListener('DOMContentLoaded', () => {
     // Add password visibility toggle functionality
