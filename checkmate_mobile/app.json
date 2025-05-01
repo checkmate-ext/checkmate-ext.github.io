@@ -4,7 +4,7 @@
     "slug": "checkmate",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon128.png",
+    "icon": "./assets/images/icon_1024.png",
     "scheme": "checkmate",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -21,8 +21,8 @@
         "INTERNET"
       ],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/icon_1024.png",
+        "backgroundColor": "#F4EED6"
       },
       "package": "com.yourcompany.checkmate",
       "intentFilters": [
@@ -65,8 +65,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "image": "./assets/images/icon_splash.png",
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }

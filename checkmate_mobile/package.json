@@ -47,7 +47,8 @@
     "react-native-size-matters": "^0.4.2",
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
-    "expo-secure-store": "~14.0.1"
+    "expo-secure-store": "~14.0.1",
+    "react-native-svg": "15.8.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
