@@ -14,7 +14,6 @@ import {
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import ResponsiveUtils from '../utils/ResponsiveUtils';
-import createResponsiveStyles from '../styles/responsive-styles';
 
 export default function Login() {
     const theme = {
@@ -33,14 +32,17 @@ export default function Login() {
         },
     };
 
-    const responsiveStyles = createResponsiveStyles(theme);
     const [dimensions, setDimensions] = useState(Dimensions.get('window'));
 
     useEffect(() => {
         const subscription = Dimensions.addEventListener('change', ({ window }) => {
             setDimensions(window);
         });
-        return () => subscription?.remove?.();
+        return () => {
+            if (typeof subscription?.remove === 'function') {
+                subscription.remove();
+            }
+        };
     }, []);
 
     const [email, setEmail] = useState('');
@@ -103,19 +105,34 @@ export default function Login() {
         }
     };
 
+    // Determine appropriate icon size based on screen size
+    const getIconSize = () => {
+        if (dimensions.width < 350) return ResponsiveUtils.moderateScale(100);
+        if (dimensions.height < 600) return ResponsiveUtils.moderateScale(110);
+        return ResponsiveUtils.moderateScale(140);
+    };
+
+    // Dynamic padding and spacing
+    const containerPadding = ResponsiveUtils.getResponsivePadding();
+    const containerWidth = ResponsiveUtils.getOptimalFormWidth();
+    const verticalSpacing = ResponsiveUtils.getResponsiveSpacing(dimensions.height > 700 ? 30 : 15);
+
     const styles = StyleSheet.create({
-        container: {
+        outerContainer: {
             flex: 1,
-            padding: ResponsiveUtils.moderateScale(24),
-            paddingTop: dimensions.height > 700 ? ResponsiveUtils.moderateScale(30) : ResponsiveUtils.moderateScale(15),
-            width: '100%',
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        container: {
+            padding: containerPadding,
+            paddingTop: verticalSpacing,
+            width: containerWidth,
             maxWidth: 600,
             alignSelf: 'center',
-            justifyContent: 'center',
         },
         logoContainer: {
             alignItems: 'center',
-            marginBottom: dimensions.height > 700 ? ResponsiveUtils.moderateScale(30) : ResponsiveUtils.moderateScale(15),
+            marginBottom: verticalSpacing,
         },
         iconContainer: {
             transform: [{ scale: 1 }],
@@ -125,33 +142,55 @@ export default function Login() {
             shadowOpacity: 0.3,
         },
         iconImage: {
-            width: ResponsiveUtils.moderateScale(140), // Increased from 90 to 140
-            height: ResponsiveUtils.moderateScale(140), // Increased from 90 to 140
+            width: getIconSize(),
+            height: getIconSize(),
         },
         form: {
             width: '100%',
             marginTop: ResponsiveUtils.moderateScale(10),
         },
         title: {
-            fontSize: ResponsiveUtils.normalizeFont(32), // Increased from 28 to 32
+            fontSize: ResponsiveUtils.normalizeFont(28),
             fontWeight: 'bold',
             marginTop: ResponsiveUtils.moderateScale(12),
-            textAlign: 'center', // Center align the title
+            textAlign: 'center',
         },
         subtitle: {
-            fontSize: ResponsiveUtils.normalizeFont(16),
+            fontSize: ResponsiveUtils.normalizeFont(14),
             color: theme.colors.text,
             opacity: 0.8,
             marginTop: ResponsiveUtils.moderateScale(4),
             marginBottom: ResponsiveUtils.moderateScale(16),
             textAlign: 'center',
         },
-        inputContainer: { marginBottom: ResponsiveUtils.moderateScale(16), backgroundColor: theme.colors.surface },
-        buttonContainer: { marginTop: ResponsiveUtils.moderateScale(20) },
-        divider: { backgroundColor: theme.colors.primary, opacity: 0.2, marginVertical: ResponsiveUtils.moderateScale(20) },
-        socialButtonsContainer: { flexDirection: 'row', justifyContent: 'center', marginVertical: ResponsiveUtils.moderateScale(16) },
-        footer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: ResponsiveUtils.moderateScale(20) },
-        errorText: { color: theme.colors.error, marginTop: ResponsiveUtils.moderateScale(8) },
+        inputContainer: {
+            marginBottom: ResponsiveUtils.moderateScale(12),
+            backgroundColor: theme.colors.surface
+        },
+        buttonContainer: {
+            marginTop: ResponsiveUtils.moderateScale(16)
+        },
+        divider: {
+            backgroundColor: theme.colors.primary,
+            opacity: 0.2,
+            marginVertical: ResponsiveUtils.moderateScale(dimensions.height < 700 ? 12 : 20)
+        },
+        socialButtonsContainer: {
+            flexDirection: 'row',
+            justifyContent: 'center',
+            marginVertical: ResponsiveUtils.moderateScale(12)
+        },
+        footer: {
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: ResponsiveUtils.moderateScale(16),
+            flexWrap: 'wrap',
+        },
+        errorText: {
+            color: theme.colors.error,
+            marginTop: ResponsiveUtils.moderateScale(8)
+        },
         actionButton: {
             borderRadius: ResponsiveUtils.moderateScale(12),
             paddingVertical: ResponsiveUtils.moderateScale(8),
@@ -161,6 +200,10 @@ export default function Login() {
             shadowRadius: 8,
             elevation: 8,
         },
+        scrollViewContent: {
+            flexGrow: 1,
+            justifyContent: 'center',
+        }
     });
 
     return (
@@ -172,117 +215,141 @@ export default function Login() {
                     keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}
                 >
                     <ScrollView
-                        contentContainerStyle={{ flexGrow: 1, justifyContent: dimensions.height < 700 ? 'flex-start' : 'center' }}
+                        contentContainerStyle={styles.scrollViewContent}
                         keyboardShouldPersistTaps="handled"
                     >
-                        <Animated.View
-                            style={[styles.container, { opacity: fadeAnim, transform: [{ translateY: slideAnim }, { scale: scaleAnim }] }]}
-                        >
-                            <View style={styles.logoContainer}>
-                                <Animated.View style={styles.iconContainer}>
-                                    <Image
-                                        source={require('../../assets/images/detective_mascot.png')}
-                                        style={styles.iconImage}
-                                        resizeMode="contain"
-                                    />
-                                </Animated.View>
-                                <Text
-                                    variant="displaySmall"
-                                    style={[styles.title, { color: theme.colors.secondary, textShadowColor: theme.colors.accent, textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 8 }]}
-                                >
-                                    CheckMate
-                                </Text>
-                                <Text style={styles.subtitle}>
-                                    Your trusted news verification assistant
-                                </Text>
-                            </View>
-
-                            <View style={styles.form}>
-                                <TextInput
-                                    mode="outlined"
-                                    label="Email"
-                                    value={email}
-                                    onChangeText={setEmail}
-                                    autoCapitalize="none"
-                                    keyboardType="email-address"
-                                    error={!!errorMessage && errorMessage.includes('email')}
-                                    left={<TextInput.Icon icon="email" color={theme.colors.secondary} />}
-                                    style={styles.inputContainer}
-                                    textColor={theme.colors.text}
-                                    outlineColor={theme.colors.primary}
-                                    activeOutlineColor={theme.colors.secondary}
-                                    placeholderTextColor={theme.colors.placeholder}
-                                />
-
-                                <TextInput
-                                    mode="outlined"
-                                    label="Password"
-                                    value={password}
-                                    onChangeText={setPassword}
-                                    secureTextEntry={!showPassword}
-                                    error={!!errorMessage && errorMessage.includes('password')}
-                                    left={<TextInput.Icon icon="lock" color={theme.colors.secondary} />}
-                                    right={
-                                        <TextInput.Icon
-                                            icon={showPassword ? 'eye-off' : 'eye'}
-                                            onPress={() => setShowPassword(!showPassword)}
-                                            color={theme.colors.secondary}
+                        <View style={styles.outerContainer}>
+                            <Animated.View
+                                style={[styles.container, { opacity: fadeAnim, transform: [{ translateY: slideAnim }, { scale: scaleAnim }] }]}
+                            >
+                                <View style={styles.logoContainer}>
+                                    <Animated.View style={styles.iconContainer}>
+                                        <Image
+                                            source={require('../../assets/images/detective_mascot.png')}
+                                            style={styles.iconImage}
+                                            resizeMode="contain"
                                         />
-                                    }
-                                    style={styles.inputContainer}
-                                    textColor={theme.colors.text}
-                                    outlineColor={theme.colors.primary}
-                                    activeOutlineColor={theme.colors.secondary}
-                                    placeholderTextColor={theme.colors.placeholder}
-                                />
-
-                                {errorMessage ? <HelperText type="error" visible={!!errorMessage} style={styles.errorText}>{errorMessage}</HelperText> : null}
-
-                                <View style={styles.buttonContainer}>
-                                    <Button
-                                        mode="contained"
-                                        onPress={handleLogin}
-                                        loading={loading}
-                                        contentStyle={{ paddingVertical: ResponsiveUtils.moderateScale(8) }}
-                                        buttonColor={theme.colors.accent}
-                                        textColor={theme.colors.text}
-                                        style={styles.actionButton}
+                                    </Animated.View>
+                                    <Text
+                                        variant={dimensions.width < 350 ? "headlineMedium" : "displaySmall"}
+                                        style={[styles.title, {
+                                            color: theme.colors.secondary,
+                                            textShadowColor: theme.colors.accent,
+                                            textShadowOffset: { width: 0, height: 0 },
+                                            textShadowRadius: 8
+                                        }]}
                                     >
-                                        {loading ? 'Logging in' : 'Login'}
-                                    </Button>
-
-                                    <Link href="/forgot-password" asChild>
-                                        <Button mode="text" onPress={() => Haptics.selectionAsync()} textColor={theme.colors.secondary} style={{ marginTop: ResponsiveUtils.moderateScale(8) }}>
-                                            Forgot Password?
-                                        </Button>
-                                    </Link>
-                                </View>
-
-                                <Divider style={styles.divider} />
-
-                                <View style={styles.socialButtonsContainer}>
-                                    <IconButton
-                                        icon="google"
-                                        mode="contained-tonal"
-                                        size={ResponsiveUtils.moderateScale(24)}
-                                        onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-                                        containerColor={theme.colors.surface}
-                                        iconColor={theme.colors.secondary}
-                                    />
-                                </View>
-
-                                <View style={styles.footer}>
-                                    <Text variant="bodyLarge" style={{ color: theme.colors.text, fontSize: ResponsiveUtils.normalizeFont(16) }}>
-                                        Don't have an account?
+                                        CheckMate
                                     </Text>
-                                    <Link href="/signup" asChild>
-                                        <Button mode="text" compact onPress={() => Haptics.selectionAsync()} textColor={theme.colors.secondary}>
-                                            Sign Up!
-                                        </Button>
-                                    </Link>
+                                    <Text style={styles.subtitle}>
+                                        Your trusted news verification assistant
+                                    </Text>
                                 </View>
-                            </View>
-                        </Animated.View>
+
+                                <View style={styles.form}>
+                                    <TextInput
+                                        mode="outlined"
+                                        label="Email"
+                                        value={email}
+                                        onChangeText={setEmail}
+                                        autoCapitalize="none"
+                                        keyboardType="email-address"
+                                        error={!!errorMessage && errorMessage.includes('email')}
+                                        left={<TextInput.Icon icon="email" color={theme.colors.secondary} />}
+                                        style={styles.inputContainer}
+                                        textColor={theme.colors.text}
+                                        outlineColor={theme.colors.primary}
+                                        activeOutlineColor={theme.colors.secondary}
+                                        placeholderTextColor={theme.colors.placeholder}
+                                    />
+
+                                    <TextInput
+                                        mode="outlined"
+                                        label="Password"
+                                        value={password}
+                                        onChangeText={setPassword}
+                                        secureTextEntry={!showPassword}
+                                        error={!!errorMessage && errorMessage.includes('password')}
+                                        left={<TextInput.Icon icon="lock" color={theme.colors.secondary} />}
+                                        right={
+                                            <TextInput.Icon
+                                                icon={showPassword ? 'eye-off' : 'eye'}
+                                                onPress={() => setShowPassword(!showPassword)}
+                                                color={theme.colors.secondary}
+                                            />
+                                        }
+                                        style={styles.inputContainer}
+                                        textColor={theme.colors.text}
+                                        outlineColor={theme.colors.primary}
+                                        activeOutlineColor={theme.colors.secondary}
+                                        placeholderTextColor={theme.colors.placeholder}
+                                    />
+
+                                    {errorMessage ? <HelperText type="error" visible={!!errorMessage} style={styles.errorText}>{errorMessage}</HelperText> : null}
+
+                                    <View style={styles.buttonContainer}>
+                                        <Button
+                                            mode="contained"
+                                            onPress={handleLogin}
+                                            loading={loading}
+                                            contentStyle={{ paddingVertical: ResponsiveUtils.moderateScale(6) }}
+                                            buttonColor={theme.colors.accent}
+                                            textColor={theme.colors.text}
+                                            style={styles.actionButton}
+                                        >
+                                            {loading ? 'Logging in' : 'Login'}
+                                        </Button>
+
+                                        <Link href="/forgot-password" asChild>
+                                            <Button
+                                                mode="text"
+                                                onPress={() => Haptics.selectionAsync()}
+                                                textColor={theme.colors.secondary}
+                                                style={{ marginTop: ResponsiveUtils.moderateScale(8) }}
+                                            >
+                                                Forgot Password?
+                                            </Button>
+                                        </Link>
+                                    </View>
+
+                                    <Divider style={styles.divider} />
+
+                                    <View style={styles.socialButtonsContainer}>
+                                        <IconButton
+                                            icon="google"
+                                            mode="contained-tonal"
+                                            size={ResponsiveUtils.moderateScale(24)}
+                                            onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+                                            containerColor={theme.colors.surface}
+                                            iconColor={theme.colors.secondary}
+                                        />
+                                    </View>
+
+                                    <View style={styles.footer}>
+                                        <Text
+                                            variant="bodyMedium"
+                                            style={{
+                                                color: theme.colors.text,
+                                                fontSize: ResponsiveUtils.normalizeFont(14),
+                                                marginRight: 4
+                                            }}
+                                        >
+                                            Don't have an account?
+                                        </Text>
+                                        <Link href="/signup" asChild>
+                                            <Button
+                                                mode="text"
+                                                compact
+                                                onPress={() => Haptics.selectionAsync()}
+                                                textColor={theme.colors.secondary}
+                                            >
+                                                Sign Up!
+                                            </Button>
+                                        </Link>
+                                    </View>
+                                </View>
+                            </Animated.View>
+                        </View>
                     </ScrollView>
                 </KeyboardAvoidingView>
             </SafeAreaView>

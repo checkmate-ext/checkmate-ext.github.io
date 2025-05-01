@@ -1,6 +1,17 @@
-import {View, Animated, ScrollView, Image, RefreshControl, TouchableOpacity, StyleSheet, SafeAreaView, Dimensions, Platform} from 'react-native';
-import {useAuth} from '../context/AuthContext';
-import {useState, useRef, useEffect} from 'react';
+import {
+    View,
+    Animated,
+    ScrollView,
+    Image,
+    RefreshControl,
+    TouchableOpacity,
+    StyleSheet,
+    SafeAreaView,
+    Dimensions,
+    Platform
+} from 'react-native';
+import { useAuth } from '../context/AuthContext';
+import { useState, useRef, useEffect } from 'react';
 import {
     Button,
     Text,
@@ -13,12 +24,11 @@ import {
     ProgressBar
 } from 'react-native-paper';
 import * as Haptics from 'expo-haptics';
-import {LinearGradient} from 'expo-linear-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
 import axios from 'axios';
-import {API_URL} from '../constants/Config';
-import {router} from 'expo-router';
+import { API_URL } from '../constants/Config';
+import { router } from 'expo-router';
 import ResponsiveUtils from '../utils/ResponsiveUtils';
-import createResponsiveStyles from '../styles/responsive-styles';
 
 // Helper function to format dates
 const formatDate = (dateString) => {
@@ -64,9 +74,6 @@ export default function Home() {
             backdrop: 'rgba(26, 22, 18, 0.5)',
         },
     };
-
-    // Get responsive styles
-    const responsiveStyles = createResponsiveStyles(theme);
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(ResponsiveUtils.moderateScale(50))).current;
@@ -266,19 +273,27 @@ export default function Home() {
         return '#F44336'; // Red
     };
 
+    // Get responsive container padding
+    const containerPadding = ResponsiveUtils.getResponsivePadding();
+
+    // Get adaptive spacing for different screen sizes
+    const verticalSpacing = ResponsiveUtils.getResponsiveSpacing(
+        dimensions.height > 700 ? 16 : 12
+    );
+
     const styles = StyleSheet.create({
         container: {
-            padding: ResponsiveUtils.moderateScale(20),
+            padding: containerPadding,
         },
         sectionTitle: {
-            fontSize: ResponsiveUtils.normalizeFont(22),
+            fontSize: ResponsiveUtils.normalizeFont(20),
             fontWeight: '700',
             color: theme.colors.text,
-            marginBottom: ResponsiveUtils.moderateScale(15),
+            marginBottom: verticalSpacing,
         },
         card: {
             backgroundColor: theme.colors.surface,
-            marginBottom: ResponsiveUtils.moderateScale(20),
+            marginBottom: verticalSpacing * 1.2,
             borderRadius: ResponsiveUtils.moderateScale(15),
             shadowColor: theme.colors.accent,
             shadowOffset: {width: 0, height: 4},
@@ -288,7 +303,7 @@ export default function Home() {
         },
         articleCard: {
             backgroundColor: theme.colors.surface,
-            marginBottom: ResponsiveUtils.moderateScale(12),
+            marginBottom: verticalSpacing * 0.75,
             borderRadius: ResponsiveUtils.moderateScale(12),
             borderLeftWidth: 4,
             shadowColor: theme.colors.accent,
@@ -300,26 +315,26 @@ export default function Home() {
         statContainer: {
             flex: 1,
             alignItems: 'center',
-            padding: ResponsiveUtils.moderateScale(10),
+            padding: ResponsiveUtils.moderateScale(dimensions.height < 700 ? 8 : 10),
         },
         statValue: {
-            fontSize: ResponsiveUtils.normalizeFont(28),
+            fontSize: ResponsiveUtils.normalizeFont(dimensions.width < 350 ? 24 : 28),
             fontWeight: 'bold',
             color: theme.colors.secondary,
         },
         statLabel: {
-            fontSize: ResponsiveUtils.normalizeFont(14),
+            fontSize: ResponsiveUtils.normalizeFont(dimensions.width < 350 ? 12 : 14),
             color: theme.colors.text,
         },
         divider: {
             backgroundColor: theme.colors.primary,
             opacity: 0.3,
-            marginVertical: ResponsiveUtils.moderateScale(10),
+            marginVertical: verticalSpacing,
         },
         statsRow: {
             flexDirection: 'row',
             justifyContent: 'space-between',
-            marginBottom: ResponsiveUtils.moderateScale(15),
+            marginBottom: verticalSpacing,
         },
         usageLabel: {
             fontSize: ResponsiveUtils.normalizeFont(14),
@@ -327,7 +342,7 @@ export default function Home() {
         },
         button: {
             borderRadius: ResponsiveUtils.moderateScale(12),
-            marginTop: ResponsiveUtils.moderateScale(15),
+            marginTop: verticalSpacing,
         },
         viewAllButton: {
             color: theme.colors.secondary,
@@ -342,7 +357,7 @@ export default function Home() {
         headerContainer: {
             flexDirection: 'row',
             alignItems: 'center',
-            marginBottom: ResponsiveUtils.moderateScale(15),
+            marginBottom: verticalSpacing,
         },
         logoContainer: {
             shadowColor: theme.colors.secondary,
@@ -351,8 +366,8 @@ export default function Home() {
             shadowOpacity: 0.2,
         },
         logo: {
-            width: ResponsiveUtils.moderateScale(40),
-            height: ResponsiveUtils.moderateScale(40),
+            width: ResponsiveUtils.moderateScale(dimensions.width < 350 ? 32 : 40),
+            height: ResponsiveUtils.moderateScale(dimensions.width < 350 ? 32 : 40),
         },
         welcomeText: {
             color: theme.colors.secondary,
@@ -360,13 +375,13 @@ export default function Home() {
             textShadowColor: theme.colors.accent,
             textShadowOffset: {width: 0, height: 0},
             textShadowRadius: 2,
-            fontSize: ResponsiveUtils.normalizeFont(16),
+            fontSize: ResponsiveUtils.normalizeFont(dimensions.width < 350 ? 14 : 16),
         },
         statsCardContent: {
             padding: ResponsiveUtils.moderateScale(15),
         },
         usageContainer: {
-            marginVertical: ResponsiveUtils.moderateScale(10),
+            marginVertical: verticalSpacing,
         },
         emptyArticlesText: {
             color: theme.colors.text,
@@ -374,9 +389,9 @@ export default function Home() {
             padding: ResponsiveUtils.moderateScale(15),
         },
         logoutButton: {
-            marginTop: ResponsiveUtils.moderateScale(10),
-            marginBottom: ResponsiveUtils.moderateScale(20),
-            paddingVertical: ResponsiveUtils.moderateScale(8),
+            marginTop: verticalSpacing,
+            marginBottom: verticalSpacing * 1.2,
+            paddingVertical: ResponsiveUtils.moderateScale(6),
         },
     });
 
@@ -437,7 +452,7 @@ export default function Home() {
                                         style={{
                                             color: theme.colors.text,
                                             marginBottom: ResponsiveUtils.moderateScale(10),
-                                            fontSize: ResponsiveUtils.normalizeFont(20)
+                                            fontSize: ResponsiveUtils.normalizeFont(dimensions.width < 350 ? 18 : 20)
                                         }}
                                     >
                                         Dashboard
@@ -455,7 +470,7 @@ export default function Home() {
                                 {loading && !stats ? (
                                     <ActivityIndicator
                                         color={theme.colors.secondary}
-                                        style={{marginVertical: ResponsiveUtils.moderateScale(20)}}
+                                        style={{marginVertical: verticalSpacing}}
                                     />
                                 ) : stats ? (
                                     <>
@@ -526,7 +541,7 @@ export default function Home() {
                                             />
                                         </View>
 
-                                        <View style={{marginTop: ResponsiveUtils.moderateScale(10)}}>
+                                        <View style={{marginTop: verticalSpacing}}>
                                             <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
                                                 <Text
                                                     variant="bodyMedium"
@@ -554,7 +569,7 @@ export default function Home() {
                                         variant="bodyLarge"
                                         style={{
                                             color: theme.colors.text,
-                                            marginVertical: ResponsiveUtils.moderateScale(10),
+                                            marginVertical: verticalSpacing,
                                             fontSize: ResponsiveUtils.normalizeFont(16)
                                         }}
                                     >
@@ -580,12 +595,12 @@ export default function Home() {
                         </Card>
 
                         {/* Recent Articles Section */}
-                        <View style={{marginBottom: ResponsiveUtils.moderateScale(20)}}>
+                        <View style={{marginBottom: verticalSpacing * 1.2}}>
                             <View style={{
                                 flexDirection: 'row',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
-                                marginBottom: ResponsiveUtils.moderateScale(15)
+                                marginBottom: verticalSpacing
                             }}>
                                 <Text
                                     variant="titleLarge"
@@ -605,7 +620,7 @@ export default function Home() {
                             {loading && recentArticles.length === 0 ? (
                                 <ActivityIndicator
                                     color={theme.colors.secondary}
-                                    style={{marginVertical: ResponsiveUtils.moderateScale(20)}}
+                                    style={{marginVertical: verticalSpacing}}
                                 />
                             ) : recentArticles.length > 0 ? (
                                 recentArticles.slice(0, 3).map(article => renderArticleCard(article))
@@ -623,7 +638,7 @@ export default function Home() {
                             onPress={handleLogout}
                             loading={loading}
                             icon="logout"
-                            contentStyle={{paddingVertical: ResponsiveUtils.moderateScale(8)}}
+                            contentStyle={{paddingVertical: ResponsiveUtils.moderateScale(6)}}
                             buttonColor={theme.colors.accent}
                             textColor={theme.colors.text}
                             style={styles.logoutButton}

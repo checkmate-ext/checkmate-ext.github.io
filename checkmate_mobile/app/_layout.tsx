@@ -1,4 +1,4 @@
-// app/_layout.tsx
+// app/_layout.tsx - Fixed navigation structure
 import { Stack } from 'expo-router';
 import { AuthProvider } from "@/app/context/AuthContext";
 import { DeepLinkProvider } from "@/app/context/DeepLinkContext";
@@ -13,11 +13,11 @@ export default function RootLayout() {
                         screenOptions={{
                             headerShown: false
                         }}
-                        initialRouteName="(auth)"
                     >
                         <Stack.Screen name="(auth)" />
                         <Stack.Screen name="(tabs)" />
-                        <Stack.Screen name="article" />
+                        <Stack.Screen name="new-search" />
+                        <Stack.Screen name="article/[id]" />
                     </Stack>
                 </DeepLinkProvider>
             </AuthProvider>
