@@ -280,6 +280,45 @@
             opacity: 0.8;
         }
 
+        /* Privacy Policy Styles */
+        .privacy-policy {
+            background-color: var(--surface-color);
+            padding: 40px;
+            border-radius: 20px;
+            margin-top: 40px;
+        }
+        .privacy-policy h3 {
+            color: var(--secondary-color);
+            border-bottom: 1px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-top: 25px;
+        }
+        .privacy-policy p {
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+        .privacy-policy ul {
+            color: var(--text-secondary);
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        .privacy-date {
+            font-style: italic;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+        footer {
+            background-color: var(--surface-color);
+            padding: 20px 0;
+            text-align: center;
+            margin-top: 40px;
+        }
+        footer p {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -326,6 +365,7 @@
             <li><a href="#features">Features</a></li>
             <li><a href="#team">Team</a></li>
             <li><a href="#reports">Reports</a></li>
+            <li><a href="#privacy">Privacy</a></li>
         </ul>
     </nav>
 </header>
@@ -395,7 +435,69 @@
             <a href="./reports/report2.pdf" class="download-link">Analysis and Requirements</a>
         </div>
     </section>
+
+    <section id="privacy" class="container">
+        <h2>Privacy Policy</h2>
+        <div class="privacy-policy">
+            <p class="privacy-date">Effective Date: April 29, 2025</p>
+            
+            <h3>Introduction</h3>
+            <p>CheckMate is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our browser extension. By using CheckMate, you agree to the practices described in this policy.</p>
+            
+            <h3>Information We Collect</h3>
+            <p>We collect the following types of information:</p>
+            <ul>
+                <li><strong>Personally Identifiable Information:</strong> We collect personal information, such as your name, email address, and authentication tokens, when you sign up, log in, or authenticate using third-party services like Google or Facebook.</li>
+                <li><strong>Web History:</strong> We collect information about the websites you visit to analyze and verify the reliability of the content. This includes URLs and metadata of the pages you interact with.</li>
+                <li><strong>Authentication Information:</strong> We collect and store authentication tokens to securely log you into your account and provide personalized services. These tokens are encrypted and stored securely.</li>
+                <li><strong>Website Content:</strong> We analyze the content of the web pages you visit to provide fact-checking and reliability scores. This content is processed locally or sent to our servers for analysis, depending on the feature.</li>
+            </ul>
+            
+            <h3>How We Use Your Information</h3>
+            <ol>
+                <li><strong>To Provide Services:</strong> We use your information to analyze website content, verify facts, and provide reliability scores.</li>
+                <li><strong>Authentication:</strong> Your authentication information is used to log you in and maintain your session securely.</li>
+                <li><strong>Personalization:</strong> We use your data to personalize your experience, such as saving your preferences and providing tailored recommendations.</li>
+                <li><strong>Improvement:</strong> We analyze usage data to improve our services and develop new features.</li>
+            </ol>
+            
+            <h3>How We Protect Your Information</h3>
+            <ul>
+                <li><strong>Encryption:</strong> All data transmitted between your browser and our servers is encrypted using industry-standard protocols.</li>
+                <li><strong>Limited Access:</strong> Only authorized personnel have access to your data, and it is used strictly for the purposes outlined in this policy.</li>
+                <li><strong>Data Minimization:</strong> We only collect the information necessary to provide our services.</li>
+            </ul>
+            
+            <h3>Sharing Your Information</h3>
+            <p>We do not sell or share your personal information with third parties, except:</p>
+            <ol>
+                <li><strong>With Your Consent:</strong> When you explicitly authorize us to share your data.</li>
+                <li><strong>For Legal Compliance:</strong> When required by law or to protect our legal rights.</li>
+                <li><strong>With Service Providers:</strong> To trusted third-party services (e.g., Google, Facebook) for authentication and analysis purposes.</li>
+            </ol>
+            
+            <h3>Your Choices</h3>
+            <ol>
+                <li><strong>Access and Control:</strong> You can access, update, or delete your personal information by contacting us at checkmatextest@gmail.com.</li>
+                <li><strong>Opt-Out:</strong> You can disable the extension or revoke permissions at any time through your browser settings.</li>
+            </ol>
+            
+            <h3>Changes to This Policy</h3>
+            <p>We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated effective date.</p>
+            
+            <h3>Contact Us</h3>
+            <p>If you have any questions or concerns about this Privacy Policy, please contact us at: checkmatextest@gmail.com</p>
+            
+            <p>By using the CheckMate extension, you agree to this Privacy Policy.</p>
+        </div>
+    </section>
 </main>
+
+<footer>
+    <div class="container">
+        <p>&copy; 2025 CheckMate. All rights reserved.</p>
+    </div>
+</footer>
 
 <script>
     window.addEventListener('scroll', function() {

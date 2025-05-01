@@ -100,6 +100,49 @@ document.addEventListener('DOMContentLoaded', async () => {
         tooltip.appendChild(tooltipText);
     }
 
+    // Set the title objectivity score with color-based class and format handling
+    const titleObjectivityScoreBox = document.getElementById('titleObjectivityScore');
+    if (titleObjectivityScoreBox && data.title_objectivity_score !== undefined && data.title_objectivity_score >= 0) {
+        // Handle title objectivity score that might be in 0-1 range or 0-100 range
+        const score = data.title_objectivity_score <= 1 
+            ? Math.round(data.title_objectivity_score * 100) 
+            : Math.round(data.title_objectivity_score);
+            
+        titleObjectivityScoreBox.textContent = score + '%';
+        
+        // Add color class based on score
+        if (score > 75) {
+            titleObjectivityScoreBox.classList.add('green');
+        } else if (score >= 50) {
+            titleObjectivityScoreBox.classList.add('neutral');
+        } else {
+            titleObjectivityScoreBox.classList.add('red');
+        }
+    
+        // Add tooltips to explain the score
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        titleObjectivityScoreBox.parentNode.appendChild(tooltip);
+        
+        const tooltipText = document.createElement('span');
+        tooltipText.className = 'tooltiptext';
+        tooltipText.textContent = 'Title Objectivity measures how fact-based versus sensational the article title is';
+        tooltip.appendChild(tooltipText);
+    } else if (titleObjectivityScoreBox) {
+        titleObjectivityScoreBox.textContent = 'N/A';
+        titleObjectivityScoreBox.classList.add('red');
+        
+        // Add tooltip for N/A state
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        titleObjectivityScoreBox.parentNode.appendChild(tooltip);
+        
+        const tooltipText = document.createElement('span');
+        tooltipText.className = 'tooltiptext';
+        tooltipText.textContent = 'Title objectivity score could not be calculated for this article';
+        tooltip.appendChild(tooltipText);
+    }
+
     // Set the bias score with full text display and proper box sizing
     if (biasScoreBox) {
         if (data.bias_prediction) {

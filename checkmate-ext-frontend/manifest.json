@@ -44,8 +44,7 @@
     "128": "images/icon128.png"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'",
-    "sandbox": "sandbox allow-scripts; script-src 'self' https://apis.google.com https://www.gstatic.com https://www.googleapis.com https://securetoken.googleapis.com; object-src 'self'"
+    "extension_pages": "script-src 'self'; object-src 'self'"
   },
   "oauth2": {
     "client_id": "1029076451566-0jqo4bubftitqf3opbl0kd8gmm89k5qd.apps.googleusercontent.com",

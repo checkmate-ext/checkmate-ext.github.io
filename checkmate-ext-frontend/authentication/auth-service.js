@@ -3,7 +3,6 @@ export default class AuthService {
     constructor(apiUrl) {
         this.apiUrl = apiUrl;  // Store the API URL (e.g., 'http://localhost:5000')
         this.token = localStorage.getItem('token') || sessionStorage.getItem('token');  // Get token from localStorage if it exists
-        this.googleClientId = "1029076451566-0jqo4bubftitqf3opbl0kd8gmm89k5qd.apps.googleusercontent.com"; // Google Client ID
     }
 
     async login(email, password, rememberMe = false) {
@@ -22,25 +21,23 @@ export default class AuthService {
                 throw new Error(data.message || 'Login failed');
             }
 
-            // Always store the token in localStorage
-            localStorage.setItem('token', data.token);
-            return { success: true, user: data.user };
-
+            // Store the token in localStorage
             this.token = data.token;
-
-            return { success: true };
+            localStorage.setItem('token', data.token);
+            
+            return { success: true, user: data.user };
         } catch (error) {
             return { success: false, error: error.message };
         }
     }
 
-    // auth-service.js - Corrected Google Auth Method
     async googleSignIn() {
         return new Promise((resolve, reject) => {
             // Use Chrome's identity API to get an access token
             chrome.identity.getAuthToken({ interactive: true }, async (token) => {
                 if (chrome.runtime.lastError) {
-                    reject(new Error(chrome.runtime.lastError.message));
+                    console.error('Chrome identity error:', chrome.runtime.lastError);
+                    resolve({ success: false, error: chrome.runtime.lastError.message });
                     return;
                 }
 
@@ -52,7 +49,10 @@ export default class AuthService {
                     );
 
                     if (!userInfoResponse.ok) {
-                        throw new Error('Failed to get user info from Google');
+                        const errorText = await userInfoResponse.text();
+                        console.error('Failed to get user info:', errorText);
+                        resolve({ success: false, error: 'Failed to get user info from Google' });
+                        return;
                     }
 
                     const userInfo = await userInfoResponse.json();
@@ -67,16 +67,18 @@ export default class AuthService {
                             google_id: userInfo.sub,
                             email: userInfo.email,
                             name: userInfo.name,
-                            // Include the access token for verification
-                            access_token: token
+                            access_token: token,
+                            client_type: 'extension'
                         })
                     });
 
-                    const data = await response.json();
-
                     if (!response.ok) {
-                        throw new Error(data.message || 'Google authentication failed');
+                        const errorData = await response.json();
+                        resolve({ success: false, error: errorData.message || 'Google authentication failed' });
+                        return;
                     }
+
+                    const data = await response.json();
 
                     // If auth successful, save token
                     this.token = data.token;
@@ -84,32 +86,11 @@ export default class AuthService {
                     resolve({ success: true, user: data.user });
                 } catch (error) {
                     console.error('Google sign-in error:', error);
-                    reject(error);
+                    resolve({ success: false, error: error.message || 'Google authentication failed' });
                 }
             });
         });
     }
-
-    // Helper method to dynamically load the Google API script
-    loadGoogleApi() {
-        return new Promise((resolve, reject) => {
-            // Check if script already exists
-            if (document.querySelector('script[src*="apis.google.com/js/api.js"]')) {
-                resolve();
-                return;
-            }
-
-            // Create script tag
-            const script = document.createElement('script');
-            script.src = 'https://apis.google.com/js/api.js';
-            script.async = true;
-            script.defer = true;
-            script.onload = resolve;
-            script.onerror = () => reject(new Error('Failed to load Google API'));
-            document.head.appendChild(script);
-        });
-    }
-
 
     async facebookSignIn(accessToken) {
         try {
@@ -119,14 +100,18 @@ export default class AuthService {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ facebook_token: accessToken })
+                body: JSON.stringify({ 
+                    facebook_token: accessToken,
+                    client_type: 'extension'
+                })
             });
 
-            const data = await response.json();
-
             if (!response.ok) {
-                throw new Error(data.message || 'Facebook authentication failed');
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Facebook authentication failed (${response.status})`);
             }
+
+            const data = await response.json();
 
             // Store token in class property and localStorage
             this.token = data.token;
@@ -171,7 +156,6 @@ export default class AuthService {
         }
     }
 
-    // Method to make authenticated requests to your backend
     async makeAuthenticatedRequest(endpoint, method = 'GET', body = null) {
         // Check if we have a token
         if (!this.token) {
@@ -209,18 +193,15 @@ export default class AuthService {
             const payload = JSON.parse(atob(token.split('.')[1]));
             // exp is in seconds; convert to milliseconds
             return payload.exp * 1000 >= Date.now();
-             // token is valid
         } catch (error) {
             return false;
         }
     }
 
-    // Method to check if user is logged in
     isAuthenticated() {
         return !!this.token && this.isTokenValid();
     }
 
-    // Logout method
     async logout() {
         try {
             // First clear the authentication token

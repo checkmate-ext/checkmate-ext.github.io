@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         console.debug('Fetching search history...');
-      const response = await fetch('http://localhost:5000/user/searches', {
+      const response = await fetch('https://checkmate-backend-api-1029076451566.us-central1.run.app/user/searches', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
               });
               
-              const response = await fetch(`http://localhost:5000/article/${articleId}/`, {
+              const response = await fetch(`https://checkmate-backend-api-1029076451566.us-central1.run.app/article/${articleId}/`, {
                 method: 'GET',
                 headers: {
                   'Content-Type': 'application/json',

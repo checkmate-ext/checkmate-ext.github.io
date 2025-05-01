@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.disabled = true;
 
         try {
-            const response = await fetch('http://localhost:5000/report', {
+            const response = await fetch('https://checkmate-backend-api-1029076451566.us-central1.run.app/report', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

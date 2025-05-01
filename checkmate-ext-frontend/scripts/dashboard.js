@@ -1,5 +1,5 @@
 // Constants
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = 'https://checkmate-backend-api-1029076451566.us-central1.run.app';
 const REFRESH_INTERVAL = 300000; // 5 minutes
 const ANIMATION_DURATION = 1500;
 const CHART_COLORS = {

@@ -6,7 +6,7 @@ async function fetchDailyStats() {
             return;
         }
 
-        const response = await fetch('http://localhost:5000/user/stats', {
+        const response = await fetch('https://checkmate-backend-api-1029076451566.us-central1.run.app/user/stats', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
