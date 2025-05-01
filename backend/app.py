@@ -190,6 +190,9 @@ def scrap_and_search(current_user):
                 'similarity_score': article.similarity_score
             } for article in past_similar_articles]
 
+
+            print("crocodilo bombardino")
+
             past_request = ArticleRequest.query.filter_by(user_id=current_user.id, article_id=past_article.id).first()
             if not past_request:
                 article_request = ArticleRequest(
@@ -199,7 +202,10 @@ def scrap_and_search(current_user):
                 db.session.add(article_request)
                 db.session.commit()
 
-            return jsonify({
+        print("tralelero tralala")
+
+        print(past_article.spelling_issues)
+        return jsonify({
                 'reliability_score': past_article.reliability_score,
                 'message': f"Results for {url}",
                 'article': article_data,
@@ -208,9 +214,11 @@ def scrap_and_search(current_user):
                 'website_credibility': website_credibility['credibility_score'],
                 'article_id': past_article.id,
                 'objectivity_score': past_article.objectivity_score,
-                'title_objectivity_score':  None,
+                'title_objectivity_score':  past_article.title_objectivity,
                 'bias_prediction': past_article.bias_prediction,
-                'bias_probabilities': past_article.bias_probabilities
+                'bias_probabilities': past_article.bias_probabilities,
+                'spelling_issues': past_article.spelling_issues,
+                'linguistic_issues': past_article.linguistic_issues
             })
 
         print(f"[DEBUG] scrap_and_search: No past article found. Proceeding to extract new article for URL: {url}")
@@ -243,7 +251,10 @@ def scrap_and_search(current_user):
             credibility_score=cred_score,
             objectivity_score=article.get('objectivity_score', -1),
             bias_prediction=article.get('bias_prediction', -1),
-            bias_probabilities=article.get('bias_probabilities', -1)
+            bias_probabilities=article.get('bias_probabilities', -1),
+            title_objectivity=article.get('title_objectivity_score', -1),
+            linguistic_issues=article.get('linguistic_issues', -1),
+            spelling_issues=article.get('spelling_issues', -1)
         )
 
         db.session.add(new_search)
@@ -271,12 +282,13 @@ def scrap_and_search(current_user):
                     similarity_score=sim_score
                 )
             )
-
+ 
         if similar_articles_to_insert:
             db.session.bulk_save_objects(similar_articles_to_insert)
 
         db.session.commit()
         print("[DEBUG] scrap_and_search: Database commit successful. Similar articles count:", len(similar_articles))
+        print("objectivity for title: ", article.get('title_objectivity_score'))
         return jsonify({
             'reliability_score': article['reliability_score'],
             'message': f"Results for {url}",
@@ -287,8 +299,11 @@ def scrap_and_search(current_user):
             'article_id': new_search.id,
             'objectivity_score': article['objectivity_score'],
             'bias_prediction': article['bias_prediction'],
-            'title_objectivity_score':  article.get('title_objectivity_score'),
-            'bias_probabilities': article['bias_probabilities']
+            'title_objectivity_score':  article['title_objectivity_score'],
+            'bias_probabilities': article['bias_probabilities'],
+            'spelling_issues': article['spelling_issues'],
+            'linguistic_issues': article['linguistic_issues'],
+
         })
 
     except Exception as e:
@@ -532,7 +547,6 @@ def get_article_data(current_user, article_id):
     try:
         article = ArticleSearch.query.filter_by(id=article_id).first()
         if article:
-            # Note: change "filtery_by" to "query.filter_by" if that was a typo.
             similar_articles = SimilarArticle.query.filter_by(main_article_id=article.id).all()
             website_credibility = check_website_score(article.url)
 
@@ -556,8 +570,11 @@ def get_article_data(current_user, article_id):
                 'website_credibility': website_credibility['credibility_score'],
                 'article_id': article.id,
                 'objectivity_score': article.objectivity_score,
+                'title_objectivity_score': article.title_objectivity,  # Add this field
                 'bias_prediction': article.bias_prediction,
-                'bias_probabilities': article.bias_probabilities
+                'bias_probabilities': article.bias_probabilities,
+                'spelling_issues': article.spelling_issues,
+                'linguistic_issues': article.linguistic_issues
             })
         else:
             return jsonify({
