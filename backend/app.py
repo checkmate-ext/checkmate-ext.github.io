@@ -75,7 +75,6 @@ def create_app():
     # Load all required API keys and configurations
     app.config['G_API_KEY'] = os.getenv("G_API_KEY")
     app.config['CX_ID'] = os.getenv("CX_ID")
-    app.config['VISION_API_KEY'] = os.getenv("VISION_API_KEY")
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
     app.config['EMAIL_VERIFICATION_SECRET_KEY'] = os.getenv('EMAIL_VERIFICATION_SECRET_KEY')
     app.config['GOOGLE_CLIENT_ID'] = "1029076451566-0jqo4bubftitqf3opbl0kd8gmm89k5qd.apps.googleusercontent.com"
@@ -88,7 +87,7 @@ def create_app():
     DB_PORT = os.getenv("DB_PORT", "5432")
     DB_NAME = os.getenv("DB_NAME")
 
-    required_vars = ['G_API_KEY', 'CX_ID', 'VISION_API_KEY',
+    required_vars = ['G_API_KEY', 'CX_ID',
                      'DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_NAME',
                      'MAIL_USERNAME', 'MAIL_PASSWORD']
     missing_vars = [var for var in required_vars if not os.getenv(var)]
@@ -204,7 +203,6 @@ def scrap_and_search(current_user):
                 'message': f"Results for {url}",
                 'article': article_data,
                 'similar_articles': similar_articles_data,
-                'images_data': [],
                 'website_credibility': website_credibility['credibility_score'],
                 'article_id': past_article.id,
                 'objectivity_score': past_article.objectivity_score,
@@ -214,15 +212,12 @@ def scrap_and_search(current_user):
                 'spelling_issues': past_article.spelling_issues,
                 'linguistic_issues': past_article.linguistic_issues
             })
-        print("tralelero tralala")
 
         print(f"[DEBUG] scrap_and_search: No past article found. Proceeding to extract new article for URL: {url}")
         try:
-            print("cappucino assasino")
             google_search = ArticleAnalyzer(
                 app.config['G_API_KEY'],
                 app.config['CX_ID'],
-                app.config['VISION_API_KEY'],
                 url
             )
             if not validate_article_data(google_search.article):
@@ -233,7 +228,6 @@ def scrap_and_search(current_user):
             similar_articles = google_search.get_similar()
             article = google_search.article
             print("[DEBUG] scrap_and_search: Article extracted successfully.")
-            images_data = []
         except Exception as e:
             print("[DEBUG] scrap_and_search: Exception during article extraction:", e)
             return jsonify({'error': str(e)}), 400
@@ -289,8 +283,7 @@ def scrap_and_search(current_user):
             'reliability_score': article['reliability_score'],
             'message': f"Results for {url}",
             'article': article,
-            'similar_articles': similar_articles,  # These now have Google-provided titles
-            'images_data': images_data,
+            'similar_articles': similar_articles,
             'website_credibility': cred_score,
             'article_id': new_search.id,
             'objectivity_score': article['objectivity_score'],
@@ -563,7 +556,6 @@ def get_article_data(current_user, article_id):
                 'message': f"Results for {article.url}",
                 'article': article_data,
                 'similar_articles': similar_articles_data,
-                'images_data': [],
                 'website_credibility': website_credibility['credibility_score'],
                 'article_id': article.id,
                 'objectivity_score': article.objectivity_score,

@@ -3,7 +3,7 @@
  */
 
 // Base URL for API endpoints
-export const API_BASE_URL = 'https://checkmate-backend-api-1029076451566.us-central1.run.app';
+export const API_BASE_URL = 'http://localhost:5000';
 
 // Authentication settings
 export const AUTH_CONFIG = {

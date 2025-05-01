@@ -56,7 +56,6 @@ class ArticleExtractor:
                 'content': 'Could not initialize driver.',
                 'date': None,
                 'url': url,
-                'images': []
             }
 
         try:
@@ -78,7 +77,6 @@ class ArticleExtractor:
                         'content': 'Page load error',
                         'date': None,
                         'url': url,
-                        'images': []
                     }
                 try:
                     self.driver.delete_all_cookies()
@@ -98,7 +96,6 @@ class ArticleExtractor:
         content_element = self.find_enhanced_content(soup) or self.find_main_content(soup)
         content = self.clean_content(content_element) if content_element else ''
         date = self.find_date(soup)
-        images = self.extract_images(content_element, url) if content_element else []
 
         if not content or len(content) < 100:
             content = "Could not extract meaningful content"
@@ -108,7 +105,6 @@ class ArticleExtractor:
             'content': content,
             'date': date,
             'url': url,
-            'images': images
         }
 
     def find_enhanced_title(self, soup):
@@ -199,83 +195,6 @@ class ArticleExtractor:
             print(f"Error finding paragraphs: {e}")
 
         return soup.body
-
-    def extract_images(self, content_element, base_url) -> List[Dict[str, str]]:
-        if not content_element:
-            return []
-
-        image_sources = set()
-        images = []
-
-        search_methods = [
-            lambda: content_element.find_all("img", src=True),
-            lambda: content_element.find_all("img", {"class": re.compile(r"(image|photo)", re.I)}),
-            lambda: content_element.select('img[src*="/"]')
-        ]
-
-        for method in search_methods:
-            try:
-                found_images = method()
-                for img in found_images:
-                    image_data = self.process_image_element(img, base_url)
-                    if image_data and image_data['src'] not in image_sources:
-                        image_sources.add(image_data['src'])
-                        images.append(image_data)
-            except Exception as e:
-                print(f"Error in image search method: {e}")
-
-        return images
-
-    def process_image_element(self, img, base_url) -> Optional[Dict[str, str]]:
-        try:
-            src = img.get("src")
-            if not src or src.startswith("data:") or src.startswith("blob:"):
-                for attr in ['data-src', 'data-original-src', 'data-lazy-src']:
-                    if img.get(attr):
-                        src = img.get(attr)
-                        break
-                if not src or src.startswith("data:") or src.startswith("blob:"):
-                    return None
-            src = self.normalize_url(src, base_url)
-            if not src:
-                return None
-            if not self.is_valid_article_image(img):
-                return None
-            return {
-                'src': src,
-                'alt': img.get('alt', ''),
-                'title': img.get('title', ''),
-                'width': img.get('width', ''),
-                'height': img.get('height', '')
-            }
-        except Exception as e:
-            print(f"Error processing image element: {e}")
-            return None
-
-    def is_valid_article_image(self, img) -> bool:
-        width = img.get('width')
-        height = img.get('height')
-        if width and height:
-            try:
-                if int(width) < 100 or int(height) < 100:
-                    return False
-            except ValueError:
-                pass
-
-        parent_classes = []
-        parent = img.parent
-        while parent and parent.name:
-            if 'class' in parent.attrs:
-                parent_classes.extend(parent.attrs['class'])
-            parent = parent.parent
-
-        skip_indicators = [
-            'ad', 'advertisement', 'sponsor', 'promo', 'related', 'sidebar',
-            'preview', 'thumbnail', 'icon', 'logo', 'banner', 'social',
-            'share', 'recommended', 'suggestion', 'next-article'
-        ]
-
-        return not any(indicator in ' '.join(parent_classes).lower() for indicator in skip_indicators)
 
     def find_date(self, soup) -> Optional[str]:
         date_patterns = [

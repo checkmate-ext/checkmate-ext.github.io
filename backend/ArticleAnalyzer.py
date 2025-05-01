@@ -98,121 +98,6 @@ def normalize_url(url: str, base_url: str) -> Optional[str]:
         return url
     return urljoin(base_url, url)
 
-
-def is_valid_article_image(img) -> bool:
-    """
-    Check if the image is a valid article image.
-    Uses width/height attributes and inspects the image source, alt/title attributes,
-    and parent elements for common ad/sponsored/thumbnail keywords.
-    """
-
-    # 1) Enforce a larger minimum dimension to skip small thumbnails.
-    MIN_DIMENSION = 300
-
-    width = img.get('width')
-    height = img.get('height')
-    if width and height:
-        try:
-            if int(width) < MIN_DIMENSION or int(height) < MIN_DIMENSION:
-                return False
-        except ValueError:
-            pass  # If the width/height aren't numeric, we'll just keep going.
-
-    # 2) Check image src for ad-related keywords.
-    src = (img.get("src") or "").lower()
-    ad_src_keywords = [
-        "simgad", "dianomi", "doubleclick", "adserver", "adimg",
-        "googlesyndication", "adservice", "taboola"
-    ]
-    if any(keyword in src for keyword in ad_src_keywords):
-        return False
-
-    # 3) Check for ad/sponsored keywords in alt or title attributes.
-    alt_text = (img.get("alt") or "").lower()
-    title_text = (img.get("title") or "").lower()
-    ad_text_keywords = [
-        "advert", "advertisement", "sponsored", "promo", "taboola",
-        "googleads", "ad banner", "paid partnership", "commercial",
-        "recommended", "sponsor"
-    ]
-    if any(keyword in alt_text for keyword in ad_text_keywords):
-        return False
-    if any(keyword in title_text for keyword in ad_text_keywords):
-        return False
-
-    # 4) Traverse parent elements to check for:
-    #    - anchor tags with ad keywords in href
-    #    - class/id indicating "ad", "sponsored", "promo", "thumbnail", etc.
-    parent_indicators = []
-    parent = img.parent
-    while parent:
-        # If it's an <a> tag, check href for ad/spammy keywords
-        if parent.name == "a" and parent.get("href"):
-            href = parent.get("href").lower()
-            if any(kw in href for kw in ["googleads", "adserver", "doubleclick", "taboola"]):
-                return False
-
-        # Collect class and id attributes
-        if "class" in parent.attrs:
-            parent_indicators.extend(parent.attrs["class"])
-        if "id" in parent.attrs:
-            parent_indicators.append(parent.attrs["id"])
-
-        parent = parent.parent
-
-    indicators_text = " ".join(parent_indicators).lower()
-
-    # Common parent indicators for ads, sponsored sections, or small thumbnails
-    ad_indicators = [
-        "ad", "advert", "advertisement", "sponsor", "sponsored", "promo",
-        "taboola", "googleads", "ad-container", "ad-box", "doubleclick",
-        "googlesyndication", "commercial", "partner", "outbrain",
-        "recommend", "recommended", "you-may-like", "sponsored-stories",
-        "thumbnail", "teaser", "widget", "sidebar", "banner"
-    ]
-
-    # If any known ad/sponsored/thumbnail keywords appear in parent classes/IDs, skip.
-    if any(indicator in indicators_text for indicator in ad_indicators):
-        return False
-
-    return True
-
-
-def process_image_element(img, base_url: str) -> Optional[Dict[str, str]]:
-    """
-    Process an individual image element and extract its data.
-    If the image source is missing or looks like a data/blob URI,
-    attempts to use lazy-loading attributes.
-    """
-    try:
-        src = img.get("src")
-        if not src or src.startswith("data:") or src.startswith("blob:"):
-            for attr in ['data-src', 'data-original-src', 'data-lazy-src']:
-                if img.get(attr):
-                    src = img.get(attr)
-                    break
-            if not src or src.startswith("data:") or src.startswith("blob:"):
-                return None
-
-        src = normalize_url(src, base_url)
-        if not src:
-            return None
-
-        if not is_valid_article_image(img):
-            return None
-
-        return {
-            'src': src,
-            'alt': img.get('alt', ''),
-            'title': img.get('title', ''),
-            'width': img.get('width', ''),
-            'height': img.get('height', '')
-        }
-    except Exception as e:
-        print(f"Error processing image element: {e}")
-        return None
-
-
 def find_enhanced_title(soup):
     """Extract title using advanced selectors, copied from ArticleExtractor."""
     meta_title = soup.find('meta', property='og:title')
@@ -305,35 +190,6 @@ def find_main_content(soup):
         print(f"Error finding paragraphs: {e}")
 
     return soup.body
-
-
-def extract_images(content_element, base_url):
-    """Extract images from content, copied from ArticleExtractor."""
-    if not content_element:
-        return []
-
-    image_sources = set()
-    images = []
-
-    search_methods = [
-        lambda: content_element.find_all("img", src=True),
-        lambda: content_element.find_all("img", {"class": re.compile(r"(image|photo)", re.I)}),
-        lambda: content_element.select('img[src*="/"]')
-    ]
-
-    for method in search_methods:
-        try:
-            found_images = method()
-            for img in found_images:
-                image_data = process_image_element(img, base_url)
-                if image_data and image_data['src'] not in image_sources:
-                    image_sources.add(image_data['src'])
-                    images.append(image_data)
-        except Exception as e:
-            print(f"Error in image search method: {e}")
-
-    return images
-
 
 def find_title(soup):
     """Backup method to find title, copied from ArticleExtractor."""
@@ -519,12 +375,6 @@ def validate_article_data(article_data: dict) -> bool:
     return True
 
 def _extract_with_requests(url: str, min_text_length: int = 100):
-    """
-    Fetch and parse an article using requests and BeautifulSoup.
-    Extract the title, text content, and images using multiple heuristics.
-    Enhanced with methods from ArticleExtractor.
-    Returns None if extraction fails or content is insufficient.
-    """
     try:
         resp = requests.get(url, timeout=10)
         resp.raise_for_status()
@@ -560,27 +410,17 @@ def _extract_with_requests(url: str, min_text_length: int = 100):
             print(f"Requests extraction returned error content for {url}")
             return None
 
-        # Image extraction
-        images = extract_images(content_element, url) if content_element else []
-
         return {
             "title": title,
             "content": text_content,
             "date": date,
             "url": url,
-            "images": images,
         }
     except Exception as e:
         print(f"Lightweight fetch failed for {url}: {e}")
         return None
 
 def _extract_article_hybrid(url, main_article=None):
-    """
-    Hybrid approach:
-    1) Try requests + BeautifulSoup first.
-    2) If that yields insufficient content, fallback to ArticleExtractor.
-    3) If both methods fail, return None.
-    """
     article_data = _extract_with_requests(url)
     if article_data is not None:
         if main_article is None:
@@ -762,11 +602,10 @@ class ArticleExtractionError(Exception):
     pass
 
 class ArticleAnalyzer:
-    def __init__(self, api_key: str, cx: str, vision_api_key: str, article_url: str):
+    def __init__(self, api_key: str, cx: str, article_url: str):
         print("[DEBUG] ArticleAnalyzer: Initializing for URL:", article_url)
         self.api_key = api_key
         self.cx = cx
-        self.vision_api_key = vision_api_key
 
         # Extract the main article
         self.article = _extract_article_hybrid(article_url)
@@ -935,95 +774,3 @@ class ArticleAnalyzer:
 
         print(f"[DEBUG] ArticleAnalyzer: Returning {len(display_articles)} similar articles.")
         return display_articles
-
-    def get_images_data(self):
-        """
-        Analyze and return images only from the main article.
-        Similar articles remain available (stored in self.extracted_articles)
-        but will not trigger additional Vision API calls.
-        """
-        images_data = []
-        main_article_images = self.article.get('images', [])
-        for image in main_article_images:
-            # First, filter out images that don't pass validation
-            if not is_valid_article_image(image):
-                continue
-
-            # Analyze the image using Vision API
-            analyzed = self.__analyze_web_detection(image)
-            if analyzed:
-                images_data.append(analyzed)
-        return images_data
-
-    def __analyze_web_detection(self, image_url: str):
-        """
-        Fetch web detection results from Google Cloud Vision API and apply extra filtering:
-          - Pre-check: if the image URL itself contains ad indicators, skip it.
-          - After detection: if any of the top 3 entities contain disallowed ad-related words,
-            skip the image.
-        """
-        # Pre-check on URL
-        ad_indicators_url = [
-            "simgad", "dianomi", "doubleclick", "adserver", "googlesyndication", "adservice"
-        ]
-        if any(indicator in image_url.lower() for indicator in ad_indicators_url):
-            print(f"Skipping image {image_url} due to ad keyword in URL.")
-            return None
-
-        payload = {
-            "requests": [
-                {
-                    "image": {"source": {"imageUri": image_url}},
-                    "features": [{"type": "WEB_DETECTION"}],
-                }
-            ]
-        }
-        try:
-            response = requests.post(self.vision_api_url, json=payload)
-            response.raise_for_status()  # Raise error for HTTP issues
-            response_data = response.json()
-
-            # Check for API errors.
-            if "error" in response_data:
-                raise Exception(f"Vision API Error: {response_data['error']['message']}")
-
-            web_detection = response_data["responses"][0].get("webDetection", {})
-            if not web_detection:
-                print("No web detection results found.")
-                return None
-
-            # Filter and sort entities (with non-empty description)
-            entities = web_detection.get("webEntities", [])
-            entities = [e for e in entities if e.get("description")]
-            if not entities:
-                print("No entities with description found.")
-                return None
-
-            # Sort entities by score (defaulting to 0 if missing) and take the top three.
-            entities = sorted(entities, key=lambda x: x.get("score", 0), reverse=True)
-            top_entities = entities[:3]
-
-            # Define disallowed entity keywords that suggest the image might be an ad.
-            disallowed_entities = [
-                "logo", "advert", "advertisement", "sponsored", "promo", "taboola",
-                "googleads", "ad", "banner", "commercial", "adserver", "doubleclick"
-            ]
-
-            # Check if any of the top entities are disallowed.
-            for entity in top_entities:
-                desc = entity.get("description", "").lower()
-                if any(bad in desc for bad in disallowed_entities):
-                    print(f"Skipping image {image_url} due to disallowed entity: '{desc}'.")
-                    return None
-
-            return {
-                "entities": top_entities,
-                "pages_with_matching_images": web_detection.get("pagesWithMatchingImages", []),
-                "full_matching_images": web_detection.get("fullMatchingImages", []),
-                "partial_matching_images": web_detection.get("partialMatchingImages", []),
-            }
-        except requests.RequestException as e:
-            print(f"HTTP Request Error: {e}")
-        except Exception as e:
-            print(f"Error analyzing web detection: {e}")
-        return None
