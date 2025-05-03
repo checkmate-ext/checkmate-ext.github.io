@@ -1,21 +1,51 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log("MoreDetails page loaded");
+    // Get analysis results from localStorage
     const dataString = localStorage.getItem('analysisResults');
     if (!dataString) {
-        // No data found, show placeholders
+        console.error("No analysis data found in localStorage");
         document.getElementById('reliabilityScore').textContent = 'N/A';
+        document.getElementById('objectivityScore').textContent = 'N/A';
+        document.getElementById('biasScore').textContent = 'N/A';
+        document.getElementById('titleObjectivityScore').textContent = 'N/A';
+        document.getElementById('similarArticlesList').innerHTML = '<p>No data available</p>';
         return;
     }
-    const data = JSON.parse(dataString);
+    
+    console.log("Parsing data from localStorage");
+    let data;
+    try {
+        data = JSON.parse(dataString);
+        console.log("Analysis data:", data);
+    } catch (err) {
+        console.error("Failed to parse analysis results:", err);
+        document.getElementById('similarArticlesList').innerHTML = '<p>Error parsing data</p>';
+        return;
+    }
 
+    // Get DOM elements
     const reliabilityScoreBox = document.getElementById('reliabilityScore');
     const objectivityScoreBox = document.getElementById('objectivityScore');
     const biasScoreBox = document.getElementById('biasScore');
+    const titleObjectivityScoreBox = document.getElementById('titleObjectivityScore');
     const detailsList = document.getElementById('detailsList');
     const similarArticlesList = document.getElementById('similarArticlesList');
 
+    // Check if we found all required elements
+    console.log("DOM Elements found:", {
+        reliabilityScoreBox: !!reliabilityScoreBox,
+        objectivityScoreBox: !!objectivityScoreBox,
+        biasScoreBox: !!biasScoreBox,
+        titleObjectivityScoreBox: !!titleObjectivityScoreBox,
+        similarArticlesList: !!similarArticlesList
+    });
+
+    // Display website credibility information
     function fetchWebsiteScore() {
         try {
             const credibilityResult = document.getElementById('credibilityResult');
+            if (!credibilityResult) return;
+            
             credibilityResult.classList.remove('green', 'neutral', 'red');
 
             if (data.website_credibility !== null && data.website_credibility !== undefined) {
@@ -40,42 +70,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (error) {
             console.error('Error fetching website score:', error);
             const credibilityResult = document.getElementById('credibilityResult');
-            credibilityResult.textContent = 'Error retrieving score';
-            credibilityResult.classList.add('red');
+            if (credibilityResult) {
+                credibilityResult.textContent = 'Error retrieving score';
+                credibilityResult.classList.add('red');
+            }
         }
     }
 
     fetchWebsiteScore();
 
-    // Set the reliability score with proper format handling
-    if (data.reliability_score !== undefined && data.reliability_score !== null) {
-        const raw = data.reliability_score;
-        const pct = raw <= 1 ? Math.round(raw * 100) : Math.round(raw);
-        reliabilityScoreBox.textContent = pct + '%';
+    // Set reliability score
+    if (reliabilityScoreBox) {
+        if (data.reliability_score !== undefined && data.reliability_score !== null) {
+            const raw = data.reliability_score;
+            const pct = raw <= 1 ? Math.round(raw * 100) : Math.round(raw);
+            reliabilityScoreBox.textContent = pct + '%';
 
-        if (pct > 75) {
-            reliabilityScoreBox.classList.add('green');
-        } else if (pct >= 50) {
-            reliabilityScoreBox.classList.add('neutral');
+            if (pct > 75) {
+                reliabilityScoreBox.classList.add('green');
+            } else if (pct >= 50) {
+                reliabilityScoreBox.classList.add('neutral');
+            } else {
+                reliabilityScoreBox.classList.add('red');
+            }
         } else {
+            reliabilityScoreBox.textContent = 'N/A';
             reliabilityScoreBox.classList.add('red');
         }
-    } else {
-        reliabilityScoreBox.textContent = 'N/A';
-        reliabilityScoreBox.classList.add('red');
     }
 
-    // Set the objectivity score with color-based class and format handling
+    // Set objectivity score
     if (objectivityScoreBox) {
-        if (data.objectivity_score !== undefined && data.objectivity_score >= 0) {
-            // Handle objectivity score that might be in 0-1 range or 0-100 range
+        if (data.objectivity_score !== undefined && data.objectivity_score !== null) {
             const score = data.objectivity_score <= 1 
                 ? Math.round(data.objectivity_score * 100) 
                 : Math.round(data.objectivity_score);
                 
             objectivityScoreBox.textContent = score + '%';
             
-            // Add color class based on score
             if (score > 75) {
                 objectivityScoreBox.classList.add('green');
             } else if (score >= 50) {
@@ -83,70 +115,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else {
                 objectivityScoreBox.classList.add('red');
             }
-        }
-        else {
+
+            // Add tooltips to explain the scores
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            objectivityScoreBox.parentNode.appendChild(tooltip);
+            
+            const tooltipText = document.createElement('span');
+            tooltipText.className = 'tooltiptext';
+            tooltipText.textContent = 'Objectivity measures how fact-based versus opinion-based the article is';
+            tooltip.appendChild(tooltipText);
+        } else {
             objectivityScoreBox.textContent = 'N/A';
             objectivityScoreBox.classList.add('red');
         }
-
-        // Add tooltips to explain the scores
-        const tooltip = document.createElement('div');
-        tooltip.className = 'tooltip';
-        objectivityScoreBox.parentNode.appendChild(tooltip);
-        
-        const tooltipText = document.createElement('span');
-        tooltipText.className = 'tooltiptext';
-        tooltipText.textContent = 'Objectivity measures how fact-based versus opinion-based the article is';
-        tooltip.appendChild(tooltipText);
     }
 
-    // Set the title objectivity score with color-based class and format handling
-    const titleObjectivityScoreBox = document.getElementById('titleObjectivityScore');
-    if (titleObjectivityScoreBox && data.title_objectivity_score !== undefined && data.title_objectivity_score >= 0) {
-        // Handle title objectivity score that might be in 0-1 range or 0-100 range
-        const score = data.title_objectivity_score <= 1 
-            ? Math.round(data.title_objectivity_score * 100) 
-            : Math.round(data.title_objectivity_score);
-            
-        titleObjectivityScoreBox.textContent = score + '%';
-        
-        // Add color class based on score
-        if (score > 75) {
-            titleObjectivityScoreBox.classList.add('green');
-        } else if (score >= 50) {
-            titleObjectivityScoreBox.classList.add('neutral');
-        } else {
-            titleObjectivityScoreBox.classList.add('red');
-        }
-    
-        // Add tooltips to explain the score
-        const tooltip = document.createElement('div');
-        tooltip.className = 'tooltip';
-        titleObjectivityScoreBox.parentNode.appendChild(tooltip);
-        
-        const tooltipText = document.createElement('span');
-        tooltipText.className = 'tooltiptext';
-        tooltipText.textContent = 'Title Objectivity measures how fact-based versus sensational the article title is';
-        tooltip.appendChild(tooltipText);
-    } else if (titleObjectivityScoreBox) {
-        titleObjectivityScoreBox.textContent = 'N/A';
-        titleObjectivityScoreBox.classList.add('red');
-        
-        // Add tooltip for N/A state
-        const tooltip = document.createElement('div');
-        tooltip.className = 'tooltip';
-        titleObjectivityScoreBox.parentNode.appendChild(tooltip);
-        
-        const tooltipText = document.createElement('span');
-        tooltipText.className = 'tooltiptext';
-        tooltipText.textContent = 'Title objectivity score could not be calculated for this article';
-        tooltip.appendChild(tooltipText);
-    }
-z
-    // Set the bias score with full text display and proper box sizing
+    // Set bias score
     if (biasScoreBox) {
+        console.log("Setting bias score with data:", data.bias_prediction);
+        
         if (data.bias_prediction) {
-            // Use bias text but ensure it fits within the box
             let biasText = data.bias_prediction;
             
             // Adjust font size based on text length
@@ -172,46 +161,95 @@ z
             } else {
                 biasScoreBox.classList.add('red'); // For any other bias
             }
+
+            // Add tooltips to explain the scores
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            biasScoreBox.parentNode.appendChild(tooltip);
+            
+            const tooltipText = document.createElement('span');
+            tooltipText.className = 'tooltiptext';
+            tooltipText.textContent = 'Political bias indicates the political leaning of the article';
+            tooltip.appendChild(tooltipText);
         } else {
+            console.log("No bias prediction available");
             biasScoreBox.textContent = 'N/A';
             biasScoreBox.classList.add('red');
         }
-
-        // Add tooltips to explain the scores
-        const tooltip = document.createElement('div');
-        tooltip.className = 'tooltip';
-        biasScoreBox.parentNode.appendChild(tooltip);
-        
-        const tooltipText = document.createElement('span');
-        tooltipText.className = 'tooltiptext';
-        tooltipText.textContent = 'Political bias indicates the political leaning of the article';
-        tooltip.appendChild(tooltipText);
     }
 
-    // Display similar articles with Google-provided titles and similarity scores
-    if (data.similar_articles && data.similar_articles.length > 0) {
-        similarArticlesList.innerHTML = ''; // Clear previous content
-        
-        data.similar_articles.forEach(article => {
-            const articleElement = document.createElement('div');
-            articleElement.classList.add('similar-article');
-
-            // Calculate similarity percentage (if available) or use a placeholder
-            const similarityScore = article.similarity_score !== undefined 
-                ? Math.round(article.similarity_score * 100) 
-                : Math.floor(Math.random() * 100);
+    // Set title objectivity score
+    if (titleObjectivityScoreBox) {
+        if (data.title_objectivity_score !== undefined && data.title_objectivity !== null) {
+            const score = data.title_objectivity_score <= 1 
+                ? Math.round(data.title_objectivity_score * 100) 
+                : Math.round(data.title_objectivity_score);
+                
+            titleObjectivityScoreBox.textContent = score + '%';
             
-            articleElement.innerHTML = `
-                <h4>${article.title || 'Untitled Article'}</h4>
-                <a href="${article.url}" target="_blank">${article.url}</a>
-                <div class="similarity-badge theme-colored">
-                    Similarity: ${similarityScore}%
-                </div>
-            `;
-            similarArticlesList.appendChild(articleElement);
-        });
-    } else {
-        similarArticlesList.innerHTML = '<p>No similar articles found.</p>';
+            if (score > 75) {
+                titleObjectivityScoreBox.classList.add('green');
+            } else if (score >= 50) {
+                titleObjectivityScoreBox.classList.add('neutral');
+            } else {
+                titleObjectivityScoreBox.classList.add('red');
+            }
+
+            // Add tooltips to explain the score
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            titleObjectivityScoreBox.parentNode.appendChild(tooltip);
+            
+            const tooltipText = document.createElement('span');
+            tooltipText.className = 'tooltiptext';
+            tooltipText.textContent = 'Title Objectivity measures how fact-based versus sensational the article title is';
+            tooltip.appendChild(tooltipText);
+        } else {
+            titleObjectivityScoreBox.textContent = 'N/A';
+            titleObjectivityScoreBox.classList.add('red');
+            
+            // Add tooltip for N/A state
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            titleObjectivityScoreBox.parentNode.appendChild(tooltip);
+            
+            const tooltipText = document.createElement('span');
+            tooltipText.className = 'tooltiptext';
+            tooltipText.textContent = 'Title objectivity score could not be calculated for this article';
+            tooltip.appendChild(tooltipText);
+        }
+    }
+
+    // Display similar articles
+    if (similarArticlesList) {
+        console.log("Setting up similar articles:", data.similar_articles?.length);
+        
+        if (data.similar_articles && data.similar_articles.length > 0) {
+            similarArticlesList.innerHTML = ''; // Clear previous content
+            
+            data.similar_articles.forEach(article => {
+                console.log("Processing similar article:", article);
+                const articleElement = document.createElement('div');
+                articleElement.classList.add('similar-article');
+
+                // Calculate similarity percentage
+                const similarityScore = article.similarity_score !== undefined 
+                    ? Math.round(article.similarity_score * 100) 
+                    : Math.floor(Math.random() * 100);
+                
+                articleElement.innerHTML = `
+                    <h4>${article.title || 'Untitled Article'}</h4>
+                    <a href="${article.url}" target="_blank">${article.url}</a>
+                    <div class="similarity-badge" style="background-color: var(--primary-color); color: white; display: inline-block; padding: 2px 5px; border-radius: 3px; font-size: 11px; font-weight: bold; margin-top: 6px;">
+                        Similarity: ${similarityScore}%
+                    </div>
+                `;
+                similarArticlesList.appendChild(articleElement);
+            });
+        } else {
+            console.log("No similar articles found");
+            similarArticlesList.innerHTML = '<p>No similar articles found.</p>';
+        }
     }
 
     // Display image analysis data if available
@@ -285,15 +323,21 @@ z
         detailsList.innerHTML = '<p>No image analysis data found.</p>';
     }
 
-    // Report mistake functionality
+    // Set up report mistake button
     const reportMistakeBtn = document.getElementById('reportMistakeBtn');
     if (reportMistakeBtn) {
         reportMistakeBtn.addEventListener('click', () => {
-            // Store the report type in localStorage
             localStorage.setItem('reportType', 'reliability');
-            
-            // Navigate to report page
             navigateTo('report.html');
         });
     }
+
+    // Set up navigation buttons
+    document.getElementById('menuBtn')?.addEventListener('click', () => {
+        navigateTo('MainMenuPage.html');
+    });
+
+    document.getElementById('profileBtn')?.addEventListener('click', () => {
+        navigateTo('ProfilePage.html');
+    });
 });

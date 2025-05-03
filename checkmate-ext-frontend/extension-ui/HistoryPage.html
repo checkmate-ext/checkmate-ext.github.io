@@ -196,6 +196,15 @@
             animation: spin 1s linear infinite;
             z-index: 10;
         }
+
+        .history-item.highlight {
+            animation: highlight-pulse 2s ease-out;
+        }
+        
+        @keyframes highlight-pulse {
+            0% { background-color: rgba(60, 179, 113, 0.3); }
+            100% { background-color: transparent; }
+        }
         
         @keyframes spin {
             to { transform: rotate(360deg); }
