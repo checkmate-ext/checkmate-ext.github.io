@@ -1,5 +1,5 @@
 from sqlalchemy import text  
-from models import db  
+from models import db
 from urllib.parse import urlparse
 
 import tldextract

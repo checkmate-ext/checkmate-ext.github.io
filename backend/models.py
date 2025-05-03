@@ -44,6 +44,7 @@ class ArticleSearch(db.Model):
     spelling_issues = db.Column(db.Integer)
     linguistic_issues = db.Column(db.Integer)
     title_objectivity = db.Column(db.Float(precision=53))
+    pct = db.Column(db.Float(precision=53))
 
 
 class SimilarArticle(db.Model):
