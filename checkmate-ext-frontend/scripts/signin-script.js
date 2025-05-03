@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Store user data if needed
                 if (result.user) {
                     localStorage.setItem('user', JSON.stringify(result.user));
+                    localStorage.setItem('userPlan', result.user.subscription_plan);
                 }
                 // set the local storage data for email
                 localStorage.setItem('userEmail', email);
@@ -78,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Store user data if needed
                 if (result.user) {
                     localStorage.setItem('user', JSON.stringify(result.user));
+                    localStorage.setItem('userPlan', result.user.subscription_plan);
                 }
                 // Navigate to dashboard or main page
                 navigateTo('MainMenuPage.html');
@@ -135,6 +137,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (result.success) {
                     // Set the userEmail in localStorage if not already done in the service
                     if (result.user && result.user.email) {
+                        localStorage.setItem('user', JSON.stringify(result.user));
+                        localStorage.setItem('userPlan', result.user.subscription_plan);
                         localStorage.setItem('userEmail', result.user.email);
                     }
                     

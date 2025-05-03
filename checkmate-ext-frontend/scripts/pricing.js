@@ -33,9 +33,26 @@ async function loadUserPlan() {
 }
 
 function getStoredPlan() {
-  return new Promise(resolve =>
-      chrome.storage.sync.get(['userPlan'], res => resolve(res.userPlan || 'free'))
-  );
+  return new Promise(resolve => {
+    // First check localStorage
+    const localPlan = localStorage.getItem('userPlan');
+    if (localPlan) {
+      resolve(localPlan);
+      return;
+    }
+
+    // Fall back to chrome.storage.sync
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+      chrome.storage.sync.get(['userPlan'], res => {
+        const plan = res.userPlan || 'free';
+        // Synchronize to localStorage for future consistency
+        localStorage.setItem('userPlan', plan);
+        resolve(plan);
+      });
+    } else {
+      resolve('free');
+    }
+  });
 }
 
 function renderPricingUI(currentPlan) {
@@ -140,6 +157,7 @@ async function changePlan(plan) {
       : { success: false };
   if (res.success) {
     chrome.storage.sync.set({ userPlan: plan }, () => renderPricingUI(plan));
+    localStorage.setItem('userPlan', plan);
     alert(plan === 'free' ? 'Downgraded to Free' : 'Plan updated');
   } else {
     alert('Failed to update plan');
