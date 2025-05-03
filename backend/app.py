@@ -565,7 +565,8 @@ def get_article_data(current_user, article_id):
                 'bias_prediction': article.bias_prediction,
                 'bias_probabilities': article.bias_probabilities,
                 'spelling_issues': article.spelling_issues,
-                'linguistic_issues': article.linguistic_issues
+                'linguistic_issues': article.linguistic_issues,
+                'pct': article.pct
             })
         else:
             return jsonify({

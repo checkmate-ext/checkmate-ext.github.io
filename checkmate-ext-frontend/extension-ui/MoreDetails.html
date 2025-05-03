@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Checkmate - More Details</title>
-    <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CheckMate - Details</title>
     <style>
         :root {
             --primary-color: #3cb371;
@@ -14,7 +14,6 @@
             --score-neutral: #f1c40f;
             --score-green: #2ecc71;
             --warning-color: #f1c40f;
-            --neutral-bg: #ffffff;
         }
 
         body {
@@ -24,200 +23,183 @@
             background-color: var(--bg-light);
             width: 380px;
             height: 600px;
+            color: var(--text-dark);
+        }
+
+        /* Container holds everything */
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
             overflow: hidden;
         }
 
-        .container {
-            width: 380px;
-            height: 600px;
-            background: var(--neutral-bg);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
+        /* Header with logo */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 16px;
-            flex: 0 0 auto;
+            padding: 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            background-color: white;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 20px;
         }
 
         .header-icons img {
             cursor: pointer;
             opacity: 0.7;
-            transition: all 0.3s ease;
+            transition: opacity 0.3s;
         }
 
         .header-icons img:hover {
             opacity: 1;
-            transform: scale(1.1) rotate(5deg);
         }
 
-        /* Scores container with all three scores in one row */
+        /* New layout - Scores display */
         .scores-container {
-            display: flex;
-            flex-direction: column;
-            margin: 0 15px 10px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 12px;
+            margin: 10px 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
-        
+
         /* Website credibility banner */
         .credibility-banner {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 6px 10px;
-            margin-bottom: 10px;
+            padding: 10px;
             border-radius: 8px;
-            font-weight: 600;
-            font-size: 13px;
             text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 15px;
         }
 
         .credibility-banner.green {
-            background-color: rgba(46, 204, 113, 0.15);
-            color: #27ae60;
-            border: 1px solid rgba(46, 204, 113, 0.3);
+            background-color: rgba(46, 204, 113, 0.1);
+            color: var(--score-green);
         }
 
         .credibility-banner.neutral {
-            background-color: rgba(241, 196, 15, 0.15);
-            color: #f39c12;
-            border: 1px solid rgba(241, 196, 15, 0.3);
+            background-color: rgba(241, 196, 15, 0.1);
+            color: var(--score-neutral);
         }
 
         .credibility-banner.red {
-            background-color: rgba(231, 76, 60, 0.15);
-            color: #c0392b;
-            border: 1px solid rgba(231, 76, 60, 0.3);
-        }
-        
-        /* All scores row */
-        .scores-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--score-red);
         }
 
-        /* Main reliability score */
-        .reliability-container {
-            flex: 0 0 50%;
+        /* Main reliability container - centered at top */
+        .main-reliability-container {
             display: flex;
+            flex-direction: column;
             align-items: center;
+            margin-bottom: 15px;
         }
-        
+
         .reliability-score-box {
-            color: #fff;
-            font-size: 28px;
-            font-weight: bold;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
             display: flex;
-            justify-content: center;
             align-items: center;
-            width: 55px;
-            height: 55px;
-            border-radius: 8px;
-            cursor: default;
-            user-select: none;
-            transition: all 0.3s ease;
+            justify-content: center;
+            background-color: #e0e0e0;
+            font-size: 24px;
+            font-weight: bold;
             position: relative;
-            overflow: hidden;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-            margin-right: 10px;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 5px;
         }
 
         .reliability-info {
             display: flex;
             flex-direction: column;
+            align-items: center;
         }
 
         .reliability-label {
+            font-weight: 600;
             font-size: 14px;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-        
-        .reliability-desc {
-            font-size: 11px;
-            color: #666;
-            margin-top: 2px;
-            max-width: 110px;
+            margin-bottom: 2px;
         }
 
-        /* Secondary scores */
-        .secondary-scores {
-            flex: 0 0 50%;
+        .reliability-desc {
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+            max-width: 200px;
+        }
+
+        /* Secondary scores row - at bottom */
+        .secondary-scores-row {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .secondary-score {
+            flex: 1;
+            min-width: 70px;
             display: flex;
             flex-direction: column;
-            gap: 5px;
-        }
-        
-        .secondary-score {
-            display: flex;
             align-items: center;
         }
-        
+
         .score-box {
-            color: #fff;
-            font-size: 16px;
-            font-weight: bold;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 36px;
-            height: 24px;
-            border-radius: 4px;
-            cursor: default;
-            user-select: none;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            margin-right: 8px;
-        }
-        
-        /* Make bias score box wider to accommodate longer text */
-        #biasScore {
             width: 50px;
-            font-size: 13px;
+            height: 30px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: bold;
+            position: relative;
+            color: white;
+            background-color: #e0e0e0;
+            margin-bottom: 5px;
+            overflow: hidden;
         }
-        
+
         .score-label {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             color: var(--text-dark);
+            text-align: center;
         }
 
-        /* Score colors */
-        .reliability-score-box.red, .score-box.red {
-            background-color: var(--score-red);
+        /* Color classes */
+        .green {
+            background-color: var(--score-green);
         }
 
-        .reliability-score-box.neutral, .score-box.neutral {
+        .neutral {
             background-color: var(--score-neutral);
         }
 
-        .reliability-score-box.green, .score-box.green {
-            background-color: var(--score-green);
-        }
-        
-        /* Hover effects for score boxes */
-        .reliability-score-box:hover, .score-box:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        .red {
+            background-color: var(--score-red);
         }
 
+        /* Add ripple effect on hover */
         .reliability-score-box::before, .score-box::before {
             content: '';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.2), transparent);
-            transform: rotate(45deg);
-            transition: all 0.5s;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
             opacity: 0;
         }
 
@@ -319,40 +301,49 @@
             font-size: 11px;
             font-weight: bold;
             color: white;
-            margin-top: 6px;
+            margin-top: 5px;
+            background-color: var(--primary-color);
         }
-        
+
+        /* Tooltip styling */
         .tooltip {
             position: relative;
             display: inline-block;
         }
-        
+
         .tooltip .tooltiptext {
             visibility: hidden;
-            width: 200px;
-            background-color: rgba(0,0,0,0.7);
+            width: 160px;
+            background-color: #555;
             color: #fff;
             text-align: center;
             border-radius: 6px;
-            padding: 5px;
+            padding: 8px;
             position: absolute;
             z-index: 1;
             bottom: 125%;
             left: 50%;
-            transform: translateX(-50%);
+            margin-left: -80px;
             opacity: 0;
             transition: opacity 0.3s;
-            font-size: 11px;
-            font-weight: normal;
+            font-size: 12px;
+            pointer-events: none;
         }
-        
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+
         .tooltip:hover .tooltiptext {
             visibility: visible;
             opacity: 1;
-        }
-        
-        .similarity-badge.theme-colored {
-            background-color: var(--primary-color);
         }
     </style>
 </head>
@@ -367,45 +358,47 @@
         </div>
     </div>
 
-    <!-- Scores container with compact layout -->
+    <!-- Scores container with new layout -->
     <div class="scores-container">
         <!-- Website Credibility Banner -->
         <div id="credibilityResult" class="credibility-banner neutral">
             Website Credibility: Analyzing...
         </div>
         
-        <!-- All scores in one row -->
-        <div class="scores-row">
-            <!-- Prominent Reliability Score -->
-            <div class="reliability-container">
-                <div class="reliability-score-box" id="reliabilityScore">--</div>
-                <div class="reliability-info">
-                    <div class="reliability-label">Reliability</div>
-                    <div class="reliability-desc">Overall article trustworthiness</div>
-                </div>
+        <!-- Centered Reliability Score at top -->
+        <div class="main-reliability-container">
+            <div class="reliability-score-box" id="reliabilityScore">--</div>
+            <div class="reliability-info">
+                <div class="reliability-label">Reliability</div>
+                <div class="reliability-desc">Overall article trustworthiness</div>
+            </div>
+        </div>
+        
+        <!-- Secondary Scores in a horizontal row at bottom -->
+        <div class="secondary-scores-row">
+            <div class="secondary-score">
+                <div class="score-box" id="objectivityScore">--</div>
+                <div class="score-label">Objectivity</div>
             </div>
             
-            <!-- Secondary Scores vertically stacked -->
-            <div class="secondary-scores">
-                <div class="secondary-score">
-                    <div class="score-box" id="objectivityScore">--</div>
-                    <div class="score-label">Objectivity</div>
-                </div>
-                
-                <div class="secondary-score">
-                    <div class="score-box" id="biasScore">--</div>
-                    <div class="score-label">Bias</div>
-                </div>
-                
-                <div class="secondary-score">
-                    <div class="score-box" id="titleObjectivityScore">--</div>
-                    <div class="score-label">Title Objectivity</div>
-                </div>
+            <div class="secondary-score">
+                <div class="score-box" id="biasScore">--</div>
+                <div class="score-label">Bias</div>
+            </div>
+            
+            <div class="secondary-score">
+                <div class="score-box" id="titleObjectivityScore">--</div>
+                <div class="score-label">Title</div>
+            </div>
+
+            <div class="secondary-score">
+                <div class="score-box" id="grammarScoreBox">--</div>
+                <div class="score-label">Grammar</div>
             </div>
         </div>
     </div>
 
-    <!-- Expanded Articles Section -->
+    <!-- Expanded Articles Section with more space -->
     <div class="articles-section">
         <div class="articles-title">Similar Articles</div>
         <div id="similarArticlesList"></div>

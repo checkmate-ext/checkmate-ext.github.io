@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('objectivityScore').textContent = 'N/A';
         document.getElementById('biasScore').textContent = 'N/A';
         document.getElementById('titleObjectivityScore').textContent = 'N/A';
+        document.getElementById('grammarScoreBox').textContent = 'N/A';
         document.getElementById('similarArticlesList').innerHTML = '<p>No data available</p>';
         return;
     }
@@ -28,6 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const objectivityScoreBox = document.getElementById('objectivityScore');
     const biasScoreBox = document.getElementById('biasScore');
     const titleObjectivityScoreBox = document.getElementById('titleObjectivityScore');
+    const grammarScoreBox = document.getElementById('grammarScoreBox');
     const detailsList = document.getElementById('detailsList');
     const similarArticlesList = document.getElementById('similarArticlesList');
 
@@ -37,6 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         objectivityScoreBox: !!objectivityScoreBox,
         biasScoreBox: !!biasScoreBox,
         titleObjectivityScoreBox: !!titleObjectivityScoreBox,
+        grammarScoreBox: !!grammarScoreBox,
         similarArticlesList: !!similarArticlesList
     });
 
@@ -180,10 +183,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Set title objectivity score
     if (titleObjectivityScoreBox) {
-        if (data.title_objectivity_score !== undefined && data.title_objectivity !== null) {
-            const score = data.title_objectivity_score <= 1 
-                ? Math.round(data.title_objectivity_score * 100) 
-                : Math.round(data.title_objectivity_score);
+        // Check both possible field names from backend
+        const titleObjectivityValue = data.title_objectivity !== undefined && data.title_objectivity !== null ? 
+            data.title_objectivity : 
+            data.title_objectivity_score;
+            
+        if (titleObjectivityValue !== undefined && titleObjectivityValue !== null && titleObjectivityValue >= 0) {
+            const score = titleObjectivityValue <= 1 
+                ? Math.round(titleObjectivityValue * 100) 
+                : Math.round(titleObjectivityValue);
                 
             titleObjectivityScoreBox.textContent = score;
             
@@ -216,6 +224,51 @@ document.addEventListener('DOMContentLoaded', async () => {
             const tooltipText = document.createElement('span');
             tooltipText.className = 'tooltiptext';
             tooltipText.textContent = 'Title objectivity score could not be calculated for this article';
+            tooltip.appendChild(tooltipText);
+        }
+    }
+
+    // Set grammar score - IMPROVED CODE
+    if (grammarScoreBox) {
+        if (data.spelling_issues !== undefined && data.pct !== undefined) {
+            // Get error count and format percentage
+            const errorCount = data.spelling_issues;
+            const errorRate = data.pct;
+            const formattedRate = (errorRate * 100).toFixed(1);
+            
+            // Display a concise format "Count (Rate%)"
+            grammarScoreBox.textContent = formattedRate + '%';
+            
+            // Color coding based on error rate
+            if (errorRate < 0.02) { // Less than 2%
+                grammarScoreBox.classList.add('green');
+            } else if (errorRate < 0.05) { // Less than 5%
+                grammarScoreBox.classList.add('neutral');
+            } else {
+                grammarScoreBox.classList.add('red');
+            }
+            
+            // Add detailed tooltip showing both count and rate
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            grammarScoreBox.parentNode.appendChild(tooltip);
+            
+            const tooltipText = document.createElement('span');
+            tooltipText.className = 'tooltiptext';
+            tooltipText.textContent = `${errorCount} spelling/grammar errors found (${formattedRate}% of text)`;
+            tooltip.appendChild(tooltipText);
+        } else {
+            grammarScoreBox.textContent = 'N/A';
+            grammarScoreBox.classList.add('neutral');
+            
+            // Add tooltip for N/A state
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            grammarScoreBox.parentNode.appendChild(tooltip);
+            
+            const tooltipText = document.createElement('span');
+            tooltipText.className = 'tooltiptext';
+            tooltipText.textContent = 'Grammar error information is not available for this article';
             tooltip.appendChild(tooltipText);
         }
     }
