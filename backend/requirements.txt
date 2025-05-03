@@ -105,3 +105,4 @@ wsproto==1.2.0
 yarg==0.1.9
 pyspellchecker
 textblob
+numpy

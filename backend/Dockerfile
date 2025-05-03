@@ -19,5 +19,3 @@ EXPOSE 5000
 
 # Start the FastAPI server with Uvicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
-
-

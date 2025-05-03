@@ -3,3 +3,10 @@ backend/__pycache__/
 backend/email_verification/__pycache__/
 *.idea*
 mlKeyPair.pem
+tf_train/
+subj-39.tf/
+mlp_model.joblib
+scaler.joblib
+model.safetensors
+glove.6B.50d.word2vec.txt
+vocab.txt
