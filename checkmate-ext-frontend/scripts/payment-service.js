@@ -1,6 +1,8 @@
 class PaymentService {
     constructor() {
         this.token = localStorage.getItem('token') || null;
+        // Get the API base URL from window object
+        this.apiBaseUrl = window.API_BASE_URL;
     }
 
     loadToken() {
@@ -18,7 +20,7 @@ class PaymentService {
 
     // ① Initialize CheckoutForm
     async initializeCheckout(plan, price, callbackUrl) {
-        const resp = await fetch(`${API_BASE_URL}/cf/initialize`, {
+        const resp = await fetch(`${this.apiBaseUrl}/cf/initialize`, {
             method: 'POST',
             headers: this.getHeaders(),
             body: JSON.stringify({ plan, price, callbackUrl })
@@ -29,7 +31,7 @@ class PaymentService {
 
     // ② Query CheckoutForm result
     async queryCheckout(token, plan) {
-        const resp = await fetch(`${API_BASE_URL}/cf/query`, {
+        const resp = await fetch(`${this.apiBaseUrl}/cf/query`, {
             method: 'POST',
             headers: this.getHeaders(),
             body: JSON.stringify({ token, plan })
@@ -40,7 +42,7 @@ class PaymentService {
 
     // Existing methods…
     async getCurrentSubscription() {
-        const resp = await fetch(`${API_BASE_URL}/user/stats`, {
+        const resp = await fetch(`${this.apiBaseUrl}/user/stats`, {
             method: 'GET',
             headers: this.getHeaders()
         });
@@ -50,7 +52,7 @@ class PaymentService {
     }
 
     async updatePlan(plan) {
-        const resp = await fetch(`${API_BASE_URL}/user/update-plan`, {
+        const resp = await fetch(`${this.apiBaseUrl}/user/update-plan`, {
             method: 'POST',
             headers: this.getHeaders(),
             body: JSON.stringify({ plan })
