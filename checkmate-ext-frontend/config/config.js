@@ -1,18 +1,19 @@
 /**
  * Global configuration for the CheckMate extension
+ * Non-module version that works with regular script tags
  */
 
-// Base URL for API endpoints
-export const API_BASE_URL = 'http://localhost:5000';
+// Make all variables available in the global scope
+window.API_BASE_URL = 'http://localhost:5000';
 
 // Authentication settings
-export const AUTH_CONFIG = {
+window.AUTH_CONFIG = {
     googleClientId: '1029076451566-0jqo4bubftitqf3opbl0kd8gmm89k5qd.apps.googleusercontent.com',
     facebookAppId: '505389282507431'
 };
 
 // UI related constants
-export const UI_CONFIG = {
+window.UI_CONFIG = {
     refreshInterval: 300000, // 5 minutes
     animationDuration: 1500,
     chartColors: {
@@ -23,7 +24,7 @@ export const UI_CONFIG = {
 };
 
 // API endpoints (all relative to API_BASE_URL)
-export const ENDPOINTS = {
+window.ENDPOINTS = {
     login: '/user/login',
     register: '/user/register',
     googleAuth: '/auth/google_userinfo',

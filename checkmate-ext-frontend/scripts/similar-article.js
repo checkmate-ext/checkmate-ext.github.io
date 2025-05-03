@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         tooltipText.textContent = 'Title objectivity score could not be calculated for this article';
         tooltip.appendChild(tooltipText);
     }
-
+z
     // Set the bias score with full text display and proper box sizing
     if (biasScoreBox) {
         if (data.bias_prediction) {

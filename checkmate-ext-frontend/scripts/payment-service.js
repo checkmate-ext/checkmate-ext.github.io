@@ -1,5 +1,3 @@
-import { API_BASE_URL } from './config.js';
-
 class PaymentService {
     constructor() {
         this.token = localStorage.getItem('token') || null;

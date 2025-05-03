@@ -1,6 +1,5 @@
 // Constants
 
-import { API_BASE_URL, ENDPOINTS, AUTH_CONFIG } from '../config/config.js';
 const REFRESH_INTERVAL = 300000; // 5 minutes
 const ANIMATION_DURATION = 1500;
 const CHART_COLORS = {

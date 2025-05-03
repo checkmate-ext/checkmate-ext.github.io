@@ -1,5 +1,3 @@
-import { API_BASE_URL } from "../config/config";
-
 document.addEventListener('DOMContentLoaded', () => {
     // Handle radio button selection styling
     const radioButtons = document.querySelectorAll('.custom-radio input');

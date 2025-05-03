@@ -1,4 +1,3 @@
-import { API_BASE_URL, ENDPOINTS, AUTH_CONFIG } from '../config/config.js';
 document.addEventListener('DOMContentLoaded', () => {
     const currentPageUrlElement = document.getElementById('currentPageUrl');
     const analyzeButton = document.getElementById('analyzeButton');

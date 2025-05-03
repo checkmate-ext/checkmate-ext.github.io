@@ -1,5 +1,4 @@
 // Language: JavaScript
-import { API_BASE_URL, ENDPOINTS, AUTH_CONFIG } from '../config/config.js';
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('token');
     const historyList = document.querySelector('.history-list');

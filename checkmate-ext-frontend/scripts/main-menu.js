@@ -1,4 +1,3 @@
-import { API_BASE_URL, ENDPOINTS, AUTH_CONFIG } from '../config/config.js';
 
 async function fetchDailyStats() {
     try {
