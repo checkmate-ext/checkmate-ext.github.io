@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (data.reliability_score !== undefined && data.reliability_score !== null) {
             const raw = data.reliability_score;
             const pct = raw <= 1 ? Math.round(raw * 100) : Math.round(raw);
-            reliabilityScoreBox.textContent = pct + '%';
+            reliabilityScoreBox.textContent = pct;
 
             if (pct > 75) {
                 reliabilityScoreBox.classList.add('green');
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ? Math.round(data.objectivity_score * 100) 
                 : Math.round(data.objectivity_score);
                 
-            objectivityScoreBox.textContent = score + '%';
+            objectivityScoreBox.textContent = score;
             
             if (score > 75) {
                 objectivityScoreBox.classList.add('green');
@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ? Math.round(data.title_objectivity_score * 100) 
                 : Math.round(data.title_objectivity_score);
                 
-            titleObjectivityScoreBox.textContent = score + '%';
+            titleObjectivityScoreBox.textContent = score;
             
             if (score > 75) {
                 titleObjectivityScoreBox.classList.add('green');

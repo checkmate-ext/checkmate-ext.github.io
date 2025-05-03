@@ -85,13 +85,13 @@ function setObjectivityScore(data) {
         // Add color class based on score
         if (score > 75) {
             objectivityScore.classList.add('green');
-            objectivityAnalysis.textContent = `Objectivity Analysis: The article has a high objectivity score (${score}%), suggesting it is primarily fact-based with minimal opinions or subjective statements.`;
+            objectivityAnalysis.textContent = `Objectivity Analysis: The article has a high objectivity score (${score}), suggesting it is primarily fact-based with minimal opinions or subjective statements.`;
         } else if (score >= 50) {
             objectivityScore.classList.add('neutral');
-            objectivityAnalysis.textContent = `Objectivity Analysis: The article has a moderate objectivity score (${score}%), containing a mix of factual information and opinion-based content.`;
+            objectivityAnalysis.textContent = `Objectivity Analysis: The article has a moderate objectivity score (${score}), containing a mix of factual information and opinion-based content.`;
         } else {
             objectivityScore.classList.add('red');
-            objectivityAnalysis.textContent = `Objectivity Analysis: The article has a low objectivity score (${score}%), indicating it is heavily opinion-based with limited factual content.`;
+            objectivityAnalysis.textContent = `Objectivity Analysis: The article has a low objectivity score (${score}), indicating it is heavily opinion-based with limited factual content.`;
         }
     } else {
         objectivityScore.textContent = 'N/A';
