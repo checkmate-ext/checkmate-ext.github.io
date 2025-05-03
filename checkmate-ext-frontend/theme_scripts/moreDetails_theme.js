@@ -21,7 +21,12 @@ document.addEventListener('DOMContentLoaded', function() {
             scoreBoxShadow: '0 4px 12px rgba(0,0,0,0.1)',
             headerIconOpacity: '0.7',
             scrollbarThumb: '#ccc',
-            scrollbarTrack: '#f9f9f9'
+            scrollbarTrack: '#f9f9f9',
+            credibilityBannerBg: {
+                green: 'rgba(46, 204, 113, 0.1)',
+                neutral: 'rgba(241, 196, 15, 0.1)',
+                red: 'rgba(231, 76, 60, 0.1)'
+            }
         },
         dark: {
             bgColor: '#1a1a1a',
@@ -43,7 +48,12 @@ document.addEventListener('DOMContentLoaded', function() {
             scoreBoxShadow: '0 4px 12px rgba(0,0,0,0.3)',
             headerIconOpacity: '0.85',
             scrollbarThumb: '#666',
-            scrollbarTrack: '#222'
+            scrollbarTrack: '#222',
+            credibilityBannerBg: {
+                green: 'rgba(46, 204, 113, 0.15)',
+                neutral: 'rgba(241, 196, 15, 0.15)',
+                red: 'rgba(231, 76, 60, 0.15)'
+            }
         }
     };
 
@@ -88,50 +98,79 @@ document.addEventListener('DOMContentLoaded', function() {
             element.style.boxShadow = themeValues.scoreBoxShadow;
         });
         
-        // Special handling for objectivity and bias score boxes
-        const objectivityScoreBox = document.getElementById('objectivityScore');
-        if (objectivityScoreBox) {
-            // Add the theme-colored class if not already present
-            if (!objectivityScoreBox.classList.contains('theme-colored')) {
-                objectivityScoreBox.classList.add('theme-colored');
-            }
-            objectivityScoreBox.style.boxShadow = themeValues.scoreBoxShadow;
-            objectivityScoreBox.style.color = '#FFFFFF'; // Force white text
+        // Handle scores container
+        const scoresContainer = document.querySelector('.scores-container');
+        if (scoresContainer) {
+            scoresContainer.style.backgroundColor = themeValues.containerBg;
+            scoresContainer.style.boxShadow = themeValues.scoreBoxShadow;
         }
         
-        const biasScoreBox = document.getElementById('biasScore');
-        if (biasScoreBox) {
-            // Add the theme-colored class if not already present
-            if (!biasScoreBox.classList.contains('theme-colored')) {
-                biasScoreBox.classList.add('theme-colored');
+        // Handle credibility banner - preserve color class but update background
+        const credibilityBanner = document.getElementById('credibilityResult');
+        if (credibilityBanner) {
+            if (credibilityBanner.classList.contains('green')) {
+                credibilityBanner.style.backgroundColor = themeValues.credibilityBannerBg.green;
+            } else if (credibilityBanner.classList.contains('neutral')) {
+                credibilityBanner.style.backgroundColor = themeValues.credibilityBannerBg.neutral;
+            } else if (credibilityBanner.classList.contains('red')) {
+                credibilityBanner.style.backgroundColor = themeValues.credibilityBannerBg.red;
             }
-            biasScoreBox.style.boxShadow = themeValues.scoreBoxShadow;
-            biasScoreBox.style.color = '#FFFFFF'; // Force white text
         }
         
-        // Standard score boxes should keep their color classes (red/yellow/green)
-        const allScoreBoxes = document.querySelectorAll('.score-box:not(.theme-colored)');
-        allScoreBoxes.forEach(box => {
-            box.style.color = '#FFFFFF';  // Standard score boxes also get white text
+        // Main reliability container
+        const reliabilityContainer = document.querySelector('.main-reliability-container');
+        if (reliabilityContainer) {
+            reliabilityContainer.style.color = themeValues.textColor;
+        }
+        
+        // Reliability description
+        const reliabilityDesc = document.querySelector('.reliability-desc');
+        if (reliabilityDesc) {
+            reliabilityDesc.style.color = themeValues.secondaryTextColor;
+        }
+        
+        // Secondary scores row
+        const secondaryScoresRow = document.querySelector('.secondary-scores-row');
+        if (secondaryScoresRow) {
+            secondaryScoresRow.style.color = themeValues.textColor;
+        }
+        
+        // Handle all secondary score boxes
+        const secondaryScores = document.querySelectorAll('.secondary-score');
+        secondaryScores.forEach(score => {
+            score.style.color = themeValues.textColor;
         });
         
-        // Style similarity badges - make sure text is white
-        const similarityBadges = document.querySelectorAll('.similarity-badge');
-        similarityBadges.forEach(badge => {
-            // Add theme-colored class if not already present
-            if (!badge.classList.contains('theme-colored')) {
-                badge.classList.add('theme-colored');
-            }
-            badge.style.boxShadow = theme === 'dark' ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.1)';
-            badge.style.color = '#FFFFFF'; // Force white text
-        });
+        // Score boxes - handle each one we expect to be present
+        const reliabilityScore = document.getElementById('reliabilityScore');
+        if (reliabilityScore) {
+            reliabilityScore.style.boxShadow = themeValues.scoreBoxShadow;
+            reliabilityScore.style.color = '#FFFFFF'; // Ensure white text
+        }
         
-        // Style tooltips - make sure text is white
-        const tooltipTexts = document.querySelectorAll('.tooltiptext');
-        tooltipTexts.forEach(tooltip => {
-            tooltip.style.backgroundColor = theme === 'dark' ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.7)';
-            tooltip.style.color = '#FFFFFF'; // Force white text for tooltips
-        });
+        const objectivityScore = document.getElementById('objectivityScore');
+        if (objectivityScore) {
+            objectivityScore.style.boxShadow = themeValues.scoreBoxShadow;
+            objectivityScore.style.color = '#FFFFFF'; // Ensure white text
+        }
+        
+        const biasScore = document.getElementById('biasScore');
+        if (biasScore) {
+            biasScore.style.boxShadow = themeValues.scoreBoxShadow;
+            biasScore.style.color = '#FFFFFF'; // Ensure white text
+        }
+        
+        const titleObjectivityScore = document.getElementById('titleObjectivityScore');
+        if (titleObjectivityScore) {
+            titleObjectivityScore.style.boxShadow = themeValues.scoreBoxShadow;
+            titleObjectivityScore.style.color = '#FFFFFF'; // Ensure white text
+        }
+        
+        const grammarScoreBox = document.getElementById('grammarScoreBox');
+        if (grammarScoreBox) {
+            grammarScoreBox.style.boxShadow = themeValues.scoreBoxShadow;
+            grammarScoreBox.style.color = '#FFFFFF'; // Ensure white text
+        }
         
         // All score labels should use secondary text color
         const allScoreLabels = document.querySelectorAll('.score-label');
@@ -150,6 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const header = document.querySelector('.header');
         if (header) {
             header.style.background = themeValues.containerBg;
+            header.style.borderBottomColor = themeValues.borderColor;
         }
         
         // Header icons
@@ -157,25 +197,6 @@ document.addEventListener('DOMContentLoaded', function() {
             img.style.opacity = themeValues.headerIconOpacity;
             img.style.filter = theme === 'dark' ? 'invert(1)' : 'none';
         });
-        
-        // Logo container
-        const logoContainer = document.querySelector('.logo-container');
-        if (logoContainer) {
-            logoContainer.style.background = themeValues.containerBg;
-        }
-        
-        // Score section
-        const scoreSection = document.querySelector('.score-section');
-        if (scoreSection) {
-            scoreSection.style.color = themeValues.textColor;
-        }
-        
-        // Score box (reliability - don't change color classes as they're based on the score value)
-        const scoreBox = document.getElementById('reliabilityScore');
-        if (scoreBox) {
-            scoreBox.style.boxShadow = themeValues.scoreBoxShadow;
-            scoreBox.style.color = '#FFFFFF'; // Explicitly set text to white
-        }
         
         // Articles section
         const articlesSection = document.querySelector('.articles-section');
@@ -209,54 +230,19 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
         
-        // Details section
-        const detailsSection = document.querySelector('.details-section');
-        if (detailsSection) {
-            detailsSection.style.background = themeValues.detailsBoxBg;
-            detailsSection.style.borderColor = themeValues.detailsBoxBorder;
-            detailsSection.style.color = themeValues.textColor;
-        }
+        // Style similarity badges
+        const similarityBadges = document.querySelectorAll('.similarity-badge');
+        similarityBadges.forEach(badge => {
+            badge.style.backgroundColor = themeValues.primaryColor;
+            badge.style.color = '#FFFFFF';
+        });
         
-        // Details title
-        const detailsTitle = document.querySelector('.details-title');
-        if (detailsTitle) {
-            detailsTitle.style.color = themeValues.textColor;
-        }
-        
-        // Details list items
-        const detailsList = document.getElementById('detailsList');
-        if (detailsList) {
-            // Style all headings
-            detailsList.querySelectorAll('h2, h3, h4').forEach(heading => {
-                heading.style.color = themeValues.primaryColor;
-            });
-            
-            // Style all list items
-            detailsList.querySelectorAll('li').forEach(item => {
-                item.style.color = themeValues.textColor;
-            });
-            
-            // Style all links
-            detailsList.querySelectorAll('a').forEach(link => {
-                link.style.color = themeValues.linkColor;
-            });
-            
-            // Style all paragraphs
-            detailsList.querySelectorAll('p').forEach(p => {
-                p.style.color = themeValues.textColor;
-            });
-            
-            // Style any unordered lists
-            detailsList.querySelectorAll('ul').forEach(ul => {
-                ul.style.color = themeValues.textColor;
-            });
-        }
-        
-        // Credibility result
-        const credibilityResult = document.getElementById('credibilityResult');
-        if (credibilityResult) {
-            credibilityResult.style.color = themeValues.textColor;
-        }
+        // Style tooltips - make sure text is white
+        const tooltipTexts = document.querySelectorAll('.tooltiptext');
+        tooltipTexts.forEach(tooltip => {
+            tooltip.style.backgroundColor = theme === 'dark' ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.7)';
+            tooltip.style.color = '#FFFFFF'; // Force white text for tooltips
+        });
         
         // Report mistake button
         const reportMistakeBtn = document.querySelector('.report-mistake-button');
@@ -269,6 +255,38 @@ document.addEventListener('DOMContentLoaded', function() {
             if (reportBtnImg) {
                 reportBtnImg.style.opacity = themeValues.headerIconOpacity;
                 // Don't invert this icon as it needs to be visible on yellow background
+            }
+        }
+
+        
+        // Handle grammar modal if it exists
+        const grammarModal = document.getElementById('grammarDetailsModal');
+        if (grammarModal) {
+            const modalContent = grammarModal.querySelector('div');
+            if (modalContent) {
+                modalContent.style.backgroundColor = theme === 'dark' ? themeValues.detailsBoxBg : 'white';
+                modalContent.style.color = themeValues.textColor;
+                modalContent.style.boxShadow = theme === 'dark' ? 
+                    '0 4px 15px rgba(0,0,0,0.4)' : 
+                    '0 4px 12px rgba(0,0,0,0.2)';
+                    
+                // Handle text colors
+                const headings = modalContent.querySelectorAll('h3, strong');
+                headings.forEach(heading => {
+                    heading.style.color = themeValues.textColor;
+                });
+                
+                // Handle description text
+                const description = modalContent.querySelector('div:last-of-type');
+                if (description) {
+                    description.style.color = themeValues.secondaryTextColor;
+                }
+                
+                // Handle close button
+                const closeBtn = document.getElementById('closeGrammarModal');
+                if (closeBtn) {
+                    closeBtn.style.background = themeValues.primaryColor;
+                }
             }
         }
         
@@ -341,6 +359,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 text-shadow: ${theme === 'dark' ? '1px 1px 3px rgba(0,0,0,0.5)' : 'none'};
             }
             
+            /* Hover effects for reliability score box */
+            .reliability-score-box:hover::before, 
+            .score-box:hover::before {
+                opacity: 1;
+                transform: translate(25%, 25%) rotate(45deg);
+            }
+            
             /* Ensure white text on tooltips */
             .tooltiptext {
                 color: #FFFFFF !important;
@@ -349,6 +374,28 @@ document.addEventListener('DOMContentLoaded', function() {
             /* Proper coloring for score labels */
             .score-label {
                 color: ${themeValues.secondaryTextColor} !important;
+            }
+            
+            /* Grammar score specific styles */
+            #grammarScoreBox {
+                text-shadow: ${theme === 'dark' ? '1px 1px 3px rgba(0,0,0,0.5)' : 'none'};
+                width: 75px !important;  /* Change from whatever it was to 75px */
+                font-size: 14px !important;
+            }
+            
+            /* Ensure proper spacing in secondary scores row */
+            .secondary-scores-row {
+                background-color: transparent !important;
+                gap: 8px;
+            }
+            
+            /* Ensure proper sizing of score boxes in the row */
+            .secondary-score .score-box {
+                width: 50px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
         `;
     }

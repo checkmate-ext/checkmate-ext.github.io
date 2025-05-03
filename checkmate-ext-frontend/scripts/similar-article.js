@@ -228,34 +228,152 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Set grammar score - IMPROVED CODE
+    // Set grammar score with clickable detailed popup
     if (grammarScoreBox) {
         if (data.spelling_issues !== undefined && data.pct !== undefined) {
             // Get error count and format percentage
             const errorCount = data.spelling_issues;
             const errorRate = data.pct;
-            const formattedRate = (errorRate * 100).toFixed(1);
+            const formattedErrorRate = (errorRate * 100).toFixed(1);
+            const accuracyRate = (100 - parseFloat(formattedErrorRate)).toFixed(1);
             
-            // Display a concise format "Count (Rate%)"
-            grammarScoreBox.textContent = formattedRate + '%';
+            // Show accuracy rate in the box - make text slightly smaller for better fit
+            grammarScoreBox.innerHTML = `<span style="font-size: 14px">${accuracyRate}%</span>`;
+            grammarScoreBox.style.cursor = 'pointer';
+            grammarScoreBox.title = 'Click for grammar details';
             
-            // Color coding based on error rate
-            if (errorRate < 0.02) { // Less than 2%
+            // Add a cleaner, more visible info icon
+            const indicator = document.createElement('span');
+            indicator.innerHTML = '&#9432;'; // Info icon
+            indicator.style.position = 'absolute';
+            indicator.style.top = '3px';
+            indicator.style.right = '3px';
+            indicator.style.fontSize = '11px';
+            indicator.style.opacity = '0.9';
+            indicator.style.color = 'rgba(255,255,255,0.9)';
+            grammarScoreBox.style.position = 'relative';
+            grammarScoreBox.appendChild(indicator);
+            
+            // Color coding based on accuracy rate instead of error rate
+            if (parseFloat(accuracyRate) > 98) { // More than 98% accurate
                 grammarScoreBox.classList.add('green');
-            } else if (errorRate < 0.05) { // Less than 5%
+            } else if (parseFloat(accuracyRate) >= 95) { // 95-98% accurate
                 grammarScoreBox.classList.add('neutral');
             } else {
                 grammarScoreBox.classList.add('red');
             }
             
-            // Add detailed tooltip showing both count and rate
+            // Create a modal dialog element with proper theming that will be shown on click
+            const modalId = 'grammarDetailsModal';
+            let modal = document.getElementById(modalId);
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = modalId;
+                modal.style.display = 'none';
+                modal.style.position = 'fixed';
+                modal.style.zIndex = '1000';
+                modal.style.left = '0';
+                modal.style.top = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                modal.style.transition = 'opacity 0.3s ease';
+                modal.style.opacity = '0';
+                
+                // Get theme from localStorage or use light as default
+                const currentTheme = localStorage.getItem('theme') || 'light';
+                const isDarkTheme = currentTheme === 'dark';
+                
+                const modalContent = document.createElement('div');
+                modalContent.style.backgroundColor = isDarkTheme ? '#2d2d2d' : 'white';
+                modalContent.style.color = isDarkTheme ? '#e0e0e0' : '#333';
+                modalContent.style.margin = '20% auto';
+                modalContent.style.padding = '20px';
+                modalContent.style.width = '80%';
+                modalContent.style.maxWidth = '300px';
+                modalContent.style.borderRadius = '8px';
+                modalContent.style.boxShadow = isDarkTheme ? 
+                    '0 4px 15px rgba(0,0,0,0.4)' : 
+                    '0 4px 12px rgba(0,0,0,0.2)';
+                
+                const primaryColor = isDarkTheme ? '#4eca89' : '#3cb371';
+                const borderColor = isDarkTheme ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+                const secondaryTextColor = isDarkTheme ? '#b0b0b0' : '#666';
+                
+                modalContent.innerHTML = `
+                    <h3 style="margin:0 0 15px;font-size:18px;color:${isDarkTheme ? '#e0e0e0' : '#333'};font-weight:600;">
+                        Grammar Analysis
+                    </h3>
+                    <div style="margin-bottom:20px;border-bottom:1px solid ${borderColor};padding-bottom:15px;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+                            <strong style="color:${isDarkTheme ? '#e0e0e0' : '#333'};">Error Count:</strong>
+                            <span>${errorCount} errors</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+                            <strong style="color:${isDarkTheme ? '#e0e0e0' : '#333'};">Error Rate:</strong>
+                            <span>${formattedErrorRate}%</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                            <strong style="color:${isDarkTheme ? '#e0e0e0' : '#333'};">Grammar Accuracy:</strong>
+                            <span style="color:${parseInt(accuracyRate) > 95 ? primaryColor : (parseInt(accuracyRate) > 90 ? '#f1c40f' : '#e74c3c')};font-weight:bold;">
+                                ${accuracyRate}%
+                            </span>
+                        </div>
+                    </div>
+                    <div style="font-size:13px;color:${secondaryTextColor};margin-bottom:20px;line-height:1.4;">
+                        Grammar errors include spelling mistakes, punctuation issues, and other text problems detected in the article.
+                    </div>
+                    <button id="closeGrammarModal" style="background:${primaryColor};color:white;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;display:block;margin:0 auto;font-weight:600;transition:all 0.3s ease;">
+                        Close
+                    </button>
+                `;
+                
+                modal.appendChild(modalContent);
+                document.body.appendChild(modal);
+                
+                // Add event listener to close button
+                const closeBtn = document.getElementById('closeGrammarModal');
+                closeBtn.addEventListener('click', () => {
+                    modal.style.opacity = '0';
+                    setTimeout(() => { modal.style.display = 'none'; }, 300);
+                });
+    
+                // Add hover effect to close button
+                closeBtn.addEventListener('mouseenter', () => {
+                    closeBtn.style.transform = 'translateY(-2px)';
+                    closeBtn.style.boxShadow = isDarkTheme ? 
+                        '0 4px 12px rgba(78, 202, 137, 0.4)' : 
+                        '0 4px 12px rgba(60, 179, 113, 0.3)';
+                });
+                
+                closeBtn.addEventListener('mouseleave', () => {
+                    closeBtn.style.transform = 'translateY(0)';
+                    closeBtn.style.boxShadow = 'none';
+                });
+                
+                // Close modal when clicking outside
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.style.opacity = '0';
+                        setTimeout(() => { modal.style.display = 'none'; }, 300);
+                    }
+                });
+            }
+            
+            // Add click event to show modal
+            grammarScoreBox.addEventListener('click', () => {
+                modal.style.display = 'block';
+                setTimeout(() => { modal.style.opacity = '1'; }, 10);
+            });
+            
+            // Still add tooltip for hover
             const tooltip = document.createElement('div');
             tooltip.className = 'tooltip';
             grammarScoreBox.parentNode.appendChild(tooltip);
             
             const tooltipText = document.createElement('span');
             tooltipText.className = 'tooltiptext';
-            tooltipText.textContent = `${errorCount} spelling/grammar errors found (${formattedRate}% of text)`;
+            tooltipText.innerHTML = `Grammar Accuracy: ${accuracyRate}%<br>Click for details`;
             tooltip.appendChild(tooltipText);
         } else {
             grammarScoreBox.textContent = 'N/A';
@@ -268,7 +386,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             const tooltipText = document.createElement('span');
             tooltipText.className = 'tooltiptext';
-            tooltipText.textContent = 'Grammar error information is not available for this article';
+            tooltipText.textContent = 'Grammar analysis is not available for this article';
             tooltip.appendChild(tooltipText);
         }
     }

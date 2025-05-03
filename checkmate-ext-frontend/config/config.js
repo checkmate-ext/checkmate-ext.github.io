@@ -4,7 +4,7 @@
  */
 
 // Make all variables available in the global scope
-window.API_BASE_URL = 'http://localhost:5000';
+window.API_BASE_URL = 'https://checkmate-backend-api-1029076451566.us-central1.run.app';
 
 // Authentication settings
 window.AUTH_CONFIG = {
