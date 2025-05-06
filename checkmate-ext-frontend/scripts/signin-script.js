@@ -11,6 +11,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const facebookButton = document.getElementById('facebookLoginBtn'); // Facebook button    const rememberMeCheckbox = document.getElementById('rememberMe'); // New checkbox element
     const rememberMeCheckbox = document.getElementById('rememberMe'); // New checkbox element
 
+
+    // Fix the password toggle functionality
+    const passwordToggle = document.getElementById('passwordToggle');
+    if (passwordToggle) {
+        // Make sure the whole span is clickable, not just the icon
+        passwordToggle.style.pointerEvents = 'auto';
+        passwordToggle.style.cursor = 'pointer';
+        
+        passwordToggle.addEventListener('click', function(e) {
+            // Stop event propagation to prevent any parent handlers from firing
+            e.stopPropagation();
+            
+            // Get the password input directly
+            const passwordInput = document.getElementById('password');
+            if (passwordInput) {
+                // Toggle password visibility
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // Toggle the eye icon - More reliable way
+                const icon = this.querySelector('i');
+                if (icon) {
+                    if (type === 'text') {
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                }
+            }
+        });
+    }
+    
     // Function to show error
     const showError = (message) => {
         passwordInput.classList.add('is-danger');

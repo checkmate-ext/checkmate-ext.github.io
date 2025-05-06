@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Registered successfully');
                 navigateTo('SignInPage.html');
             } else {
-                alert(result.message || 'Registration failed. Please try again.');
+                alert(result.error || 'Registration failed. Please try again.');
             }
         } catch (error) {
             console.error('Registration error:', error);

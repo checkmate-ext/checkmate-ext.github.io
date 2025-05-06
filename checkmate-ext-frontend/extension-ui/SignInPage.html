@@ -143,6 +143,18 @@
             transform: translateY(-50%);
             font-size: 1rem; /* Increased icon size */
         }
+        /* Password toggle styling */
+        .control.has-icons-left .icon.is-right {
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #718096;
+            transition: color 0.3s ease;
+        }
+        .control.has-icons-left .icon.is-right:hover {
+            color: var(--primary-color);
+        }
         /* Forgot Password with hover line effect */
         .forgot-password {
             text-align: right;
@@ -451,6 +463,10 @@
                         />
                         <span class="icon is-small is-left">
                             <i class="fas fa-lock"></i>
+                        </span>
+                        <!-- Add password toggle button -->
+                        <span class="icon is-small is-right password-toggle" id="passwordToggle" style="cursor: pointer; right: 0.75rem">
+                            <i class="fas fa-eye"></i>
                         </span>
                     </div>
                     <div id="passwordError" class="error-message"></div>
