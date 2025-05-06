@@ -104,13 +104,19 @@
             margin-bottom: 20px;
             font-weight: 600;
         }
+        
+        /* Hero section with split layout */
+        
         .hero {
             background-color: var(--surface-color);
-            text-align: center;
-            padding: 120px 0;
+            padding: 80px 0 60px;
             position: relative;
             overflow: hidden;
+            min-height: 500px;
+            display: flex;
+            align-items: center;
         }
+        
         .hero::before {
             content: '';
             position: absolute;
@@ -122,54 +128,96 @@
             opacity: 0.05;
             z-index: 0;
         }
+        
         .hero-content {
             position: relative;
             z-index: 1;
             display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 80px;
+            margin-bottom: 30px;
+        }
+        
+        .hero-left {
+            display: flex;
             flex-direction: column;
             align-items: center;
         }
-        .mascot-container {
-            width: 200px;
-            margin-bottom: 30px;
+        
+        .hero-right {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
+        
+        .mascot-container {
+            width: 280px;
+            height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
         .mascot-image {
             width: 100%;
             height: auto;
+            max-height: 280px;
+            object-fit: contain;
         }
-        .hero h1 {
-            font-size: 4em;
-            margin-bottom: 20px;
-            animation: fadeInUp 1s ease;
+        
+        .hero-title-container {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-title-container h1 {
+            font-size: 3.5em;
+            margin-bottom: 10px;
             background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-size: 300% 300%;
             animation: gradientShift 5s ease infinite;
         }
-        .tagline {
+        
+        .hero-title-container p {
             font-size: 1.4em;
-            margin-bottom: 40px;
             color: var(--text-secondary);
-            animation: fadeInUp 1s ease 0.2s;
-            animation-fill-mode: both;
+            margin-bottom: 0;
         }
+        
+        .download-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 300px;
+        }
+        
         .cta-button {
-            display: inline-block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
             background-color: var(--accent-color);
             color: #fff;
-            padding: 14px 28px;
+            padding: 14px 20px;
             text-decoration: none;
             border-radius: 30px;
             transition: all 0.3s ease;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
-            animation: fadeInUp 1s ease 0.4s;
-            animation-fill-mode: both;
             position: relative;
             overflow: hidden;
         }
+        
+        .cta-button.android {
+            background-color: #3ddc84; /* Android green */
+        }
+        
         .cta-button::before {
             content: '';
             position: absolute;
@@ -180,14 +228,124 @@
             background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.3), transparent);
             transition: all 0.5s;
         }
+        
         .cta-button:hover::before {
             left: 100%;
         }
+        
         .cta-button:hover {
-            background-color: var(--primary-color);
             transform: translateY(-3px);
             box-shadow: 0 10px 20px rgba(139, 90, 43, 0.3);
         }
+        
+        .button-icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .hero-content {
+                flex-direction: column;
+                gap: 30px;
+            }
+            
+            .mascot-container {
+                width: 220px;
+                height: 220px;
+            }
+            
+            .hero-title-container h1 {
+                font-size: 3em;
+            }
+            
+            .hero-title-container p {
+                font-size: 1.2em;
+            }
+        }
+
+        .hero-text {
+            text-align: left;
+            margin-bottom: 30px;
+        }
+        
+        .hero-text h1 {
+            font-size: 3.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 300% 300%;
+            animation: gradientShift 5s ease infinite;
+        }
+        
+        .hero-text p {
+            font-size: 1.4em;
+            color: var(--text-secondary);
+            margin-bottom: 0;
+        }
+        
+        .download-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 320px;
+        }
+        
+        .cta-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background-color: var(--accent-color);
+            color: #fff;
+            padding: 14px 20px;
+            text-decoration: none;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta-button.android {
+            background-color: #3ddc84; /* Android green */
+        }
+        
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: all 0.5s;
+        }
+        
+        .cta-button:hover::before {
+            left: 100%;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(139, 90, 43, 0.3);
+        }
+        
+        .cta-button.android:hover {
+            background-color: #2eba6a;
+        }
+        
+        .button-icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
         .features {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -428,6 +586,29 @@
                 transform: translateY(0);
             }
         }
+        
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
         @keyframes gradientShift {
             0% {
                 background-position: 0% 50%;
@@ -439,12 +620,26 @@
                 background-position: 0% 50%;
             }
         }
+        
+        /* Mobile responsiveness */
         @media (max-width: 768px) {
             .nav-links {
                 display: none;
             }
-            .hero h1 {
-                font-size: 3em;
+            .hero-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            .hero-left, .hero-right {
+                width: 100%;
+                align-items: center;
+                padding-left: 0;
+            }
+            .hero-text {
+                text-align: center;
+            }
+            .mascot-container {
+                margin: 0 auto 20px;
             }
             .feature {
                 padding: 30px;
@@ -456,9 +651,6 @@
             }
             .team-member-card {
                 width: 80%;
-            }
-            .mascot-container {
-                width: 150px;
             }
         }
     </style>
@@ -481,14 +673,41 @@
 </header>
 
 <main>
+        <!-- Updated hero section with better alignment -->
     <section class="hero">
-        <div class="container hero-content">
-            <div class="mascot-container">
-                <img src="./reports/detective_mascot.png" alt="CheckMate Detective Mascot" class="mascot-image">
+        <div class="container">
+            <div class="hero-content">
+                <!-- Left side with mascot and heading -->
+                <div class="hero-left">
+                    <div class="mascot-container">
+                        <img src="./reports/detective_mascot.png" alt="CheckMate Detective Mascot" class="mascot-image">
+                    </div>
+                </div>
+                
+                <!-- Right side with buttons -->
+                <div class="hero-right">
+                    <div class="download-buttons">
+                        <a href="https://chromewebstore.google.com/detail/checkmate/cmdelkkanmfafookdepieanibembakpf" class="cta-button">
+                            <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                            </svg>
+                            Install Chrome Extension
+                        </a>
+                        <a href="./apk/checkmate.apk" download class="cta-button android">
+                            <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48C13.85 1.23 12.95 1 12 1c-.96 0-1.86.23-2.66.63L7.85.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31C6.97 3.26 6 5.01 6 7h12c0-1.99-.97-3.75-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z"/>
+                            </svg>
+                            Download Android App
+                        </a>
+                    </div>
+                </div>
             </div>
-            <h1>CheckMate</h1>
-            <p class="tagline">Your Trusted Mate for Truth</p>
-            <a href="https://chromewebstore.google.com/detail/checkmate/cmdelkkanmfafookdepieanibembakpf" class="cta-button">Install</a>
+            
+            <!-- Title and tagline centered below -->
+            <div class="hero-title-container">
+                <h1>CheckMate</h1>
+                <p>Your Trusted Mate for Truth</p>
+            </div>
         </div>
     </section>
 
