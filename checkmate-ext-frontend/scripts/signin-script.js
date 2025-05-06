@@ -86,7 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // set the local storage data for email
                 localStorage.setItem('userEmail', email);
                 navigateTo('MainMenuPage.html');
-            } else {
+            }
+
+            else {
                 signInButton.innerHTML = originalSignInButtonText;
                 signInButton.disabled = false; // Re-enable button
                 showError('Invalid email or password');

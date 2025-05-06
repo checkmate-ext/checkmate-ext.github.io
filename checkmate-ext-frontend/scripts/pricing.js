@@ -58,22 +58,41 @@ function getStoredPlan() {
 function renderPricingUI(currentPlan) {
   const planCardsContainer = document.getElementById('planCardsContainer');
   const planMessage = document.getElementById('planMessage');
+  
+  // Keep the header message as is
   planMessage.textContent =
       currentPlan === 'free'
           ? 'Upgrade your plan to access premium features'
           : `You are currently on the ${currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} plan`;
 
   planCardsContainer.innerHTML = '';
-  if (currentPlan !== 'free')
-    addPlanCard('free', 'Free', '$0', ['Basic AI Checks', '3 checks/day', 'Standard support'], ['premium','enterprise'].includes(currentPlan) ? 'Downgrade' : 'Current Plan');
-  if (currentPlan !== 'premium')
-    addPlanCard('premium', 'Premium', '$9.99/mo', ['Advanced AI Checks', 'Unlimited checks', 'Priority support'], 'Upgrade');
-  else
-    addPlanCard('premium', 'Premium', '$9.99/mo', ['Advanced AI Checks', 'Unlimited checks', 'Priority support'], 'Current Plan', true);
-  if (currentPlan !== 'enterprise')
+  
+  // Show Free plan card
+  if (currentPlan === 'free') {
+    // If on Free plan, show as current
+    addPlanCard('free', 'Free', '₺0', ['Basic AI Checks', '10 checks/day', 'Standard support'], 'Current Plan', true);
+  } else {
+    // Otherwise show downgrade option
+    addPlanCard('free', 'Free', '₺0', ['Basic AI Checks', '10 checks/day', 'Standard support'], 'Downgrade');
+  }
+  
+  // Show Premium plan card
+  if (currentPlan === 'premium' || currentPlan === 'Premium') {
+    // If on Premium plan, show as current
+    addPlanCard('premium', 'Premium', '₺49.99/mo', ['Advanced AI Checks', 'Unlimited checks', 'Priority support'], 'Current Plan', true);
+  } else {
+    // Otherwise show upgrade option
+    addPlanCard('premium', 'Premium', '₺49.99/mo', ['Advanced AI Checks', 'Unlimited checks', 'Priority support'], 'Upgrade');
+  }
+  
+  // Show Enterprise plan card
+  if (currentPlan === 'enterprise') {
+    // If on Enterprise plan, show as current
+    addPlanCard('enterprise', 'Enterprise', 'Contact Us', ['All Premium features', 'Team features'], 'Current Plan', true);
+  } else {
+    // Otherwise show upgrade option
     addPlanCard('enterprise', 'Enterprise', 'Contact Us', ['All Premium features', 'Team features'], 'Upgrade');
-  else
-    addPlanCard('enterprise', 'Enterprise', '$Contact Us', ['All Premium features', 'Team features'], 'Current Plan', true);
+  }
 
   document.querySelectorAll('.card-btn').forEach(btn => btn.addEventListener('click', handlePlanSelection));
 }
@@ -134,7 +153,7 @@ async function handlePlanSelection(e) {
   if (plan === 'free') return changePlan(plan);
 
   // Paid flow → initialize CF
-  const amount = plan === 'premium' ? '9.99' : '29.99';
+  const amount = plan === 'premium' ? '49.99' : '29.99';
   const callbackUrl = chrome.runtime.getURL('cf-callback.html');
   const { paymentPageUrl, token } = await paymentService.initializeCheckout(plan, amount, callbackUrl);
 

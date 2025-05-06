@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await authService.register(email, email, password);
             if (result.success) {
                 console.log('Registered successfully');
+                alert('Registration successful! Please check your email to verify your account.');
                 navigateTo('SignInPage.html');
             } else {
                 alert(result.error || 'Registration failed. Please try again.');
