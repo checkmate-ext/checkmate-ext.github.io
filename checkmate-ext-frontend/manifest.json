@@ -13,7 +13,8 @@
     "https://*.facebook.com/",
     "http://localhost:5000/*",
     "http://127.0.0.1:5000/*",
-    "https://checkmate-backend-api-1029076451566.us-central1.run.app/*"
+    "https://checkmate-backend-api-1029076451566.us-central1.run.app/*",
+    "http://127.0.0.1:8000/*"
   ],
   "web_accessible_resources": [{
     "resources": [
@@ -21,7 +22,8 @@
       "images/*",
       "scripts/*",
       "navigation/*",
-      "pages/cf-callback.html"
+      "extension-ui/callback.html",
+      "scripts/callback-handler.js"
     ],
     "matches": ["<all_urls>"]
   }],

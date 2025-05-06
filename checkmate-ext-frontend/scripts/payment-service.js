@@ -3,6 +3,7 @@ class PaymentService {
         this.token = localStorage.getItem('token') || null;
         // Get the API base URL from window object
         this.apiBaseUrl = window.API_BASE_URL;
+        this.handleRedirectCallback();
     }
 
     loadToken() {
@@ -59,6 +60,41 @@ class PaymentService {
         });
         if (!resp.ok) return { success: false, error: (await resp.json()).error };
         return { success: true };
+    }
+
+
+    // Find the handleRedirectCallback method and update it to:
+    async handleRedirectCallback() {
+    try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const token = searchParams.get('token');
+        const plan = localStorage.getItem('cfPlan');
+        
+        if (!token || !plan) {
+        throw new Error('Missing token or plan information');
+        }
+        
+        // Send message to main extension context
+        chrome.runtime.sendMessage({
+        type: 'CF_TOKEN',
+        token: token,
+        plan: plan
+        });
+        
+        // Optionally close this window after short delay
+        setTimeout(() => {
+        window.close();
+        }, 1000);
+        
+        return true;
+    } catch (e) {
+        console.error('Error in redirect callback:', e);
+        return false;
+    } finally {
+        // Clean up URL and storage
+        localStorage.removeItem('pendingPlan');
+        history.replaceState(null, '', window.location.pathname);
+    }
     }
 }
 

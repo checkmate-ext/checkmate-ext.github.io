@@ -1,25 +1,42 @@
 import paymentService from './payment-service.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-  // 1) Listen for the CF callback token
+  // Listen for the payment callback message from callback-handler.js
   chrome.runtime.onMessage.addListener(async (message) => {
     if (message.type !== 'CF_TOKEN') return;
-    const plan = localStorage.getItem('cfPlan');
+    
+    const plan = message.plan || localStorage.getItem('cfPlan');
+    
     try {
+      // Show a loading state
+      const planMessage = document.getElementById('planMessage');
+      if (planMessage) {
+        planMessage.innerHTML = '<em>Processing your payment...</em>';
+      }
+      
+      // Validate the payment was successful
       const result = await paymentService.queryCheckout(message.token, plan);
+      
       if (result.paymentStatus === 'SUCCESS') {
-        chrome.storage.sync.set({ userPlan: plan }, () => renderPricingUI(plan));
-        alert('Subscription successful!');
+        // Update storage in both places
+        chrome.storage.sync.set({ userPlan: plan });
+        localStorage.setItem('userPlan', plan);
+        
+        // Show success message
+        showNotification(`Successfully subscribed to ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan!`, 'success');
+        
+        // Update the UI
+        renderPricingUI(plan);
       } else {
-        alert('Payment failed: ' + result.errorMessage);
+        showNotification('Payment failed: ' + (result.errorMessage || 'Unknown error'), 'error');
       }
     } catch (err) {
       console.error('CF query error:', err);
-      alert('Could not finalize payment.');
+      showNotification('Could not finalize payment', 'error');
     }
   });
 
-  // 2) Load the user's current plan
+  // Load the user's current plan
   loadUserPlan();
 });
 
@@ -178,33 +195,115 @@ async function handlePlanSelection(e) {
   }
   if (plan === 'free') return changePlan(plan);
 
-  // Paid flow → initialize CF
+  // Paid flow → initialize payment
   const amount = plan === 'premium' ? '49.99' : '29.99';
-  const callbackUrl = chrome.runtime.getURL('cf-callback.html');
-  const { paymentPageUrl, token } = await paymentService.initializeCheckout(plan, amount, callbackUrl);
+  const extCallback = chrome.runtime.getURL('extension-ui/callback.html');
+  const callbackUrl = `${window.API_BASE_URL}/iyzico/callback`
+  + `?plan=${plan}`
+  + `&returnUrl=${encodeURIComponent(extCallback)}`;
+  
+  // Show processing state
+  e.target.disabled = true;
+  e.target.innerHTML = '<span class="loading-spinner"></span> Processing...';
+  
+  try {
+    const { paymentPageUrl, token } = await paymentService.initializeCheckout(plan, amount, callbackUrl);
 
-  // Store for later query
-  localStorage.setItem('cfToken', token);
-  localStorage.setItem('cfPlan', plan);
+    // Store for later query
+    localStorage.setItem('cfToken', token);
+    localStorage.setItem('cfPlan', plan);
 
-  // Open the Iyzico checkout page in a new popup window
-  chrome.windows.create({
-    url: paymentPageUrl,
-    type: 'popup',
-    width: 450,
-    height: 700
-  });
+    // Open the Iyzico checkout page in a new popup window
+    chrome.windows.create({
+      url: paymentPageUrl,
+      type: 'popup',
+      width: 450,
+      height: 700
+    });
+  } catch (error) {
+    console.error('Payment initialization failed:', error);
+    showNotification('Could not initialize payment', 'error');
+    
+    // Reset button
+    e.target.disabled = false;
+    e.target.textContent = e.target.dataset.plan === 'premium' ? 'Upgrade' : 'Contact Us';
+  }
 }
 
 async function changePlan(plan) {
-  const res = plan === 'free'
-      ? await paymentService.updatePlan(plan)
-      : { success: false };
-  if (res.success) {
-    chrome.storage.sync.set({ userPlan: plan }, () => renderPricingUI(plan));
-    localStorage.setItem('userPlan', plan);
-    alert(plan === 'free' ? 'Downgraded to Free' : 'Plan updated');
-  } else {
-    alert('Failed to update plan');
+  // Show loading/processing indicator
+  const activeButton = document.activeElement;
+  if (activeButton && activeButton.tagName === 'BUTTON') {
+    activeButton.disabled = true;
+    const originalText = activeButton.textContent;
+    activeButton.innerHTML = '<span class="loading-spinner"></span> Processing...';
   }
+  
+  try {
+    const res = plan === 'free'
+        ? await paymentService.updatePlan(plan)
+        : { success: false };
+        
+    if (res.success) {
+      // Update both storage locations
+      chrome.storage.sync.set({ userPlan: plan });
+      localStorage.setItem('userPlan', plan);
+      
+      // Show notification
+      showNotification(plan === 'free' ? 'Successfully downgraded to Free plan' : 'Plan updated', 'success');
+      
+      // Refresh the UI
+      renderPricingUI(plan);
+    } else {
+      showNotification('Failed to update plan', 'error');
+      
+      // Reset button
+      if (activeButton) {
+        activeButton.disabled = false;
+        activeButton.textContent = originalText || 'Try Again';
+      }
+    }
+  } catch (error) {
+    console.error('Plan change error:', error);
+    showNotification('Error updating plan', 'error');
+    
+    // Reset button
+    if (activeButton) {
+      activeButton.disabled = false;
+      activeButton.textContent = originalText || 'Try Again';
+    }
+  }
+}
+
+function showNotification(message, type) {
+  // Remove any existing notifications
+  const existingNotifications = document.querySelectorAll('.plan-notification');
+  existingNotifications.forEach(n => n.remove());
+  
+  // Create new notification
+  const notification = document.createElement('div');
+  notification.className = 'plan-notification';
+  notification.textContent = message;
+  
+  // Style based on type
+  notification.style.position = 'fixed';
+  notification.style.top = '20px';
+  notification.style.left = '50%';
+  notification.style.transform = 'translateX(-50%)';
+  notification.style.background = type === 'success' ? '#3cb371' : '#e74c3c';
+  notification.style.color = 'white';
+  notification.style.padding = '10px 20px';
+  notification.style.borderRadius = '8px';
+  notification.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+  notification.style.zIndex = '1000';
+  notification.style.opacity = '1';
+  notification.style.transition = 'opacity 0.5s ease';
+  
+  document.body.appendChild(notification);
+  
+  // Remove notification after 3 seconds
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    setTimeout(() => notification.remove(), 500);
+  }, 3000);
 }

@@ -12,7 +12,7 @@ import iyzipay
 import jwt
 import requests
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify, current_app
+from flask import Flask, request, jsonify, current_app, redirect
 from flask import url_for
 from flask_cors import CORS
 from flask_mail import Mail, Message
@@ -1361,8 +1361,25 @@ def fetch_stats(current_user):
         db.session.rollback()
         print(f"Error fetching stats: {str(e)}")
         return jsonify({'error': 'Failed to fetch stats'}), 500
+    
+
+@app.route('/iyzico/callback', methods=['GET','POST'])
+def iyzico_callback():
+    # 1) Iyzipay POSTs form data including 'token'
+    token = request.form.get('token') or request.args.get('token')
+    plan  = request.args.get('plan')   or request.form.get('plan')
+    return_url = request.args.get('returnUrl')
+    if not token or not return_url:
+        return "Missing token or returnUrl", 400
+
+    # 2) Redirect the browser into your extension page
+    #    with the plan & token as query params.
+    dest = f"{return_url}?token={token}&plan={plan}"
+    return redirect(dest, code=302)
+
 
 
 if __name__ == '__main__':
     # Run the app on all network interfaces (0.0.0.0) instead of just localhost
     app.run(host='0.0.0.0', port=5000, debug=True)
+    
