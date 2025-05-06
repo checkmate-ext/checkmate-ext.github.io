@@ -68,25 +68,25 @@ function renderPricingUI(currentPlan) {
   planCardsContainer.innerHTML = '';
   
   // Show Free plan card
-  if (currentPlan === 'free') {
+  if (currentPlan === 'free' || currentPlan === 'Free') {
     // If on Free plan, show as current
-    addPlanCard('free', 'Free', '₺0', ['Basic AI Checks', '10 checks/day', 'Standard support'], 'Current Plan', true);
+    addPlanCard('free', 'Free', '₺0', ['Basic AI Checks', '5 checks/day', 'Standard support'], 'Current Plan', true);
   } else {
     // Otherwise show downgrade option
-    addPlanCard('free', 'Free', '₺0', ['Basic AI Checks', '10 checks/day', 'Standard support'], 'Downgrade');
+    addPlanCard('free', 'Free', '₺0', ['Basic AI Checks', '5 checks/day', 'Standard support'], 'Downgrade');
   }
   
   // Show Premium plan card
   if (currentPlan === 'premium' || currentPlan === 'Premium') {
     // If on Premium plan, show as current
-    addPlanCard('premium', 'Premium', '₺49.99/mo', ['Advanced AI Checks', 'Unlimited checks', 'Priority support'], 'Current Plan', true);
+    addPlanCard('premium', 'Premium', '₺49.99/mo', ['Advanced AI Checks', '50 checks/day', 'Priority support'], 'Current Plan', true);
   } else {
     // Otherwise show upgrade option
-    addPlanCard('premium', 'Premium', '₺49.99/mo', ['Advanced AI Checks', 'Unlimited checks', 'Priority support'], 'Upgrade');
+    addPlanCard('premium', 'Premium', '₺49.99/mo', ['Advanced AI Checks', '50 checks/day', 'Priority support'], 'Upgrade');
   }
   
   // Show Enterprise plan card
-  if (currentPlan === 'enterprise') {
+  if (currentPlan === 'enterprise' || currentPlan === 'Enterprise') {
     // If on Enterprise plan, show as current
     addPlanCard('enterprise', 'Enterprise', 'Contact Us', ['All Premium features', 'Team features'], 'Current Plan', true);
   } else {
@@ -101,22 +101,48 @@ function addPlanCard(planId, name, price, features, buttonText, isCurrentPlan = 
   const card = document.createElement('div');
   card.className = 'plan-card';
   card.dataset.plan = planId;
+  
+  // Make sure the card has position relative for absolute badge positioning
+  card.style.position = 'relative';
 
   if (isCurrentPlan) {
     const badge = document.createElement('div');
     badge.className = 'plan-badge';
     badge.textContent = 'CURRENT PLAN';
+    
+    // Set explicit styling to ensure visibility across themes
+    badge.style.position = 'absolute';
+    badge.style.top = '10px'; // Changed from -10px to prevent cutoff
+    badge.style.right = '10px';
+    badge.style.backgroundColor = planId === 'premium' ? '#ffcc00' : 
+                               planId === 'enterprise' ? '#1a73e8' : 
+                               '#3cb371'; // Specific colors for each plan
+    badge.style.color = planId === 'premium' ? '#7B6225' : '#ffffff';
+    badge.style.padding = '3px 8px';
+    badge.style.borderRadius = '10px';
+    badge.style.fontSize = '10px';
+    badge.style.fontWeight = 'bold';
+    badge.style.transform = 'rotate(3deg)';
+    badge.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+    badge.style.zIndex = '100';
+    badge.style.border = planId === 'premium' ? '1px solid #7B6225' : 
+                        planId === 'enterprise' ? '1px solid #0d47a1' : 
+                        '1px solid #2e8b57';
+    
     card.appendChild(badge);
   }
 
   const header = document.createElement('div');
   header.className = 'plan-header';
+  
   const nameDiv = document.createElement('div');
   nameDiv.className = 'plan-name';
   nameDiv.textContent = name;
+  
   const priceDiv = document.createElement('div');
   priceDiv.className = `plan-price ${planId}-price`;
   priceDiv.textContent = price;
+  
   header.append(nameDiv, priceDiv);
   card.append(header);
 
