@@ -24,6 +24,71 @@ document.addEventListener('DOMContentLoaded', () => {
         confirm: document.getElementById('confirmButton'),
         updatePassword: document.getElementById('updatePasswordButton')
     };
+    
+    // Add password toggle functionality - using same approach as signin-script.js
+    const newPasswordToggle = document.getElementById('newPasswordToggle');
+    if (newPasswordToggle) {
+        // Make sure the whole span is clickable, not just the icon
+        newPasswordToggle.style.pointerEvents = 'auto';
+        newPasswordToggle.style.cursor = 'pointer';
+        
+        newPasswordToggle.addEventListener('click', function(e) {
+            // Stop event propagation to prevent any parent handlers from firing
+            e.stopPropagation();
+            
+            // Get the password input directly
+            const passwordInput = document.getElementById('newPassword');
+            if (passwordInput) {
+                // Toggle password visibility
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // Toggle the eye icon - More reliable way
+                const icon = this.querySelector('i');
+                if (icon) {
+                    if (type === 'text') {
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                }
+            }
+        });
+    }
+    
+    const confirmPasswordToggle = document.getElementById('confirmPasswordToggle');
+    if (confirmPasswordToggle) {
+        // Make sure the whole span is clickable, not just the icon
+        confirmPasswordToggle.style.pointerEvents = 'auto';
+        confirmPasswordToggle.style.cursor = 'pointer';
+        
+        confirmPasswordToggle.addEventListener('click', function(e) {
+            // Stop event propagation to prevent any parent handlers from firing
+            e.stopPropagation();
+            
+            // Get the password input directly
+            const passwordInput = document.getElementById('confirmPassword');
+            if (passwordInput) {
+                // Toggle password visibility
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // Toggle the eye icon - More reliable way
+                const icon = this.querySelector('i');
+                if (icon) {
+                    if (type === 'text') {
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                }
+            }
+        });
+    }
 
     // Helper functions
     function showMessage(text, type) {
@@ -83,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function updatePassword(email, newPassword) {
-        const response = await fetch(`${API_BASE_URL}/user/update-forgotten-password`, {
+        const response = await fetch(`${API_BASE_URL}${ENDPOINTS.updateForgottenPassword}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, new_password: newPassword })
@@ -152,10 +217,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const confirmPassword = elements.confirmPassword.value;
         const email = elements.userEmail.value.trim();
 
-        /*if (!validatePassword(newPassword)) {
-            showMessage('Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character', 'error');
-            return;
-        }*/
+        // if (!validatePassword(newPassword)) {
+        //     showMessage('Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character', 'error');
+        //     return;
+        // }
 
         if (newPassword !== confirmPassword) {
             showMessage('Passwords do not match', 'error');
@@ -167,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             await updatePassword(email, newPassword);
-            showMessage('Password updated successfully!', 'success');
+            showMessage('Password updated successfully! You can close this page.', 'success');
             buttons.updatePassword.innerHTML = 'Updated';
         } catch (error) {
             showMessage(error.message, 'error');

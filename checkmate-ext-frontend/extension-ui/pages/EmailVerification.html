@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reset Password</title>
     <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
+    <!-- Add Font Awesome -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     <style>
         :root {
             --primary-color: #3cb371;
@@ -132,49 +134,81 @@
             align-items: center;
             margin: 0 auto;
         }
+
+        .password-input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #718096;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+            pointer-events: auto;
+            z-index: 10;
+        }
+        
+        .password-toggle:hover {
+            color: var(--primary-color);
+        }
     </style>
 </head>
 <body>
-<div class="app-wrapper">
-    <div class="container">
-        <img src="../../images/CheckMate_Transparent_Logo.png" alt="Checkmate Logo" class="logo">
-
-        <!-- Email Section -->
-        <div id="emailSection">
-            <h1>Reset Password</h1>
-            <p>Enter your email to receive a verification code</p>
-            <div class="form-group">
-                <input type="email" id="userEmail" class="input" placeholder="Enter your email" required>
+    <div class="app-wrapper">
+        <div class="container">
+            <img src="../../images/CheckMate_Transparent_Logo.png" alt="Checkmate Logo" class="logo">
+    
+            <!-- Email Section - unchanged -->
+            <div id="emailSection">
+                <h1>Reset Password</h1>
+                <p>Enter your email to receive a verification code</p>
+                <div class="form-group">
+                    <input type="email" id="userEmail" class="input" placeholder="Enter your email" required>
+                </div>
+                <button type="button" id="sendCodeButton">Send Verification Code</button>
             </div>
-            <button type="button" id="sendCodeButton">Send Verification Code</button>
+    
+            <!-- Code Verification Section - unchanged -->
+            <div id="codeSection">
+                <h1>Enter Verification Code</h1>
+                <p>We've sent a code to:<br><strong id="displayEmail"></strong></p>
+                <div class="form-group">
+                    <input type="text" id="verificationCode" class="input" placeholder="Enter Code" maxlength="6">
+                </div>
+                <button type="button" id="confirmButton">Verify Code</button>
+            </div>
+    
+            <!-- Password Update Section - with password toggle added -->
+            <div id="passwordSection">
+                <h1>Create New Password</h1>
+                <p>Please enter your new password</p>
+                <div class="form-group">
+                    <div class="password-input-wrapper">
+                        <input type="password" id="newPassword" class="input" placeholder="New Password">
+                        <span class="password-toggle" id="newPasswordToggle">
+                            <i class="fas fa-eye"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="password-input-wrapper">
+                        <input type="password" id="confirmPassword" class="input" placeholder="Confirm Password">
+                        <span class="password-toggle" id="confirmPasswordToggle">
+                            <i class="fas fa-eye"></i>
+                        </span>
+                    </div>
+                </div>
+                <button type="button" id="updatePasswordButton">Update Password</button>
+            </div>
+    
+            <div id="message" class="message"></div>
         </div>
-
-        <!-- Code Verification Section -->
-        <div id="codeSection">
-            <h1>Enter Verification Code</h1>
-            <p>We've sent a code to:<br><strong id="displayEmail"></strong></p>
-            <div class="form-group">
-                <input type="text" id="verificationCode" class="input" placeholder="Enter Code" maxlength="6">
-            </div>
-            <button type="button" id="confirmButton">Verify Code</button>
-        </div>
-
-        <!-- Password Update Section -->
-        <div id="passwordSection">
-            <h1>Create New Password</h1>
-            <p>Please enter your new password</p>
-            <div class="form-group">
-                <input type="password" id="newPassword" class="input" placeholder="New Password">
-            </div>
-            <div class="form-group">
-                <input type="password" id="confirmPassword" class="input" placeholder="Confirm Password">
-            </div>
-            <button type="button" id="updatePasswordButton">Update Password</button>
-        </div>
-
-        <div id="message" class="message"></div>
     </div>
-</div>
 <script src="../../config/config.js"></script>
 <script src="../../scripts/email-verification.js" type="module"></script>
 </body>
