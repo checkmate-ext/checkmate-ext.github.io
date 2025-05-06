@@ -1,5 +1,5 @@
 // email-verification.js
-import { API_BASE_URL, ENDPOINTS, AUTH_CONFIG } from '../config/config.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     // Section elements
     const sections = {

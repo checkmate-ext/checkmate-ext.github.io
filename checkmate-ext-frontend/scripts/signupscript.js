@@ -1,5 +1,4 @@
 import AuthService from '../authentication/auth-service.js';
-import { API_BASE_URL } from '../config/config.js';
 
 const authService = new AuthService(API_BASE_URL);
 
