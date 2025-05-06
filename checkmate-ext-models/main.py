@@ -30,8 +30,8 @@ async def load_models():
 
     try:
         subjectivity_classifier = SubjectivityClassifier(
-            model_filename="subjectivityClassifier/subj-49.tf",
-            word_filename="subjectivityClassifier/glove.6B.50d.word2vec.txt"
+            model_filename = "subjectivityClassifier/subj-39.tf",
+            word_filename = "subjectivityClassifier/glove.6B.50d.word2vec.txt"
         )
         print("✅ Subjectivity Classifier Loaded")
     except Exception as e:
@@ -39,7 +39,7 @@ async def load_models():
 
 
     try:
-        MODEL_PATH = "/politicalClassifier"
+        MODEL_PATH = "politicalClassifier"
         tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
         political_classifier = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
         political_classifier.eval()
@@ -122,6 +122,8 @@ class ReliabilityRequest(BaseModel):
     objectivity_score: float            # 0.0–1.0
     credibility_score: str              # "credible", "mixed", "uncredible"
     similarity_scores: List[float]      # list of 10 floats in [0,1]
+    title_objectivity: float            # 0.0–1.0
+    grammatical_error_rate: float       # 0.0–1.0
 
 class ReliabilityResponse(BaseModel):
     reliability: float
@@ -134,10 +136,9 @@ async def reliability_inference(input_data: ReliabilityRequest):
 
     try:
         left   = input_data.bias_probs["Left"]
-        center = input_data.bias_probs["Center"]
         right  = input_data.bias_probs["Right"]
     except KeyError:
-        raise HTTPException(400, "bias_probs must contain Left, Center, and Right")
+        raise HTTPException(400, "bias_probs must contain Left and Right")
 
     extremism = abs(left - right)
 
@@ -151,23 +152,19 @@ async def reliability_inference(input_data: ReliabilityRequest):
     if not sims or not all(0 <= s <= 1 for s in sims):
         raise HTTPException(400, "similarity_scores must be a list of floats in [0,1]")
 
-    sim_mean_mod = 0.0
-    sim_mean = float(np.mean(sims))
+    sim_mean = float(np.mean(sims)) if sims else 0.0
+    sim_max  = float(np.max(sims)) if sims else 0.0
+    sim_min  = float(np.min(sims)) if sims else 0.0
+    sim_std  = float(np.std(sims)) if sims else 0.0
 
-    if sim_mean > 0.6:
-        sim_mean_mod = sim_mean
-        sim_max  = float(np.max(sims))
-        sim_min  = float(np.min(sims))
-        sim_std  = float(np.std(sims))
-    else:
-        sim_mean_mod = 0.0
-        sim_max = sim_min = sim_std = 0.0
-
-    features = np.array([[ 
-        center, left, right, extremism,
+    features = np.array([[
+        left, right, extremism,
         input_data.objectivity_score, cred_score,
-        sim_mean_mod, sim_max, sim_min, sim_std
+        sim_mean, sim_max, sim_min, sim_std,
+        input_data.title_objectivity,
+        input_data.grammatical_error_rate
     ]])
+
     features_scaled = reliability_scaler.transform(features)
     raw_score = float(reliability_model.predict(features_scaled)[0])
     score = max(0.0, min(1.0, raw_score))
