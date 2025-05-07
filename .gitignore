@@ -4,7 +4,8 @@ backend/email_verification/__pycache__/
 *.idea*
 mlKeyPair.pem
 tf_train/
-subj-39.tf/
+/subj-39.tf/
+/subj-49.tf/
 mlp_model.joblib
 scaler.joblib
 model.safetensors

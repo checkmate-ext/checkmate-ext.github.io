@@ -1,5 +1,5 @@
 import nltk
-
+import numpy as np
 import gensim.utils as utils
 
 is_subjective = [1., 0.]
@@ -75,3 +75,21 @@ def get_data_from_list(datalist, classification, model):
         except Exception as e:
             print('Exception caught during getting the data: ' + str(e))
     return data
+
+
+def pad_sentence_vectors(batch, max_len=None):
+    if max_len is None:
+        max_len = max(len(vecs) for vecs in batch)
+
+    embedding_dim = len(batch[0][0])  # each word vector's dimension (e.g., 50 for GloVe 50d)
+    padded_batch = []
+
+    for vecs in batch:
+        pad_size = max_len - len(vecs)
+        if pad_size > 0:
+            padding = np.zeros((pad_size, embedding_dim))
+            vecs = np.vstack([vecs, padding])
+        padded_batch.append(vecs)
+
+    return np.array(padded_batch)
+

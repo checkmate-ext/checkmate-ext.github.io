@@ -1,0 +1,21 @@
+# Ignore Python virtual environments
+.venv/
+
+# Ignore IDE/editor configs
+.idea/
+
+# Bytecode and __pycache__
+__pycache__/
+*.py[cod]
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore model checkpoints or temporary files if any
+*.log
+*.ckpt
+*.tmp
+
+# Ignore environment-specific secrets if any
+.env
