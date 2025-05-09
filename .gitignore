@@ -1,13 +1,25 @@
+# Ignore all compiled Python files and cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Ignore IDE configs
+*.idea*
+
+# Ignore backend build or environment files
 backend/.env
 backend/__pycache__/
 backend/email_verification/__pycache__/
-*.idea*
+
+# Ignore model artifacts
 mlKeyPair.pem
-tf_train/
-/subj-39.tf/
-/subj-49.tf/
 mlp_model.joblib
 scaler.joblib
 model.safetensors
 glove.6B.50d.word2vec.txt
 vocab.txt
+
+# Ignore TensorFlow checkpoints
+checkmate-ext-models/subjectivityClassifier/subj-49.tf.*
+checkmate-ext-models/titleSubjectivityClassifier/subj-39.tf/*
+checkmate-ext-models/tf_train

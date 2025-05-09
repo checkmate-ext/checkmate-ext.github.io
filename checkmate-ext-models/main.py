@@ -34,7 +34,7 @@ async def load_models():
             model_filename ="titleSubjectivityClassifier/subj-39.tf",
             word_filename ="titleSubjectivityClassifier/glove.6B.50d.word2vec.txt"
         )
-        print("✅ Subjectivity Classifier Loaded")
+        print("✅ Title Subjectivity Classifier Loaded")
     except Exception as e:
         print(f"❌ Error loading Subjectivity Classifier: {e}")
 
@@ -74,14 +74,13 @@ def read_root():
     return {"message": "FastAPI running with Title Subjectivity Classifier, Subjectivity Classifier, Sentence Transformer & Political Analyzer!"}
 
 
-@app.post("/tileSubjectivity")
+@app.post("/titleSubjectivity")
 async def titleSubjectivity(input_data: InputText):
     """ Runs subjectivity classification asynchronously """
     if title_subjectivity_classifier is None:
         raise HTTPException(status_code=500, detail="Title subjectivity classifier not initialized")
 
-    loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(executor, title_subjectivity_classifier.classify_sentences_in_text, input_data.text)
+    result = title_subjectivity_classifier.classify_sentences_in_text(input_data.text)
 
     return {
         "subjective_sentences": result.get("subjective", []),
