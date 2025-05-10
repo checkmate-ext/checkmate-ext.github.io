@@ -456,7 +456,7 @@ def _extract_article_hybrid(url, main_article=None):
             # 2) title-based subjectivity
             try:
                 title_resp = requests.post(
-                    "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",
+                    "https://checkmate-api-1029076451566.us-central1.run.app/titleSubjectivity",
                     headers={"Content-Type": "application/json"},
                     json={"text": article_data.get("title", "")},
                     timeout=120,
@@ -556,7 +556,7 @@ def _extract_article_hybrid(url, main_article=None):
             # 2) title-based subjectivity
             try:
                 title_resp = requests.post(
-                    "https://checkmate-api-1029076451566.us-central1.run.app/subjectivity",
+                    "https://checkmate-api-1029076451566.us-central1.run.app/titleSubjectivity",
                     headers={"Content-Type": "application/json"},
                     json={"text": article_data.get("title", "")},
                     timeout=120,
