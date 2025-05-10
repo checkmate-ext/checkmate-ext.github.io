@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import nltk
 import numpy as np
 import torch
+from titleSubjectivityClassifier.title_subj_classifier import TitleSubjectivityClassifier
 from subjectivityClassifier.subj_classifier import SubjectivityClassifier
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import asyncio
@@ -10,11 +11,11 @@ import concurrent.futures
 import joblib
 from typing import List, Dict
 
-
 nltk.download('punkt')
 
 app = FastAPI()
 
+title_subjectivity_classifier = None
 subjectivity_classifier = None
 political_classifier = None
 tokenizer = None
@@ -26,17 +27,25 @@ executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 @app.on_event("startup")
 async def load_models():
     """ Load all models at startup """
-    global subjectivity_classifier, political_classifier, tokenizer
+    global title_subjectivity_classifier, subjectivity_classifier, political_classifier, tokenizer
+
+    try:
+        title_subjectivity_classifier = TitleSubjectivityClassifier(
+            model_filename ="titleSubjectivityClassifier/subj-39.tf",
+            word_filename ="titleSubjectivityClassifier/glove.6B.50d.word2vec.txt"
+        )
+        print("✅ Title Subjectivity Classifier Loaded")
+    except Exception as e:
+        print(f"❌ Error loading Subjectivity Classifier: {e}")
 
     try:
         subjectivity_classifier = SubjectivityClassifier(
-            model_filename = "subjectivityClassifier/subj-39.tf",
-            word_filename = "subjectivityClassifier/glove.6B.50d.word2vec.txt"
+            model_filename ="subjectivityClassifier/subj-49.tf",
+            word_filename ="subjectivityClassifier/glove.6B.50d.word2vec.txt"
         )
         print("✅ Subjectivity Classifier Loaded")
     except Exception as e:
         print(f"❌ Error loading Subjectivity Classifier: {e}")
-
 
     try:
         MODEL_PATH = "politicalClassifier"
@@ -46,7 +55,6 @@ async def load_models():
         print("✅ Political Bias Classifier Loaded")
     except Exception as e:
         print(f"❌ Error loading Political Bias Model: {e}")
-
 
     try:
         global reliability_model, reliability_scaler
@@ -60,9 +68,27 @@ async def load_models():
 class InputText(BaseModel):
     text: str
 
+
 @app.get("/")
 def read_root():
-    return {"message": "FastAPI running with Subjectivity Classifier, Sentence Transformer & Political Analyzer!"}
+    return {"message": "FastAPI running with Title Subjectivity Classifier, Subjectivity Classifier, Sentence Transformer & Political Analyzer!"}
+
+
+@app.post("/titleSubjectivity")
+async def titleSubjectivity(input_data: InputText):
+    """ Runs subjectivity classification asynchronously """
+    if title_subjectivity_classifier is None:
+        raise HTTPException(status_code=500, detail="Title subjectivity classifier not initialized")
+
+    result = title_subjectivity_classifier.classify_sentences_in_text(input_data.text)
+
+    return {
+        "subjective_sentences": result.get("subjective", []),
+        "objective_sentences": result.get("objective", []),
+        "subjectivity_prob": result.get("subjectivity_prob", []),
+        "objectivity_prob": result.get("objectivity_prob", []),
+        "class_label": result.get("class_label", None),
+    }
 
 
 @app.post("/subjectivity")
@@ -81,6 +107,7 @@ async def subjectivity(input_data: InputText):
         "objectivity_prob": result.get("objectivity_prob", []),
         "class_label": result.get("class_label", None),
     }
+
 
 @app.post("/political")
 async def political_bias(input_data: InputText):
@@ -117,6 +144,7 @@ def classify_political_bias(text: str):
         "Right": round(probabilities[2], 4)
 }
 
+
 class ReliabilityRequest(BaseModel):
     bias_probs: Dict[str, float]        # e.g. {"Left": 0.2, "Center": 0.6, "Right": 0.2}
     objectivity_score: float            # 0.0–1.0
@@ -127,6 +155,7 @@ class ReliabilityRequest(BaseModel):
 
 class ReliabilityResponse(BaseModel):
     reliability: float
+
 
 @app.post("/reliability", response_model=ReliabilityResponse)
 async def reliability_inference(input_data: ReliabilityRequest):

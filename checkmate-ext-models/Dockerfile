@@ -18,8 +18,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY main.py .
 COPY mlp_model.joblib .
 COPY scaler.joblib .
-COPY subjectivityClassifier/ subjectivityClassifier/
+COPY titleSubjectivityClassifier/ titleSubjectivityClassifier/
 COPY politicalClassifier/ politicalClassifier/
+COPY subjectivityClassifier/ subjectivityClassifier/
+
 
 # Download NLTK data
 RUN python -m nltk.downloader punkt
