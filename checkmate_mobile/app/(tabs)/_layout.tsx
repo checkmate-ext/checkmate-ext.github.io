@@ -21,8 +21,8 @@ export default function TabsLayout() {
             screenOptions={{
                 tabBarStyle: {
                     backgroundColor: theme.colors.background,
-                    borderTopColor: 'rgba(107, 68, 35, 0.3)',
-                    borderTopWidth: 1,
+                    borderTopColor: theme.colors.background, // Changed from rgba(107, 68, 35, 0.3) to match background
+                    borderTopWidth: 0, // Set to 0 to remove the border completely
                     height: 60,
                     paddingBottom: 6,
                 },
