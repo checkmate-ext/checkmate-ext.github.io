@@ -311,20 +311,7 @@ export default function Login() {
                                             </Button>
                                         </Link>
                                     </View>
-
                                     <Divider style={styles.divider} />
-
-                                    <View style={styles.socialButtonsContainer}>
-                                        <IconButton
-                                            icon="google"
-                                            mode="contained-tonal"
-                                            size={ResponsiveUtils.moderateScale(24)}
-                                            onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-                                            containerColor={theme.colors.surface}
-                                            iconColor={theme.colors.secondary}
-                                        />
-                                    </View>
-
                                     <View style={styles.footer}>
                                         <Text
                                             variant="bodyMedium"

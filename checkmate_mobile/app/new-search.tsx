@@ -10,7 +10,7 @@ import { moderateScale } from 'react-native-size-matters';
 import axios from 'axios';
 import { API_URL } from './constants/Config';
 import * as Haptics from 'expo-haptics';
-import * as Clipboard from 'expo-clipboard'; // Add this import for Clipboard functionality
+import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { authStyles } from './styles/auth';
 
@@ -188,24 +188,17 @@ export default function NewSearch() {
         };
     }, [sharedUrl, token]);
 
-    const validateUrl = (input) => {
-        // Basic URL validation
-        const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
-        return urlPattern.test(input);
-    };
+    // Removed validateUrl function
 
     const handleAnalyzeArticle = async (articleUrl = null) => {
         const urlToAnalyze = articleUrl || url;
 
         if (!urlToAnalyze) {
-            setError('Please enter a URL');
+            setError('Please enter something to analyze');
             return;
         }
 
-        if (!validateUrl(urlToAnalyze)) {
-            setError('Please enter a valid URL');
-            return;
-        }
+        // Removed URL validation check
 
         try {
             setLoading(true);
@@ -267,14 +260,10 @@ export default function NewSearch() {
         try {
             // Use getStringAsync instead of getString
             const clipboardContent = await Clipboard.getStringAsync();
-            if (validateUrl(clipboardContent)) {
-                setUrl(clipboardContent);
-                setError('');
-                Haptics.selectionAsync();
-            } else {
-                setError('Clipboard does not contain a valid URL');
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            }
+            // Removed validation check for clipboard content
+            setUrl(clipboardContent);
+            setError('');
+            Haptics.selectionAsync();
         } catch (error) {
             console.error('Error accessing clipboard:', error);
             setError('Failed to paste from clipboard');
@@ -407,16 +396,6 @@ export default function NewSearch() {
                                     https://edition.cnn.com
                                 </Text>
                             </ScrollView>
-                        </Card>
-
-                        <Card style={styles.card}>
-                            <Text style={styles.cardTitle}>Share from Browser</Text>
-                            <Text style={{color: theme.colors.text, marginBottom: moderateScale(15)}}>
-                                You can share articles directly from your browser to CheckMate for analysis.
-                            </Text>
-                            <Text style={{color: theme.colors.text}}>
-                                Simply tap the share button in your browser and select "CheckMate" from the share options.
-                            </Text>
                         </Card>
                     </View>
                 </ScrollView>

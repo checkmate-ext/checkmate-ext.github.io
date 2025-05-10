@@ -38,6 +38,7 @@ export default function ArticleDetailScreen() {
     const [articleData, setArticleData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [expandedSimilar, setExpandedSimilar] = useState(false);
+    const [expandedBias, setExpandedBias] = useState(false);
 
     const theme = {
         ...useTheme(),
@@ -171,6 +172,50 @@ export default function ArticleDetailScreen() {
         credibilityTextGreen: { color: '#27ae60' },
         credibilityTextNeutral: { color: '#f39c12' },
         credibilityTextRed: { color: '#c0392b' },
+        biasBox: {
+            marginTop: moderateScale(10),
+            padding: moderateScale(10),
+            backgroundColor: 'rgba(0,0,0,0.1)',
+            borderRadius: moderateScale(8),
+        },
+        biasLabel: {
+            fontSize: moderateScale(14),
+            fontWeight: 'bold',
+            color: theme.colors.text,
+            marginBottom: moderateScale(5),
+        },
+        biasValue: {
+            fontSize: moderateScale(14),
+            color: theme.colors.text,
+        },
+        progressBarContainer: {
+            marginVertical: moderateScale(5),
+        },
+        progressBarLabel: {
+            fontSize: moderateScale(12),
+            color: theme.colors.text,
+            marginBottom: moderateScale(3),
+        },
+        metricRow: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: moderateScale(5),
+        },
+        metricLabel: {
+            fontSize: moderateScale(14),
+            color: theme.colors.text,
+        },
+        metricValue: {
+            fontSize: moderateScale(14),
+            fontWeight: 'bold',
+            color: theme.colors.secondary,
+        },
+        titleObjectivityScore: {
+            fontSize: moderateScale(14),
+            color: theme.colors.text,
+            marginTop: moderateScale(5),
+        },
     });
 
     useEffect(() => {
@@ -207,7 +252,7 @@ export default function ArticleDetailScreen() {
                 };
             case 2:
                 return {
-                    status: 'Unreliable',
+                    status: 'Uncredible',
                     style: [styles.credibilityBanner, styles.credibilityBannerRed],
                     textStyle: [styles.credibilityText, styles.credibilityTextRed],
                 };
@@ -218,6 +263,24 @@ export default function ArticleDetailScreen() {
                     textStyle: [styles.credibilityText, styles.credibilityTextNeutral],
                 };
         }
+    };
+
+    const getBiasColor = (bias: string) => {
+        switch (bias) {
+            case 'Left':
+                return '#3498db';  // Blue
+            case 'Right':
+                return '#e74c3c';  // Red
+            case 'Center':
+                return '#2ecc71';  // Green
+            default:
+                return '#95a5a6';  // Gray
+        }
+    };
+
+    const formatPercentage = (value: number) => {
+        if (value === undefined || value === null || value < 0) return 'N/A';
+        return `${Math.round(value * 100)}%`;
     };
 
     const handleOpen = async (link: string) => {
@@ -286,6 +349,21 @@ export default function ArticleDetailScreen() {
     const { status, style: bannerStyle, textStyle } =
         getCredibilityStatus(articleData.website_credibility);
 
+    const getSpellingIssuesDescription = (count: number, percentage: number) => {
+        if (count === undefined || count < 0 || percentage === undefined || percentage < 0) return 'No data available';
+
+        if (percentage < 0.01) return 'Excellent - Very few spelling issues detected';
+        if (percentage < 0.03) return 'Good - Low number of spelling issues';
+        if (percentage < 0.05) return 'Fair - Moderate number of spelling issues';
+        return 'Poor - High number of spelling issues detected';
+    };
+
+    // Get the bias probabilities and sort them
+    const biasProbabilities = articleData.bias_probabilities || {};
+    const sortedBiasEntries = Object.entries(biasProbabilities)
+        .sort(([, valueA]: [string, any], [, valueB]: [string, any]) => valueB - valueA)
+        .filter(([, value]: [string, any]) => value > 0);
+
     return (
         <LinearGradient colors={['#1A1612', '#241E19', '#2A241E']} style={{ flex: 1 }}>
             <IconButton
@@ -347,6 +425,97 @@ export default function ArticleDetailScreen() {
                                 <Text style={{ fontSize: moderateScale(12), color: theme.colors.text }}>
                                     Objectivity
                                 </Text>
+
+                                {articleData.title_objectivity_score != null && (
+                                    <Text style={styles.titleObjectivityScore}>
+                                        Title Objectivity: {Math.round(articleData.title_objectivity_score * 100)}%
+                                    </Text>
+                                )}
+                            </View>
+                        )}
+
+                        {/* Linguistic Quality Section */}
+                        {(articleData.spelling_issues != null || articleData.linguistic_issues != null || articleData.pct != null) && (
+                            <View style={styles.objectivityScoreBox}>
+                                <Text
+                                    style={{
+                                        fontSize: moderateScale(18),
+                                        fontWeight: 'bold',
+                                        color: theme.colors.text,
+                                        marginBottom: moderateScale(5),
+                                    }}
+                                >
+                                    Linguistic Quality
+                                </Text>
+
+                                {articleData.spelling_issues != null && (
+                                    <View style={styles.metricRow}>
+                                        <Text style={styles.metricLabel}>Spelling Issues:</Text>
+                                        <Text style={styles.metricValue}>{articleData.spelling_issues}</Text>
+                                    </View>
+                                )}
+
+                                {articleData.pct != null && (
+                                    <View style={styles.metricRow}>
+                                        <Text style={styles.metricLabel}>Error Rate:</Text>
+                                        <Text style={styles.metricValue}>{(articleData.pct * 100).toFixed(2)}%</Text>
+                                    </View>
+                                )}
+
+                                {articleData.pct != null && (
+                                    <Text style={{ fontSize: moderateScale(12), color: theme.colors.text, marginTop: moderateScale(5) }}>
+                                        {getSpellingIssuesDescription(articleData.spelling_issues, articleData.pct)}
+                                    </Text>
+                                )}
+                            </View>
+                        )}
+
+                        {/* Bias Analysis Section */}
+                        {articleData.bias_prediction && (
+                            <View style={styles.biasBox}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Text style={styles.biasLabel}>Political Bias Analysis</Text>
+                                    <Button
+                                        mode="text"
+                                        compact
+                                        onPress={() => {
+                                            Haptics.selectionAsync();
+                                            setExpandedBias((v) => !v);
+                                        }}
+                                        textColor={theme.colors.secondary}
+                                    >
+                                        {expandedBias ? 'Hide Details' : 'Show Details'}
+                                    </Button>
+                                </View>
+
+                                <View style={styles.metricRow}>
+                                    <Text style={styles.metricLabel}>Predicted Bias:</Text>
+                                    <Text
+                                        style={[
+                                            styles.metricValue,
+                                            { color: getBiasColor(articleData.bias_prediction) }
+                                        ]}
+                                    >
+                                        {articleData.bias_prediction}
+                                    </Text>
+                                </View>
+
+                                {expandedBias && sortedBiasEntries.length > 0 && (
+                                    <View style={{ marginTop: moderateScale(10) }}>
+                                        {sortedBiasEntries.map(([bias, probability]: [string, number]) => (
+                                            <View key={bias} style={styles.progressBarContainer}>
+                                                <Text style={styles.progressBarLabel}>
+                                                    {bias}: {(probability * 100).toFixed(1)}%
+                                                </Text>
+                                                <ProgressBar
+                                                    progress={probability}
+                                                    color={getBiasColor(bias)}
+                                                    style={{ height: moderateScale(6), borderRadius: moderateScale(3) }}
+                                                />
+                                            </View>
+                                        ))}
+                                    </View>
+                                )}
                             </View>
                         )}
 
