@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
+    console.log("Update password theme script loaded");
+    
     // Theme settings
     const themes = {
         light: {
@@ -16,8 +18,6 @@ document.addEventListener('DOMContentLoaded', function() {
             inputBorder: '#e0e0e0',
             inputFocusBorder: '#3cb371',
             inputFocusShadow: 'rgba(60, 179, 113, 0.2)',
-            strengthBarBg: '#eeeeee',
-            strengthTextColor: '#555555',
             buttonBg: '#3cb371',
             buttonHoverBg: '#2e8b57',
             buttonDisabledBg: '#cccccc',
@@ -32,7 +32,8 @@ document.addEventListener('DOMContentLoaded', function() {
             bottomBarBg: '#ffffff',
             scrollbarThumb: '#cccccc',
             scrollbarTrack: '#f9f9f9',
-            headerIconOpacity: '0.7'
+            headerIconOpacity: '0.7',
+            labelColor: '#333333'
         },
         dark: {
             bgColor: '#1a1a1a',
@@ -49,8 +50,6 @@ document.addEventListener('DOMContentLoaded', function() {
             inputBorder: '#444444',
             inputFocusBorder: '#4eca89',
             inputFocusShadow: 'rgba(78, 202, 137, 0.2)',
-            strengthBarBg: '#333333',
-            strengthTextColor: '#b0b0b0',
             buttonBg: '#4eca89',
             buttonHoverBg: '#3da06b',
             buttonDisabledBg: '#444444',
@@ -65,7 +64,8 @@ document.addEventListener('DOMContentLoaded', function() {
             bottomBarBg: '#1E1E1E',
             scrollbarThumb: '#555555',
             scrollbarTrack: '#2d2d2d',
-            headerIconOpacity: '0.85'
+            headerIconOpacity: '0.85',
+            labelColor: '#e0e0e0'
         }
     };
 
@@ -112,9 +112,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const header = document.querySelector('.header');
         if (header) {
             header.style.backgroundColor = themeValues.headerBg;
+            header.style.borderBottomColor = themeValues.borderColor;
             
             // Back button
-            const backBtn = header.querySelector('.back-button');
+            const backBtn = header.querySelector('#backBtn');
             if (backBtn) {
                 backBtn.style.color = themeValues.iconColor;
             }
@@ -125,6 +126,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 headerTitle.style.color = themeValues.headerTitleColor;
             }
         }
+        
+        // Logo container
+        const logoContainer = document.querySelector('.logo-container');
+        if (logoContainer && theme === 'dark') {
+            logoContainer.style.filter = 'brightness(0.9)';
+        } else if (logoContainer) {
+            logoContainer.style.filter = 'none';
+        }
+        
+        // Form labels
+        document.querySelectorAll('.form-label').forEach(label => {
+            label.style.color = themeValues.labelColor;
+        });
         
         // Form styling
         document.querySelectorAll('.input-field').forEach(input => {
@@ -137,28 +151,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.toggle-password').forEach(toggle => {
             toggle.style.color = themeValues.iconColor;
         });
-        
-        // Strength container
-        const strengthContainer = document.querySelector('.strength-container');
-        if (strengthContainer) {
-            // Strength text
-            const strengthText = strengthContainer.querySelector('#strengthText');
-            if (strengthText) {
-                strengthText.style.color = themeValues.strengthTextColor;
-            }
-            
-            // Strength label
-            const strengthLabel = strengthContainer.querySelector('.strength-label');
-            if (strengthLabel) {
-                strengthLabel.style.color = themeValues.strengthTextColor;
-            }
-            
-            // Strength bar background
-            const strengthBar = strengthContainer.querySelector('.strength-bar');
-            if (strengthBar) {
-                strengthBar.style.backgroundColor = themeValues.strengthBarBg;
-            }
-        }
         
         // Update button
         const updateBtn = document.getElementById('updateBtn');
@@ -191,14 +183,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Bottom icons
-        const bottomIcons = document.querySelector('.bottom-icons');
-        if (bottomIcons) {
-            bottomIcons.style.backgroundColor = themeValues.bottomBarBg;
-            bottomIcons.style.borderTopColor = themeValues.borderColor;
+        // Bottom bar
+        const bottomBar = document.querySelector('.bottom-bar');
+        if (bottomBar) {
+            bottomBar.style.backgroundColor = themeValues.bottomBarBg;
+            bottomBar.style.borderTopColor = themeValues.borderColor;
             
             // Apply invert filter to all icons in dark mode
-            bottomIcons.querySelectorAll('img').forEach(img => {
+            bottomBar.querySelectorAll('img').forEach(img => {
                 img.style.opacity = themeValues.headerIconOpacity;
                 img.style.filter = theme === 'dark' ? 'invert(1)' : 'none';
             });
@@ -255,10 +247,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 box-shadow: 0 5px 15px ${theme === 'dark' ? 'rgba(78, 202, 137, 0.3)' : 'rgba(60, 179, 113, 0.3)'};
             }
             
-            /* Bottom icons hover */
-            .bottom-icons button:hover,
-            .bottom-icons .icon-btn:hover {
-                background-color: ${theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'};
+            /* Bottom bar icon hover */
+            .bottom-bar img:hover {
+                opacity: 1;
+            }
+            
+            /* Placeholder styling */
+            ::placeholder { 
+                color: ${theme === 'dark' ? '#999999' : '#aaaaaa'};
+                opacity: 1;
+            }
+            
+            :-ms-input-placeholder {
+                color: ${theme === 'dark' ? '#999999' : '#aaaaaa'};
+            }
+            
+            ::-ms-input-placeholder {
+                color: ${theme === 'dark' ? '#999999' : '#aaaaaa'};
+            }
+            
+            /* Loading spinner */
+            .loading-spinner {
+                border-color: ${theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.3)'};
+                border-top-color: white;
             }
         `;
     }
