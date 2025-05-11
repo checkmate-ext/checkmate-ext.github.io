@@ -292,22 +292,37 @@ export default function ArticleDetailScreen() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
         const link = articleData.article.url;
-        const deepLink = generateShareUrl(link);
-        const baseMsg = `Check the reliability of this article with CheckMate:\n\n${articleData.article.title}\n\n`;
+        const reliabilityScore = Math.round(articleData.reliability_score * 100);
+        const objectivityScore = articleData.objectivity_score != null
+            ? Math.round(articleData.objectivity_score * 100)
+            : null;
+        const websiteCredibility = getCredibilityStatus(articleData.website_credibility).status;
+        const bias = articleData.bias_prediction || 'Not analyzed';
+
+        let message = `CheckMate Article Analysis\n\n`;
+        message += `Title: ${articleData.article.title}\n\n`;
+        message += `📊 Analysis Results:\n`;
+        message += `• Reliability Score: ${reliabilityScore}%\n`;
+
+        if (objectivityScore !== null) {
+            message += `• Objectivity Score: ${objectivityScore}%\n`;
+        }
+
+        message += `• Website Credibility: ${websiteCredibility}\n`;
+        message += `• Political Bias: ${bias}\n`;
+
+        if (articleData.pct != null) {
+            message += `• Linguistic Error Rate: ${(articleData.pct * 100).toFixed(2)}%\n`;
+        }
+
+        message += `\n🔗 Read the article:\n${link}`;
+        message += `\n\nAnalyzed with CheckMate - Your trusted fact-checking assistant`;
 
         try {
-            if (Platform.OS === 'ios') {
-                await Share.share({
-                    title: 'Article Analysis from CheckMate',
-                    message: baseMsg,
-                    url: deepLink || link,
-                });
-            } else {
-                await Share.share({
-                    title: 'Article Analysis from CheckMate',
-                    message: `${baseMsg}${deepLink || link}`,
-                });
-            }
+            await Share.share({
+                title: 'Article Analysis from CheckMate',
+                message: message,
+            });
         } catch (e) {
             console.error('Error sharing article:', e);
         }
