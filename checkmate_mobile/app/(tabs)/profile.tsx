@@ -515,7 +515,6 @@ export default function Profile() {
 
                         <Button
                             mode={user?.subscription_plan === 'Free' ? 'contained' : 'outlined'}
-                            onPress={() => handleSubscriptionChange('Free')}
                             style={{marginBottom: ResponsiveUtils.moderateScale(10)}}
                             buttonColor={user?.subscription_plan === 'Free' ? theme.colors.accent : undefined}
                             textColor={user?.subscription_plan === 'Free' ? theme.colors.text : theme.colors.secondary}
@@ -525,7 +524,6 @@ export default function Profile() {
 
                         <Button
                             mode={user?.subscription_plan === 'Premium' ? 'contained' : 'outlined'}
-                            onPress={() => handleSubscriptionChange('Premium')}
                             buttonColor={user?.subscription_plan === 'Premium' ? theme.colors.accent : undefined}
                             textColor={user?.subscription_plan === 'Premium' ? theme.colors.text : theme.colors.secondary}
                         >
